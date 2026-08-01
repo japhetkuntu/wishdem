@@ -70,3 +70,104 @@ export interface PaymentResult {
   reference?: string;
   failureReason?: string;
 }
+
+export interface CalendarDay {
+  id: string;
+  weekdayLabel: string;
+  summary: string;
+}
+
+export type EventTone = "accent" | "rose" | "moss";
+export type TagTone = "accent" | "attention" | "good";
+export type PersonTagTone = "accent" | "good" | "alert";
+
+export interface CalendarEvent {
+  id: string;
+  timeLines: string[];
+  title: string;
+  description: string;
+  dotTone: EventTone;
+  tagLabel: string;
+  tagTone: TagTone;
+  group: "needs-care" | "this-week";
+}
+
+export interface SelectedMoment {
+  title: string;
+  subtitle: string;
+  days: number;
+  clips: number;
+  clipsRemaining: number;
+  contributionLabel: string;
+  contributionNote: string;
+  contributionProgress: number;
+  suggestedTimeNote: string;
+  deliveryConfidenceNote: string;
+}
+
+export type PersonFilterTag = "upcoming30" | "availableWeek" | "needsAttention";
+
+export interface PersonDetail {
+  dateLabel: string;
+  availabilityNote: string;
+  ruleLabel: string;
+  ruleNote: string;
+  ruleProgress?: number;
+  nextStepLabel: string;
+  nextStepNote: string;
+  conversationLabel: string;
+  conversationNote: string;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  initials: string;
+  avatarTone: EventTone | "periwinkle";
+  role: string;
+  nextMomentTitle: string;
+  nextMomentSubtitle: string;
+  stateLabel: string;
+  stateTagLabel: string;
+  stateTagTone: PersonTagTone;
+  actionLabel: string;
+  filterTags: PersonFilterTag[];
+  detail?: PersonDetail;
+}
+
+export type CircleGroup = "family" | "friends" | "work";
+export type CircleAvatarTone = "accent" | "rose" | "moss" | "mulberry";
+export type CircleStateTone = "neutral" | "wait" | "sealed";
+
+export interface CirclePerson {
+  id: string;
+  name: string;
+  initials: string;
+  avatarTone: CircleAvatarTone;
+  relationshipLabel: string;
+  group: CircleGroup;
+  /** null when the birthday hasn't been added yet. */
+  birthdayISO: string | null;
+  timezone: string;
+  note?: string;
+  stateLabel: string;
+  stateTone: CircleStateTone;
+  actionLabel: string;
+  /** Links "View wish" to a real wish record when one exists. */
+  wishId?: string;
+  recentlyAdded?: boolean;
+}
+
+export interface GroupInvitation {
+  id: string;
+  faceInitials: string[];
+  title: string;
+  description: string;
+  deadlineLabel: string;
+  actionLabel: string;
+}
+
+export interface CircleStats {
+  peopleCount: number;
+  momentsCount: number;
+}

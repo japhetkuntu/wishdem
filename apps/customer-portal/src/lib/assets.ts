@@ -24,4 +24,16 @@ export const ASSETS = {
     src: "https://skyagent-artifacts.skywork.ai/router/agent/2026-07-31/prod_agent_019fb49f-bdb6-7761-829d-d7971888d766/asset_ff01d53063d642b2_b36d7f4ef4d34398955bb1539f6e1547.png",
     alt: "A sealed Velvet Night envelope",
   },
+  themeGardenLetter: {
+    src: "/themes/garden-letter.jpg",
+    alt: "A botanical correspondence scene with a pressed-flower wax seal",
+  },
+  themeSundayMorning: {
+    src: "/themes/sunday-morning.jpg",
+    alt: "A quiet sunlit table with a sunburst envelope detail",
+  },
+  themeAfterglow: {
+    src: "/themes/afterglow.jpg",
+    alt: "A dusk horizon behind a champagne gold-edged envelope",
+  },
 } as const;

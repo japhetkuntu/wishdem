@@ -14,6 +14,7 @@ export default function CreateMessagePage() {
     useWizardStore();
   const { user, continueWithGoogle, continueWithEmail } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!wishId) navigate("/create/who", { replace: true });
@@ -22,10 +23,16 @@ export default function CreateMessagePage() {
   async function persistAndContinue() {
     if (!wishId) return;
     setSaving(true);
-    await saveMessageStep(wishId, message, attachment);
-    markSaved();
-    setSaving(false);
-    navigate("/create/theme");
+    setError(null);
+    try {
+      await saveMessageStep(wishId, message, attachment, recipient ?? undefined);
+      markSaved();
+      navigate("/create/theme");
+    } catch {
+      setError("We couldn't save that just now. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleGoogle() {
@@ -86,6 +93,7 @@ export default function CreateMessagePage() {
               >
                 {saving ? "Saving…" : "Continue to choose a look →"}
               </Button>
+              {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
             </div>
           ) : (
             <AuthPrompt onGoogle={handleGoogle} onEmail={handleEmail} />

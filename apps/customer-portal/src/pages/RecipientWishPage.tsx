@@ -6,7 +6,7 @@ import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 import { useWish } from "@/hooks/useWishes";
 import { markOpened } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
-import { ASSETS } from "@/lib/assets";
+import { getThemeImage } from "@/lib/themeImages";
 
 export default function RecipientWishPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +29,7 @@ export default function RecipientWishPage() {
   }
 
   const isOpened = revealed || wish.status === "opened";
+  const vesselImage = getThemeImage(wish.themeId, "reveal");
 
   async function handleOpen() {
     if (!id) return;
@@ -56,8 +57,8 @@ export default function RecipientWishPage() {
             <SealButton
               recipientName={wish.recipient.name}
               onOpen={handleOpen}
-              imageSrc={ASSETS.revealVelvetEnvelope.src}
-              imageAlt={ASSETS.revealVelvetEnvelope.alt}
+              imageSrc={vesselImage.src}
+              imageAlt={vesselImage.alt}
             />
           </div>
 

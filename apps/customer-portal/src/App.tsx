@@ -11,6 +11,10 @@ import CreateSealPage from "@/pages/create/CreateSealPage";
 import CreateScheduledPage from "@/pages/create/CreateScheduledPage";
 import CreatePaymentFailedPage from "@/pages/create/CreatePaymentFailedPage";
 import DashboardPage from "@/pages/DashboardPage";
+import CalendarPage from "@/pages/CalendarPage";
+import PeoplePage from "@/pages/PeoplePage";
+import CirclePage from "@/pages/CirclePage";
+import AddPersonPage from "@/pages/AddPersonPage";
 import RecipientWishPage from "@/pages/RecipientWishPage";
 
 export default function App() {
@@ -28,6 +32,10 @@ export default function App() {
       <Route path="/create/scheduled" element={<CreateScheduledPage />} />
       <Route path="/create/payment-failed" element={<CreatePaymentFailedPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/calendar" element={<CalendarPage />} />
+      <Route path="/people" element={<PeoplePage />} />
+      <Route path="/circle" element={<CirclePage />} />
+      <Route path="/circle/new" element={<AddPersonPage />} />
       <Route path="/w/:id" element={<RecipientWishPage />} />
     </Routes>
   );

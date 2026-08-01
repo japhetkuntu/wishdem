@@ -2,16 +2,33 @@ import {
   currentUser,
   EXISTING_EMAILS,
   findWish,
+  persistWishes,
   setCurrentUser,
   themes,
   wishes,
 } from "@/mocks/db";
 import { maskEmail } from "@/lib/format";
+import { CALENDAR_DAYS, SOFIA_MOMENT, TODAY_EVENTS } from "@/mocks/calendarData";
+import { PEOPLE } from "@/mocks/peopleData";
+import {
+  CIRCLE_PEOPLE,
+  CIRCLE_STATS,
+  persistCirclePeople,
+  SHARED_INVITATIONS,
+} from "@/mocks/circleData";
 import type {
   Attachment,
+  CalendarDay,
+  CalendarEvent,
+  CircleGroup,
+  CirclePerson,
+  CircleStats,
   DeliveryChannel,
+  GroupInvitation,
+  Person,
   PaymentResult,
   Recipient,
+  SelectedMoment,
   ThemeId,
   User,
   Wish,
@@ -54,6 +71,7 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
   const existing = input.id ? findWish(input.id) : null;
   if (existing) {
     existing.recipient = input.recipient;
+    persistWishes();
     return delay(existing);
   }
   const wish: Wish = {
@@ -69,35 +87,68 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
     createdAt: new Date().toISOString(),
   };
   wishes.unshift(wish);
+  persistWishes();
   return delay(wish);
+}
+
+/**
+ * Recovers a wish record the mock "database" has lost track of — e.g. a
+ * wishId the wizard still holds from before this tab's mock data was last
+ * reset. The wizard already has the recipient in its own persisted state,
+ * so steps can rebuild the record instead of failing outright.
+ */
+function ensureWish(id: string, recipient: Recipient | null | undefined): Wish {
+  const existing = findWish(id);
+  if (existing) return existing;
+  if (!recipient) throw new Error(`Wish ${id} not found`);
+  const recovered: Wish = {
+    id,
+    recipient,
+    message: "",
+    attachment: null,
+    themeId: null,
+    channel: null,
+    status: "draft",
+    fromName: "You",
+    priceLabel: "£1.49",
+    createdAt: new Date().toISOString(),
+  };
+  wishes.unshift(recovered);
+  return recovered;
 }
 
 export async function saveMessageStep(
   id: string,
   message: string,
   attachment: Attachment | null,
+  recipient?: Recipient,
 ): Promise<Wish> {
-  const wish = findWish(id);
-  if (!wish) throw new Error(`Wish ${id} not found`);
+  const wish = ensureWish(id, recipient);
   wish.message = message;
   wish.attachment = attachment;
+  persistWishes();
   return delay(wish);
 }
 
-export async function saveThemeStep(id: string, themeId: ThemeId): Promise<Wish> {
-  const wish = findWish(id);
-  if (!wish) throw new Error(`Wish ${id} not found`);
+export async function saveThemeStep(
+  id: string,
+  themeId: ThemeId,
+  recipient?: Recipient,
+): Promise<Wish> {
+  const wish = ensureWish(id, recipient);
   wish.themeId = themeId;
+  persistWishes();
   return delay(wish);
 }
 
 export async function saveDeliverStep(
   id: string,
   channel: DeliveryChannel,
+  recipient?: Recipient,
 ): Promise<Wish> {
-  const wish = findWish(id);
-  if (!wish) throw new Error(`Wish ${id} not found`);
+  const wish = ensureWish(id, recipient);
   wish.channel = channel;
+  persistWishes();
   return delay(wish);
 }
 
@@ -109,9 +160,9 @@ export async function saveDeliverStep(
 export async function chargeMobileMoney(
   wishId: string,
   _phoneNumber: string,
+  recipient?: Recipient,
 ): Promise<PaymentResult> {
-  const wish = findWish(wishId);
-  if (!wish) throw new Error(`Wish ${wishId} not found`);
+  const wish = ensureWish(wishId, recipient);
 
   // Deterministic-ish mock: numbers ending in "0" simulate a decline so the
   // payment-failed flow is easy to reach during testing.
@@ -125,6 +176,7 @@ export async function chargeMobileMoney(
 
   wish.status = "sealed";
   wish.sealedAt = new Date().toISOString();
+  persistWishes();
   return { success: true, reference: `WD-${Math.random().toString(36).slice(2, 10).toUpperCase()}` };
 }
 
@@ -133,11 +185,17 @@ export async function markOpened(id: string): Promise<Wish> {
   if (!wish) throw new Error(`Wish ${id} not found`);
   wish.status = "opened";
   wish.openedAt = new Date().toISOString();
+  persistWishes();
   return delay(wish);
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   return delay(currentUser);
+}
+
+export async function signOut(): Promise<void> {
+  setCurrentUser(null);
+  return delay(undefined);
 }
 
 export async function signInWithGoogle(): Promise<User> {
@@ -195,4 +253,86 @@ export async function verifyOtp(
   };
   setCurrentUser(user);
   return delay(user);
+}
+
+export async function listCalendarDays(): Promise<CalendarDay[]> {
+  return delay([...CALENDAR_DAYS]);
+}
+
+/**
+ * Only "today" has scripted events in this mock — other days render an
+ * empty state rather than pretending to have real content for them.
+ */
+export async function listEventsForDay(dayId: string): Promise<CalendarEvent[]> {
+  return delay(dayId === "day-1" ? [...TODAY_EVENTS] : []);
+}
+
+export async function getSelectedMoment(): Promise<SelectedMoment> {
+  return delay(SOFIA_MOMENT);
+}
+
+export async function listPeople(): Promise<Person[]> {
+  return delay([...PEOPLE]);
+}
+
+export async function listCirclePeople(): Promise<CirclePerson[]> {
+  return delay([...CIRCLE_PEOPLE]);
+}
+
+export async function listSharedInvitations(): Promise<GroupInvitation[]> {
+  return delay([...SHARED_INVITATIONS]);
+}
+
+export async function getCircleStats(): Promise<CircleStats> {
+  return delay(CIRCLE_STATS);
+}
+
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function groupFromRelationship(relationshipLabel: string): CircleGroup {
+  if (relationshipLabel === "Family") return "family";
+  if (relationshipLabel === "Colleague") return "work";
+  return "friends";
+}
+
+const CIRCLE_AVATAR_TONES: CirclePerson["avatarTone"][] = [
+  "accent",
+  "rose",
+  "moss",
+  "mulberry",
+];
+
+export interface AddCirclePersonInput {
+  name: string;
+  birthdayISO: string | null;
+  timezone: string;
+  relationshipLabel: string;
+  note?: string;
+}
+
+export async function addCirclePerson(input: AddCirclePersonInput): Promise<CirclePerson> {
+  const person: CirclePerson = {
+    id: `circle-${Math.random().toString(36).slice(2, 10)}`,
+    name: input.name,
+    initials: initialsFrom(input.name),
+    avatarTone: CIRCLE_AVATAR_TONES[CIRCLE_PEOPLE.length % CIRCLE_AVATAR_TONES.length],
+    relationshipLabel: input.relationshipLabel,
+    group: groupFromRelationship(input.relationshipLabel),
+    birthdayISO: input.birthdayISO,
+    timezone: input.timezone,
+    note: input.note,
+    stateLabel: input.birthdayISO ? "No wish started" : "Needs a date",
+    stateTone: "neutral",
+    actionLabel: input.birthdayISO ? "Begin a wish →" : "Add birthday →",
+    recentlyAdded: true,
+  };
+  CIRCLE_PEOPLE.unshift(person);
+  persistCirclePeople();
+  return delay(person);
 }

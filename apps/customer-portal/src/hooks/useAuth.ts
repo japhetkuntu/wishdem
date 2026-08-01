@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getCurrentUser, signInWithEmail, signInWithGoogle } from "@/lib/api";
+import { getCurrentUser, signInWithEmail, signInWithGoogle, signOut } from "@/lib/api";
 import type { User } from "@/types";
 
 export function useAuth() {
@@ -25,5 +25,10 @@ export function useAuth() {
     return u;
   }, []);
 
-  return { user, loading, continueWithGoogle, continueWithEmail };
+  const logOut = useCallback(async () => {
+    await signOut();
+    setUser(null);
+  }, []);
+
+  return { user, loading, continueWithGoogle, continueWithEmail, logOut };
 }

@@ -3,10 +3,13 @@ import clsx from "clsx";
 import type { Theme, ThemeId } from "@/types";
 import { ASSETS } from "@/lib/assets";
 
-// Only Velvet Night has reference photography in the design mockups today;
-// other themes fall back to their swatch colour until artwork exists.
+// Reference photography per theme. Themes without an entry fall back to
+// their flat swatch colour until artwork exists.
 const THEME_PREVIEW_IMAGES: Partial<Record<ThemeId, { src: string; alt: string }>> = {
   "velvet-night": ASSETS.createThemeVelvet,
+  "garden-letter": ASSETS.themeGardenLetter,
+  "sunday-morning": ASSETS.themeSundayMorning,
+  afterglow: ASSETS.themeAfterglow,
 };
 
 export function ThemeCard({
@@ -18,6 +21,8 @@ export function ThemeCard({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const image = THEME_PREVIEW_IMAGES[theme.id];
+
   return (
     <button
       type="button"
@@ -25,16 +30,43 @@ export function ThemeCard({
       aria-pressed={selected}
       className={clsx(
         "relative min-h-[145px] overflow-hidden rounded-lg border p-[14px] text-left transition-colors sm:min-h-[180px] sm:p-5",
-        theme.swatch,
+        !image && theme.swatch,
         selected ? "border-champagne" : "border-porcelain/20",
       )}
     >
-      <b className="relative block font-display text-[22px] sm:text-[26px]">{theme.name}</b>
-      <p className="relative mt-1 max-w-[80%] text-[12px] opacity-75">{theme.description.split("·")[0]}</p>
-      <i
-        aria-hidden
-        className="absolute -right-4 bottom-4 h-[60px] w-[100px] rotate-[-8deg] rounded-md bg-porcelain sm:bottom-[17px]"
-      />
+      {image && (
+        <>
+          <img
+            src={image.src}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+        </>
+      )}
+      <b
+        className={clsx(
+          "relative block font-display text-[22px] sm:text-[26px]",
+          image && "text-porcelain",
+        )}
+      >
+        {theme.name}
+      </b>
+      <p
+        className={clsx(
+          "relative mt-1 max-w-[80%] text-[12px]",
+          image ? "text-porcelain/85" : "opacity-75",
+        )}
+      >
+        {theme.description.split("·")[0]}
+      </p>
+      {!image && (
+        <i
+          aria-hidden
+          className="absolute -right-4 bottom-4 h-[60px] w-[100px] rotate-[-8deg] rounded-md bg-porcelain sm:bottom-[17px]"
+        />
+      )}
     </button>
   );
 }

@@ -6,7 +6,7 @@ import { useWizardStore } from "@/store/wizardStore";
 import { useThemes } from "@/hooks/useThemes";
 import { chargeMobileMoney } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
-import { ASSETS } from "@/lib/assets";
+import { getThemeImage } from "@/lib/themeImages";
 
 const PRICE_LABEL = "£1.49";
 
@@ -23,6 +23,7 @@ export default function CreateSealPage() {
   }, [wishId, recipient, navigate]);
 
   const theme = themes.find((t) => t.id === themeId);
+  const vesselImage = getThemeImage(themeId, "seal");
   const channelLabel =
     channel === "whatsapp" ? "WhatsApp" : channel === "sms" ? "SMS" : "Private link";
 
@@ -31,20 +32,25 @@ export default function CreateSealPage() {
     if (!wishId) return;
     setError(null);
     setCharging(true);
-    const result = await chargeMobileMoney(wishId, paymentPhone);
-    setCharging(false);
-    if (result.success) {
-      navigate("/create/scheduled");
-    } else {
-      setError(result.failureReason ?? "The charge could not be completed.");
-      navigate("/create/payment-failed");
+    try {
+      const result = await chargeMobileMoney(wishId, paymentPhone, recipient ?? undefined);
+      if (result.success) {
+        navigate("/create/scheduled");
+      } else {
+        setError(result.failureReason ?? "The charge could not be completed.");
+        navigate("/create/payment-failed");
+      }
+    } catch {
+      setError("We couldn't reach payment just now. Please try again.");
+    } finally {
+      setCharging(false);
     }
   }
 
   return (
-    <CreateLayout activeIndex={3}>
-      <section className="grid gap-6 sm:grid-cols-[1.1fr_1fr] sm:gap-10">
-        <div>
+    <CreateLayout activeIndex={3} fitViewport>
+      <section className="grid gap-6 sm:h-full sm:grid-cols-[1.1fr_1fr] sm:gap-10">
+        <div className="sm:flex sm:h-full sm:flex-col sm:justify-center">
           <span className="text-[10px] font-extrabold tracking-[0.14em] text-champagne">
             LAST LOOK BEFORE IT'S SEALED
           </span>
@@ -57,42 +63,42 @@ export default function CreateSealPage() {
           </p>
         </div>
 
-        <aside className="rounded-lg bg-porcelain p-6 text-ink shadow-card">
-          <div className="mb-4 aspect-square w-full overflow-hidden rounded-md">
+        <aside className="rounded-lg bg-porcelain p-5 text-ink shadow-card sm:flex sm:h-full sm:flex-col sm:overflow-y-auto sm:p-6">
+          <div className="mb-3 h-[120px] w-full flex-none overflow-hidden rounded-md sm:h-[130px]">
             <img
-              src={ASSETS.paymentSealedLetter.src}
-              alt={ASSETS.paymentSealedLetter.alt}
+              src={vesselImage.src}
+              alt={vesselImage.alt}
               className="h-full w-full object-cover"
             />
           </div>
           <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
             READY TO HOLD
           </span>
-          <h2 className="my-[5px] mb-[15px] font-display text-[29px]">
+          <h2 className="my-[5px] mb-[10px] font-display text-[24px] sm:text-[26px]">
             {recipient?.name ?? "Their"}'s birthday wish
           </h2>
 
-          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[13px] text-[12px]">
+          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[9px] text-[12px]">
             <span>Delivery</span>
             <b>
               {recipient ? formatWeekdayDate(recipient.birthdayISO) : "—"} ·{" "}
               {recipient?.deliveryTime ?? "—"}
             </b>
           </div>
-          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[13px] text-[12px]">
+          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[9px] text-[12px]">
             <span>Theme</span>
             <b>{theme?.name ?? "Not chosen"}</b>
           </div>
-          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[13px] text-[12px]">
+          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[9px] text-[12px]">
             <span>Notification</span>
             <b>{channelLabel}</b>
           </div>
-          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[13px] text-[12px]">
+          <div className="flex justify-between gap-[10px] border-t border-plum/[0.13] py-[9px] text-[12px]">
             <span>Wish keeping & delivery</span>
             <b>{PRICE_LABEL}</b>
           </div>
 
-          <form onSubmit={handlePay} className="mt-3">
+          <form onSubmit={handlePay} className="mt-2">
             <label className="mb-1 block text-[10px] font-extrabold tracking-[0.1em] text-mulberry">
               MOBILE MONEY NUMBER
             </label>

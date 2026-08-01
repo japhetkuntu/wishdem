@@ -38,6 +38,7 @@ export default function CreateDeliverPage() {
   const { wishId, recipient, channel, setChannel, markSaved } = useWizardStore();
   const [selected, setSelected] = useState<DeliveryChannel | null>(channel);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!wishId) navigate("/create/who", { replace: true });
@@ -46,11 +47,17 @@ export default function CreateDeliverPage() {
   async function handleContinue() {
     if (!wishId || !selected) return;
     setSaving(true);
-    await saveDeliverStep(wishId, selected);
-    setChannel(selected);
-    markSaved();
-    setSaving(false);
-    navigate("/create/seal");
+    setError(null);
+    try {
+      await saveDeliverStep(wishId, selected, recipient ?? undefined);
+      setChannel(selected);
+      markSaved();
+      navigate("/create/seal");
+    } catch {
+      setError("We couldn't save that just now. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -97,6 +104,7 @@ export default function CreateDeliverPage() {
       >
         {saving ? "Saving…" : "Continue to seal →"}
       </Button>
+      {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
     </CreateLayout>
   );
 }

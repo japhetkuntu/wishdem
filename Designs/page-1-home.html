@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600&display=swap"
         rel="stylesheet">
     <style>
         :root {
@@ -18,8 +18,6 @@
             --m: #4A203D;
             --r: #D99AA9;
             --g: #34443A;
-            --rm: 14px;
-            --rl: 22px;
             --sh: 0 12px 32px rgba(13, 6, 14, .24)
         }
 
@@ -36,24 +34,27 @@
 
         .shell {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1280px;
             margin: auto;
-            padding: 26px 32px
+            padding: 0 30px 32px
         }
 
-        .top {
+        .nav {
+            height: 68px;
             display: flex;
-            justify-content: space-between;
-            align-items: center
+            align-items: center;
+            gap: 18px;
+            border-bottom: 1px solid #F6F0E826
         }
 
         .brand {
             font-size: 21px;
             font-weight: 800;
-            letter-spacing: -1.5px
+            letter-spacing: -1.4px;
+            margin-right: 13px
         }
 
-        .brand i {
+        .brand b {
             display: inline-block;
             width: 6px;
             height: 6px;
@@ -62,279 +63,433 @@
             margin: 0 2px 7px
         }
 
-        .back {
-            color: #F6F0E8ab;
+        .nav a {
+            color: #F6F0E8a7;
+            text-decoration: none;
             font-size: 11px;
-            text-decoration: none
+            font-weight: 700
+        }
+
+        .nav a.active {
+            height: 68px;
+            display: flex;
+            align-items: center;
+            color: var(--s);
+            border-bottom: 2px solid var(--a)
+        }
+
+        .sp {
+            flex: 1
+        }
+
+        .add {
+            border: 0;
+            border-radius: 999px;
+            background: var(--a);
+            color: var(--p);
+            font: 800 10px Manrope;
+            padding: 10px 14px
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            padding: 28px 0 17px
+        }
+
+        .ey {
+            font-size: 9px;
+            color: var(--a);
+            letter-spacing: .14em;
+            font-weight: 800
+        }
+
+        .head h1 {
+            font: 500 39px 'Playfair Display';
+            margin: 4px 0
+        }
+
+        .head p {
+            font-size: 11px;
+            color: #F6F0E8a7;
+            margin: 0
+        }
+
+        .outline {
+            border: 1px solid #E6C87A62;
+            background: #E6C87A10;
+            color: var(--a);
+            padding: 9px 12px;
+            border-radius: 999px;
+            font: 800 10px Manrope
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 295px;
+            gap: 14px
         }
 
         .main {
-            display: grid;
-            grid-template-columns: .83fr 1.17fr;
-            gap: 18px;
-            align-items: center;
-            padding: 58px 0 40px
+            min-width: 0
         }
 
-        .welcome {
-            padding: 21px
+        .filters {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-bottom: 12px
         }
 
-        .seal {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--a);
-            display: grid;
-            place-items: center;
-            color: var(--p);
-            text-align: center;
-            font: 500 12px/1.1 'Playfair Display';
-            margin-bottom: 23px
+        .chip {
+            border: 1px solid #F6F0E82b;
+            border-radius: 999px;
+            padding: 7px 10px;
+            color: #F6F0E8ad;
+            background: transparent;
+            font: 800 9px Manrope
         }
 
-        .eyebrow {
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: .13em;
-            color: var(--a)
-        }
-
-        h1 {
-            font: 500 42px/1.08 'Playfair Display';
-            letter-spacing: -1px;
-            margin: 7px 0 13px
-        }
-
-        .welcome p {
-            font-size: 12px;
-            line-height: 1.6;
-            color: #F6F0E8b0;
-            max-width: 350px
-        }
-
-        .tiny-note {
-            margin-top: 20px;
-            border-left: 2px solid var(--a);
-            padding: 8px 0 8px 11px;
-            font-size: 10px;
-            line-height: 1.5;
-            color: #F6F0E8a6
-        }
-
-        .card {
+        .chip.active {
             background: var(--s);
-            color: var(--i);
-            border-radius: var(--rl);
-            padding: 27px;
-            box-shadow: var(--sh)
-        }
-
-        .card h2 {
-            font: 500 31px 'Playfair Display';
-            margin: 6px 0
-        }
-
-        .sub {
-            font-size: 12px;
-            line-height: 1.55;
-            color: #241D2490;
-            margin: 0 0 18px
-        }
-
-        .label {
-            display: block;
-            font-size: 10px;
-            font-weight: 800;
-            margin: 14px 0 6px
-        }
-
-        .input {
-            width: 100%;
-            border-radius: 9px;
-            border: 1px solid #2A162930;
-            padding: 12px;
-            background: #fff;
-            font: 500 13px Manrope;
-            color: var(--p);
-            outline: none
-        }
-
-        .input:focus {
-            border: 2px solid var(--a);
-            padding: 11px
-        }
-
-        .hint {
-            font-size: 9px;
-            color: #241D2488;
-            margin: 5px 0 0
-        }
-
-        .code {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            margin: 7px 0 5px
-        }
-
-        .code input {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 10px;
-            border: 1px solid #2A162930;
-            background: #fff;
-            text-align: center;
-            font: 600 20px Manrope;
             color: var(--p)
         }
 
-        .code input:first-child {
-            border: 2px solid var(--a);
-            box-shadow: 0 0 0 3px #E6C87A2c
+        .section {
+            border: 1px solid #F6F0E81d;
+            border-radius: 14px;
+            overflow: hidden
         }
 
-        .resend {
-            font-size: 10px;
-            color: #241D2491;
-            margin: 6px 0 17px
+        .section h2 {
+            font: 500 22px 'Playfair Display';
+            margin: 0;
+            padding: 15px 16px 11px;
+            background: #F6F0E809
         }
 
-        .resend b {
-            color: var(--m)
+        .person {
+            display: grid;
+            grid-template-columns: 1.25fr .8fr .9fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 13px 16px;
+            border-top: 1px solid #F6F0E817
         }
 
-        .btn {
-            width: 100%;
-            border: 0;
-            border-radius: 9999px;
-            padding: 13px;
-            background: var(--p);
-            color: var(--s);
-            font: 800 11px Manrope
-        }
-
-        .private {
+        .identity {
             display: flex;
-            gap: 9px;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 9px;
-            background: #E6C87A20;
-            font-size: 9px;
-            line-height: 1.5;
-            color: #241D2490
+            align-items: center;
+            gap: 9px
         }
 
-        .private i {
-            width: 8px;
-            height: 8px;
+        .av {
+            width: 33px;
+            height: 33px;
             border-radius: 50%;
+            display: grid;
+            place-items: center;
             background: var(--a);
-            margin-top: 3px;
-            flex: none
-        }
-
-        .foot {
-            text-align: center;
+            color: var(--p);
             font-size: 10px;
-            color: #241D2490;
-            margin: 14px 0 0
+            font-weight: 800
         }
 
-        .foot a {
+        .av.rose {
+            background: var(--r)
+        }
+
+        .av.moss {
+            background: var(--g);
+            color: var(--s)
+        }
+
+        .av.mauve {
+            background: var(--m);
+            color: var(--s)
+        }
+
+        .identity strong {
+            font-size: 11px;
+            display: block
+        }
+
+        .identity span,
+        .meta {
+            font-size: 9px;
+            color: #F6F0E8a4
+        }
+
+        .meta b {
+            display: block;
+            color: var(--s);
+            font-size: 10px
+        }
+
+        .state {
+            font: 800 8px Manrope;
+            padding: 5px 7px;
+            border-radius: 999px;
+            background: var(--a);
+            color: var(--p);
+            display: inline-block
+        }
+
+        .state.wait {
+            background: var(--r)
+        }
+
+        .state.sealed {
+            background: var(--g);
+            color: var(--s)
+        }
+
+        .go {
+            background: transparent;
+            border: 0;
+            color: var(--a);
+            font: 800 9px Manrope;
+            white-space: nowrap
+        }
+
+        .side {
+            border-radius: 14px;
+            background: var(--s);
+            color: var(--i);
+            box-shadow: var(--sh);
+            padding: 17px;
+            align-self: start
+        }
+
+        .over {
+            font-size: 9px;
             font-weight: 800;
             color: var(--m);
-            text-decoration: none
+            letter-spacing: .12em
         }
 
-        @media(max-width:760px) {
+        .over b {
+            background: var(--r);
+            padding: 3px 6px;
+            border-radius: 99px;
+            color: var(--p)
+        }
+
+        .inv {
+            padding: 14px 0;
+            border-bottom: 1px solid #2A162918
+        }
+
+        .faces {
+            display: flex;
+            margin-bottom: 10px
+        }
+
+        .faces span {
+            width: 27px;
+            height: 27px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: var(--m);
+            color: var(--s);
+            font-size: 7px;
+            font-weight: 800;
+            border: 2px solid var(--s);
+            margin-right: -5px
+        }
+
+        .faces span:nth-child(2) {
+            background: var(--a);
+            color: var(--p)
+        }
+
+        .faces span:nth-child(3) {
+            background: var(--r);
+            color: var(--p)
+        }
+
+        .inv h3 {
+            font: 500 23px 'Playfair Display';
+            margin: 5px 0
+        }
+
+        .inv p,
+        .soft {
+            font-size: 10px;
+            line-height: 1.45;
+            color: #241D24a8
+        }
+
+        .deadline {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--m);
+            margin: 10px 0
+        }
+
+        .inv button {
+            border: 0;
+            border-radius: 999px;
+            background: var(--p);
+            color: var(--s);
+            font: 800 9px Manrope;
+            padding: 9px 11px
+        }
+
+        .soft {
+            padding-top: 14px
+        }
+
+        .soft strong {
+            display: block;
+            color: var(--i);
+            font-size: 11px;
+            margin-bottom: 4px
+        }
+
+        @media(max-width:800px) {
             .shell {
-                padding: 20px
+                padding: 0 16px 24px
             }
 
-            .main {
-                grid-template-columns: 1fr;
-                padding: 38px 0
+            .layout {
+                grid-template-columns: 1fr
             }
 
-            .welcome {
-                padding: 0
+            .side {
+                order: -1
             }
 
-            .welcome h1 {
-                font-size: 36px
+            .nav a {
+                display: none
             }
 
-            .tiny-note {
+            .nav a.active {
+                display: flex
+            }
+
+            .head {
+                display: block
+            }
+
+            .outline {
+                margin-top: 12px
+            }
+
+            .person {
+                grid-template-columns: 1fr auto
+            }
+
+            .person .meta,
+            .person .state {
                 display: none
             }
         }
 
-        @media(max-width:420px) {
+        @media(max-width:480px) {
             .shell {
-                padding: 16px
+                padding: 0 12px 18px
             }
 
-            .main {
-                padding: 29px 0
+            .head h1 {
+                font-size: 33px
             }
 
-            .card {
-                padding: 20px
+            .nav {
+                height: 58px
             }
 
-            .code {
-                gap: 5px
-            }
-
-            .card h2 {
-                font-size: 28px
+            .nav a.active {
+                height: 58px
             }
         }
     </style>
 </head>
 
 <body data-artboard-width="1440" data-device-type="web">
-    <main data-node-id="n1" class="shell" data-page-id="auth-03-new-customer" data-role="new-customer-otp-completion">
-        <header data-node-id="n2" class="top"><b data-node-id="n3" class="brand">Wish<i data-node-id="n4"></i>Dem</b><a
-                data-node-id="n5" class="back" href="#email">Use a different email</a></header>
-        <div data-node-id="n6" class="main">
-            <section data-node-id="n7" class="welcome" data-role="supporting">
-                <div data-node-id="n8" class="seal">a place<br>to bloom</div><span data-node-id="n9"
-                    class="eyebrow">YOUR FIRST PRIVATE DESK</span>
-                <h1 data-node-id="n10">A thoughtful birthday starts long before the date.</h1>
-                <p data-node-id="n11">Write it while the feeling is here. WishDem will keep your message safely until
-                    the moment it matters.</p>
-                <div data-node-id="n12" class="tiny-note">After this, you can plant your first future wish—no long
-                    profile form, no password to create.</div>
-            </section>
-            <section data-node-id="n13" class="card" data-role="primary"><span data-node-id="n14" class="eyebrow"
-                    style="color:#4A203D">02 · MAKE IT YOURS</span>
-                <h2 data-node-id="n15">Let’s make this yours</h2>
-                <p data-node-id="n16" class="sub">First, confirm the code sent to <b
-                        data-node-id="n17">m•••@example.com</b>. Then your correspondence desk is ready.</p><label
-                    data-node-id="n18" class="label" for="name">Your name</label><input data-node-id="n19" id="name"
-                    class="input" placeholder="e.g. Amara" autocomplete="name">
-                <p data-node-id="n20" class="hint">A preferred name is perfect. It makes future correspondence feel
-                    personal.</p><label data-node-id="n21" class="label">Your six-digit code</label>
-                <div data-node-id="n22" class="code" aria-label="Six digit verification code"><input data-node-id="n23"
-                        aria-label="Digit 1" inputmode="numeric" maxlength="1" autofocus><input data-node-id="n24"
-                        aria-label="Digit 2" inputmode="numeric" maxlength="1"><input data-node-id="n25"
-                        aria-label="Digit 3" inputmode="numeric" maxlength="1"><input data-node-id="n26"
-                        aria-label="Digit 4" inputmode="numeric" maxlength="1"><input data-node-id="n27"
-                        aria-label="Digit 5" inputmode="numeric" maxlength="1"><input data-node-id="n28"
-                        aria-label="Digit 6" inputmode="numeric" maxlength="1"></div>
-                <div data-node-id="n29" class="resend">A fresh code can be requested in <b data-node-id="n30">00:24</b>
-                    · <a data-node-id="n31" href="#help">Need help?</a></div><button data-node-id="n32"
-                    class="btn">Create my WishDem</button>
-                <div data-node-id="n33" class="private"><i data-node-id="n34"></i><span data-node-id="n35"><b
-                            data-node-id="n36">Private by design.</b><br>Your name and email create a personal place for
-                        future wishes—nothing more is needed right now.</span></div>
-                <p data-node-id="n37" class="foot">Already have an account? <a data-node-id="n38" href="#email">Use a
-                        different email</a>.</p>
-            </section>
-        </div>
+    <main data-node-id="n1" class="shell" data-page-id="circle-02-overview" data-role="relationship-hub">
+        <nav data-node-id="n2" class="nav" data-component="wd-nav">
+            <div data-node-id="n3" class="brand">Wish<b data-node-id="n4"></b>Dem</div><a data-node-id="n5"
+                href="#">Home</a><a data-node-id="n6" href="#">Wishes</a><a data-node-id="n7" href="#">Calendar</a><a
+                data-node-id="n8" class="active" aria-current="page" href="#">Circle</a>
+            <div data-node-id="n9" class="sp"></div><button data-node-id="n10" class="add">+ Add people</button>
+        </nav>
+        <header data-node-id="n11" class="head">
+            <div data-node-id="n12"><span data-node-id="n13" class="ey">YOUR PRIVATE CONSTELLATION</span>
+                <h1 data-node-id="n14">Your Circle</h1>
+                <p data-node-id="n15">The people and shared celebrations you’re holding close.</p>
+            </div><button data-node-id="n16" class="outline">Create a group wish</button>
+        </header>
+        <section data-node-id="n17" class="layout">
+            <div data-node-id="n18" class="main">
+                <div data-node-id="n19" class="filters"><button data-node-id="n20" class="chip active">Coming
+                        up</button><button data-node-id="n21" class="chip">Family</button><button data-node-id="n22"
+                        class="chip">Friends</button><button data-node-id="n23" class="chip">Work</button><button
+                        data-node-id="n24" class="chip">Recently added</button></div>
+                <div data-node-id="n25" class="section">
+                    <h2 data-node-id="n26">Coming up</h2>
+                    <article data-node-id="n27" class="person">
+                        <div data-node-id="n28" class="identity">
+                            <div data-node-id="n29" class="av">MC</div>
+                            <div data-node-id="n30"><strong data-node-id="n31">Maya Chen</strong><span
+                                    data-node-id="n32">Best friend</span></div>
+                        </div>
+                        <div data-node-id="n33" class="meta"><b data-node-id="n34">14 June · 42 days</b>Birthday moment
+                        </div>
+                        <div data-node-id="n35"><span data-node-id="n36" class="state wait">8 notes · waiting on
+                                3</span></div><button data-node-id="n37" class="go">View wish →</button>
+                    </article>
+                    <article data-node-id="n38" class="person">
+                        <div data-node-id="n39" class="identity">
+                            <div data-node-id="n40" class="av moss">LH</div>
+                            <div data-node-id="n41"><strong data-node-id="n42">Leo Hart</strong><span
+                                    data-node-id="n43">Friend</span></div>
+                        </div>
+                        <div data-node-id="n44" class="meta"><b data-node-id="n45">2 October · 8 days</b>Birthday moment
+                        </div>
+                        <div data-node-id="n46"><span data-node-id="n47" class="state sealed">Sealed for delivery</span>
+                        </div><button data-node-id="n48" class="go">View wish →</button>
+                    </article>
+                    <article data-node-id="n49" class="person">
+                        <div data-node-id="n50" class="identity">
+                            <div data-node-id="n51" class="av rose">D</div>
+                            <div data-node-id="n52"><strong data-node-id="n53">Dad</strong><span
+                                    data-node-id="n54">Family</span></div>
+                        </div>
+                        <div data-node-id="n55" class="meta"><b data-node-id="n56">28 May · 25 days</b>Birthday moment
+                        </div>
+                        <div data-node-id="n57"><span data-node-id="n58" class="state">No wish started</span></div>
+                        <button data-node-id="n59" class="go">Begin a wish →</button>
+                    </article>
+                    <article data-node-id="n60" class="person">
+                        <div data-node-id="n61" class="identity">
+                            <div data-node-id="n62" class="av mauve">AR</div>
+                            <div data-node-id="n63"><strong data-node-id="n64">Amir Rahman</strong><span
+                                    data-node-id="n65">Colleague</span></div>
+                        </div>
+                        <div data-node-id="n66" class="meta"><b data-node-id="n67">Birthday unknown</b>Add when it feels
+                            right</div>
+                        <div data-node-id="n68"><span data-node-id="n69" class="state">Needs a date</span></div><button
+                            data-node-id="n70" class="go">Add birthday →</button>
+                    </article>
+                </div>
+            </div>
+            <aside data-node-id="n71" class="side">
+                <div data-node-id="n72" class="over">SHARED WITH ME <b data-node-id="n73">1</b></div>
+                <article data-node-id="n74" class="inv">
+                    <div data-node-id="n75" class="faces"><span data-node-id="n76">LP</span><span
+                            data-node-id="n77">NC</span><span data-node-id="n78">TR</span></div>
+                    <h3 data-node-id="n79">Maya’s 30th</h3>
+                    <p data-node-id="n80">Lena invited you to add a note to a group birthday wish.</p>
+                    <div data-node-id="n81" class="deadline">Contributions close in 6 days</div><button
+                        data-node-id="n82">Add your message</button>
+                </article>
+                <div data-node-id="n83" class="soft"><strong data-node-id="n84">Your Circle is growing gently.</strong>8
+                    people remembered · 3 birthday moments held for the months ahead.</div>
+            </aside>
+        </section>
     </main>
 </body>
 

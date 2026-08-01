@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { AppNav } from "@/components/AppNav";
 import { WishCard } from "@/components/WishCard";
 import { EmptyState } from "@/components/EmptyState";
 import { CountdownInline } from "@/components/Countdown";
@@ -21,19 +22,22 @@ export default function DashboardPage() {
 
   if (showEmpty) {
     return (
-      <main className="mx-auto grid min-h-screen max-w-[1260px] place-items-center px-5 py-8">
-        <EmptyState
-          badge={"for\nlater"}
-          eyebrow="NO WISHES ARE WAITING YET"
-          title="Some of the best birthday words arrive before you know you'll need them."
-          description="Start with one person. Write while the feeling is here, and let WishDem hold it for their day."
-          chips={["For a best friend", "For Mum", "For someone far away", "For next year"]}
-          action={
-            <Link to="/create/who">
-              <Button>Create your first wish</Button>
-            </Link>
-          }
-        />
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+        <AppNav active="home" />
+        <div className="grid min-h-[70vh] place-items-center py-8">
+          <EmptyState
+            badge={"for\nlater"}
+            eyebrow="NO WISHES ARE WAITING YET"
+            title="Some of the best birthday words arrive before you know you'll need them."
+            description="Start with one person. Write while the feeling is here, and let WishDem hold it for their day."
+            chips={["For a best friend", "For Mum", "For someone far away", "For next year"]}
+            action={
+              <Link to="/create/who">
+                <Button>Create your first wish</Button>
+              </Link>
+            }
+          />
+        </div>
       </main>
     );
   }
@@ -56,19 +60,7 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
-      <nav className="flex min-h-[48px] items-center justify-between border-b border-porcelain/[0.14] pb-4">
-        <Link to="/" className="text-[21px] font-extrabold tracking-[-1.7px]">
-          Wish<i className="mx-[2px] mb-2 inline-block h-[7px] w-[7px] rounded-full bg-champagne align-middle" />
-          Dem
-        </Link>
-        <div className="flex items-center gap-[18px]">
-          <span className="hidden text-[12px] font-bold opacity-70 sm:inline">Calendar</span>
-          <span className="hidden text-[12px] font-bold opacity-70 sm:inline">People</span>
-          <Link to="/create/who">
-            <Button>Save a future wish</Button>
-          </Link>
-        </div>
-      </nav>
+      <AppNav active="home" />
 
       <section className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
         <div>

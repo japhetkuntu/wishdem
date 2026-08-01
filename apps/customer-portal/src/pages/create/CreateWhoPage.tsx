@@ -45,6 +45,7 @@ export default function CreateWhoPage() {
   const [birthdayISO, setBirthdayISO] = useState(recipient?.birthdayISO ?? "");
   const [deliveryTime, setDeliveryTime] = useState(recipient?.deliveryTime ?? "09:00");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (queryWishId && queryWishId !== wishId) {
@@ -66,6 +67,7 @@ export default function CreateWhoPage() {
     e.preventDefault();
     if (!name.trim() || !birthdayISO) return;
     setSaving(true);
+    setError(null);
     const rec = {
       name: name.trim(),
       relationship,
@@ -73,11 +75,16 @@ export default function CreateWhoPage() {
       deliveryTime,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
-    const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec });
-    setWishId(wish.id);
-    setRecipient(rec);
-    setSaving(false);
-    navigate("/create/message");
+    try {
+      const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec });
+      setWishId(wish.id);
+      setRecipient(rec);
+      navigate("/create/message");
+    } catch {
+      setError("We couldn't save that just now. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -159,6 +166,7 @@ export default function CreateWhoPage() {
                 Nothing is sent yet. Your draft stays in your hands.
               </span>
             </div>
+            {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
           </form>
         </div>
 

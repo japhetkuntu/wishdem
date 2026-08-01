@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { useWizardStore } from "@/store/wizardStore";
 import { daysUntil, formatWeekdayDate } from "@/lib/date";
-import { ASSETS } from "@/lib/assets";
+import { getThemeImage } from "@/lib/themeImages";
 
 export default function CreateScheduledPage() {
   const navigate = useNavigate();
-  const { recipient, channel, reset } = useWizardStore();
+  const { recipient, themeId, channel, reset } = useWizardStore();
+  const vesselImage = getThemeImage(themeId, "scheduled");
 
   useEffect(() => {
     if (!recipient) navigate("/create/who", { replace: true });
@@ -54,8 +55,8 @@ export default function CreateScheduledPage() {
 
       <div className="relative order-first mx-auto w-full max-w-[410px] justify-self-center sm:order-none">
         <img
-          src={ASSETS.scheduledGift.src}
-          alt={ASSETS.scheduledGift.alt}
+          src={vesselImage.src}
+          alt={vesselImage.alt}
           className="aspect-square w-full rounded-full border border-champagne/55 object-cover shadow-deep"
         />
         <div className="absolute bottom-[26px] right-[-10px] rounded-md bg-porcelain px-[17px] py-[14px] text-right font-display text-[25px] text-plum shadow-deep">

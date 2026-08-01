@@ -45,7 +45,9 @@ export function setCurrentUser(user: User | null) {
 /** Emails treated as already having a WishDem account — everyone else is a new customer. */
 export const EXISTING_EMAILS = ["leila@example.com"];
 
-export const wishes: Wish[] = [
+const WISHES_STORAGE_KEY = "wishdem-mock-wishes";
+
+const SEED_WISHES: Wish[] = [
   {
     id: "wish-maya",
     recipient: {
@@ -121,7 +123,54 @@ export const wishes: Wish[] = [
     createdAt: "2026-07-01T08:00:00.000Z",
     sealedAt: "2026-07-01T08:10:00.000Z",
   },
+  {
+    id: "wish-leo",
+    recipient: {
+      name: "Leo Hart",
+      relationship: "Friend",
+      birthdayISO: "2026-10-02",
+      deliveryTime: "08:00",
+      timezone: "Europe/London",
+    },
+    message: "Leo, here's to another year of your terrible jokes and great company.",
+    attachment: null,
+    themeId: "velvet-night",
+    channel: "whatsapp",
+    status: "sealed",
+    fromName: "You",
+    priceLabel: "£1.49",
+    createdAt: "2026-07-10T08:00:00.000Z",
+    sealedAt: "2026-07-10T08:05:00.000Z",
+  },
 ];
+
+/**
+ * The wizard's draft state persists across reloads via sessionStorage
+ * (see store/wizardStore.ts), so the wish records it references need to
+ * survive reloads too — otherwise a stale wishId from before a refresh
+ * points at nothing, and every save silently fails. Mirroring that same
+ * sessionStorage persistence here keeps the two in sync.
+ */
+function loadWishes(): Wish[] {
+  if (typeof sessionStorage === "undefined") return [...SEED_WISHES];
+  try {
+    const raw = sessionStorage.getItem(WISHES_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as Wish[];
+  } catch {
+    // Corrupt or inaccessible storage — fall back to the seed data.
+  }
+  return [...SEED_WISHES];
+}
+
+export const wishes: Wish[] = loadWishes();
+
+export function persistWishes() {
+  try {
+    sessionStorage.setItem(WISHES_STORAGE_KEY, JSON.stringify(wishes));
+  } catch {
+    // Storage unavailable/full — non-fatal for a mock layer.
+  }
+}
 
 export function findWish(id: string) {
   return wishes.find((w) => w.id === id) ?? null;

@@ -1,5 +1,12 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+
+const LINKS = [
+  { to: "/how-it-works", label: "How it works" },
+  { to: "/dashboard", label: "Your portal" },
+  { to: "/how-it-works#faq", label: "Questions" },
+];
 
 /**
  * Shared marketing-facing header (Home, How it works). The signed-in app
@@ -7,6 +14,19 @@ import { Button } from "@wishdem/design-system";
  * concerns, different links.
  */
 export function SiteNav() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <nav className="flex items-center justify-between border-b border-porcelain/[0.14] py-[17px]">
       <Link to="/" className="text-[20px] font-extrabold tracking-[-1.5px]">
@@ -15,23 +35,55 @@ export function SiteNav() {
         Dem
       </Link>
       <div className="flex items-center gap-[18px] text-[11px] font-bold text-porcelain/75">
-        <Link to="/how-it-works" className="hidden sm:inline">
-          How it works
-        </Link>
-        <Link to="/dashboard" className="hidden sm:inline">
-          Your portal
-        </Link>
-        <Link to="/how-it-works#faq" className="hidden sm:inline">
-          Questions
-        </Link>
+        {LINKS.map((link) => (
+          <Link key={link.label} to={link.to} className="hidden sm:inline">
+            {link.label}
+          </Link>
+        ))}
         <Link to="/login">
           <Button variant="outline" size="sm">
             Sign in
           </Button>
         </Link>
-        <Link to="/create/who">
+        <Link to="/create/who" className="hidden sm:inline-block">
           <Button size="sm">Create a wish</Button>
         </Link>
+
+        <div ref={menuRef} className="relative sm:hidden">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Open menu"
+            className="grid h-9 w-9 place-items-center rounded-full border border-porcelain/25"
+          >
+            <div className="flex flex-col gap-[3px]">
+              <span className="block h-[2px] w-[15px] bg-porcelain" />
+              <span className="block h-[2px] w-[15px] bg-porcelain" />
+              <span className="block h-[2px] w-[15px] bg-porcelain" />
+            </div>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-md border border-porcelain/15 bg-plum p-2 shadow-deep">
+              {LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-sm px-3 py-2 text-[13px] font-bold text-porcelain hover:bg-porcelain/10"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                to="/create/who"
+                onClick={() => setMenuOpen(false)}
+                className="mt-1 block rounded-sm border-t border-porcelain/10 px-3 pb-1 pt-2 text-[13px] font-bold text-champagne hover:bg-porcelain/10"
+              >
+                Create a wish
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -14,6 +14,7 @@ export default function CreateThemePage() {
   const { wishId, recipient, themeId, setTheme, markSaved } = useWizardStore();
   const [selected, setSelected] = useState<ThemeId | null>(themeId);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!wishId) navigate("/create/who", { replace: true });
@@ -24,11 +25,17 @@ export default function CreateThemePage() {
   async function handleContinue() {
     if (!wishId || !selected) return;
     setSaving(true);
-    await saveThemeStep(wishId, selected);
-    setTheme(selected);
-    markSaved();
-    setSaving(false);
-    navigate("/create/deliver");
+    setError(null);
+    try {
+      await saveThemeStep(wishId, selected, recipient ?? undefined);
+      setTheme(selected);
+      markSaved();
+      navigate("/create/deliver");
+    } catch {
+      setError("We couldn't save that just now. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -57,14 +64,17 @@ export default function CreateThemePage() {
         <ThemePreviewPanel
           theme={selectedTheme}
           footer={
-            <Button
-              type="button"
-              onClick={handleContinue}
-              disabled={!selected || saving}
-              className="mt-5 w-full"
-            >
-              {saving ? "Saving…" : "Continue to seal & schedule →"}
-            </Button>
+            <>
+              <Button
+                type="button"
+                onClick={handleContinue}
+                disabled={!selected || saving}
+                className="mt-5 w-full"
+              >
+                {saving ? "Saving…" : "Continue to seal & schedule →"}
+              </Button>
+              {error && <p className="mt-3 text-[12px] text-mulberry">{error}</p>}
+            </>
           }
         />
       </section>
