@@ -1,0 +1,13 @@
+[build]
+  command = "pnpm --filter @wishdem/customer-portal build"
+  publish = "apps/customer-portal/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Single-page app: let React Router handle every path client-side instead
+# of Netlify returning a 404 for anything but "/".
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
