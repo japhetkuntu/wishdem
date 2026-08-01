@@ -5,7 +5,7 @@
  */
 export const ASSETS = {
   homeHeroGift: {
-    src: "https://skyagent-artifacts.skywork.ai/router/agent/2026-07-31/prod_agent_019fb49f-bdb6-7761-829d-d7971888d766/asset_44045a101d8e3a8d_8bb8bb7710ca48469128b665448cbf11.png",
+    src: "/themes/home-hero.webp",
     alt: "A sealed plum envelope prepared as a future gift",
   },
   createThemeVelvet: {
