@@ -1,0 +1,9 @@
+@import "@wishdem/design-system/styles.css";
+
+/* The operations workspace is a light-surface tool, unlike the customer
+   portal's dark shell — override the shared dark body default here rather
+   than fight it with a wrapper class on every page. */
+body {
+  background-color: #f9f9fb;
+  color: #241d24;
+}
