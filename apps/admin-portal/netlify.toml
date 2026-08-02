@@ -1,6 +1,6 @@
 [build]
   command = "pnpm --filter @wishdem/admin-portal build"
-  publish = "dist"
+  publish = "apps/admin-portal/dist"
 
 [build.environment]
   NODE_VERSION = "20"
