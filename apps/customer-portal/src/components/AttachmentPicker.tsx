@@ -13,7 +13,7 @@ const TABS: { kind: AttachmentKind; label: string }[] = [
   { kind: "voice", label: "Voice note" },
 ];
 
-interface PanelProps {
+export interface PanelProps {
   value: Attachment | null;
   onChange: (attachment: Attachment | null) => void;
 }
@@ -107,7 +107,7 @@ function GifPanel({ value, onChange }: PanelProps) {
   );
 }
 
-function ImagePanel({ value, onChange }: PanelProps) {
+export function ImagePanel({ value, onChange }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasImage = value?.kind === "image" && value.url;
 
@@ -153,7 +153,7 @@ function ImagePanel({ value, onChange }: PanelProps) {
   );
 }
 
-function VideoPanel({ value, onChange }: PanelProps) {
+export function VideoPanel({ value, onChange }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -245,7 +245,7 @@ function VideoPanel({ value, onChange }: PanelProps) {
   );
 }
 
-function VoicePanel({ value, onChange }: PanelProps) {
+export function VoicePanel({ value, onChange }: PanelProps) {
   const recorder = useMediaRecorder({ video: false, maxSeconds: 30 });
 
   useEffect(() => {

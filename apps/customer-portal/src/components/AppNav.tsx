@@ -4,14 +4,14 @@ import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
 import { useAuth } from "@/hooks/useAuth";
 
-export type AppNavKey = "home" | "wishes" | "calendar" | "people" | "circle";
+export type AppNavKey = "home" | "wishes" | "calendar" | "people" | "circle" | "groupWishes";
 
+// People, Circle, and Group Wishes are built but hidden from MVP nav —
+// keep their keys/routes intact, just not linked here for now.
 const NAV_LINKS: { key: AppNavKey; label: string; to: string }[] = [
   { key: "home", label: "Home", to: "/dashboard" },
   { key: "wishes", label: "Wishes", to: "/dashboard" },
   { key: "calendar", label: "Calendar", to: "/calendar" },
-  { key: "people", label: "People", to: "/people" },
-  { key: "circle", label: "Circle", to: "/circle" },
 ];
 
 function gmtLabel() {

@@ -16,15 +16,37 @@ import {
   persistCirclePeople,
   SHARED_INVITATIONS,
 } from "@/mocks/circleData";
+import {
+  findGroupWish,
+  findGroupWishInvitation,
+  GROUP_WISH_INVITATIONS,
+  GROUP_WISHES,
+  persistGroupWishes,
+  persistGroupWishInvitations,
+} from "@/mocks/groupWishData";
+import {
+  findMemoryForContribution,
+  GROUP_WISH_MEMORIES,
+  persistGroupWishMemories,
+} from "@/mocks/groupWishMemories";
+import { findBloom, persistBirthdayBloom } from "@/mocks/birthdayBloomData";
 import type {
   Attachment,
+  BirthdayBloom,
+  BloomWish,
   CalendarDay,
   CalendarEvent,
   CircleGroup,
   CirclePerson,
   CircleStats,
+  ContributionContext,
   DeliveryChannel,
   GroupInvitation,
+  GroupWish,
+  GroupWishFormat,
+  GroupWishInvitation,
+  GroupWishMemory,
+  MemoryFormat,
   Person,
   PaymentResult,
   Recipient,
@@ -335,4 +357,176 @@ export async function addCirclePerson(input: AddCirclePersonInput): Promise<Circ
   CIRCLE_PEOPLE.unshift(person);
   persistCirclePeople();
   return delay(person);
+}
+
+export async function listGroupWishes(): Promise<GroupWish[]> {
+  return delay([...GROUP_WISHES]);
+}
+
+export async function getGroupWish(id: string): Promise<GroupWish | null> {
+  return delay(findGroupWish(id) ?? null);
+}
+
+export async function listGroupWishInvitations(): Promise<GroupWishInvitation[]> {
+  return delay([...GROUP_WISH_INVITATIONS]);
+}
+
+export async function getGroupWishInvitation(id: string): Promise<GroupWishInvitation | null> {
+  return delay(findGroupWishInvitation(id) ?? null);
+}
+
+export interface CreateGroupWishInput {
+  title: string;
+  recipientName: string;
+  occasion: string;
+  deliveryDateLabel: string;
+  collectByLabel: string;
+  context?: string;
+  formats: GroupWishFormat[];
+  namesVisible: boolean;
+}
+
+export async function createGroupWish(input: CreateGroupWishInput): Promise<GroupWish> {
+  const wish: GroupWish = {
+    id: `gw-${Math.random().toString(36).slice(2, 10)}`,
+    title: input.title,
+    recipientName: input.recipientName,
+    occasion: input.occasion,
+    deliveryDateLabel: input.deliveryDateLabel,
+    collectByLabel: input.collectByLabel,
+    context: input.context,
+    formats: input.formats,
+    namesVisible: input.namesVisible,
+    joinedCount: 0,
+    invitedCount: 0,
+    viewedCount: 0,
+    declinedCount: 0,
+    memoriesCount: 0,
+    activity: [{ id: `act-${Math.random().toString(36).slice(2, 8)}`, message: `You created ${input.title}.` }],
+    createdAt: new Date().toISOString(),
+  };
+  GROUP_WISHES.unshift(wish);
+  persistGroupWishes();
+  return delay(wish);
+}
+
+export async function respondToGroupWishInvitation(
+  id: string,
+  status: "joined" | "declined" | "not-now",
+): Promise<GroupWishInvitation> {
+  const invitation = findGroupWishInvitation(id);
+  if (!invitation) throw new Error(`Invitation ${id} not found`);
+  invitation.status = status;
+  if (status === "joined") {
+    invitation.needNote = "Joined just now · add a note, photo, voice note, or short video whenever you are ready.";
+  }
+  persistGroupWishInvitations();
+  return delay(invitation);
+}
+
+/**
+ * Resolves the public, no-account-needed guest contribution view — the
+ * link a contributor clicks doesn't care whether it points at an invitation
+ * the current account received, or a group wish the current account
+ * organizes, so this checks both id spaces.
+ */
+export async function getContributionContext(id: string): Promise<ContributionContext | null> {
+  const invitation = findGroupWishInvitation(id);
+  if (invitation) {
+    return delay({
+      id: invitation.id,
+      title: invitation.title,
+      inviterName: invitation.inviterName,
+      recipientName: invitation.title.split("'s")[0] || invitation.title,
+      deliveredLabel: invitation.deliveredLabel,
+      collectionClosesLabel: invitation.collectionClosesLabel,
+      memoriesWaitingLabel: invitation.alreadyJoinedLabel,
+      memoriesProgress: 67,
+      daysLeftLabel: invitation.daysLeftLabel,
+      formats: invitation.formats,
+    });
+  }
+  const wish = findGroupWish(id);
+  if (wish) {
+    return delay({
+      id: wish.id,
+      title: wish.title,
+      inviterName: currentUser?.name ?? "The organizer",
+      recipientName: wish.recipientName,
+      deliveredLabel: `Delivers ${wish.deliveryDateLabel}`,
+      collectionClosesLabel: `Collect by ${wish.collectByLabel}`,
+      memoriesWaitingLabel: `${wish.memoriesCount} memories added so far`,
+      memoriesProgress: Math.min(100, wish.memoriesCount * 10),
+      daysLeftLabel: "a few days left",
+      formats: wish.formats,
+    });
+  }
+  return delay(null);
+}
+
+export async function getMemoryDraft(contributionId: string): Promise<GroupWishMemory | null> {
+  return delay(findMemoryForContribution(contributionId) ?? null);
+}
+
+export interface SaveMemoryDraftInput {
+  format: MemoryFormat;
+  title?: string;
+  body: string;
+  whenWhere?: string;
+  contributorLabel: string;
+  attachment?: Attachment | null;
+}
+
+export async function saveMemoryDraft(
+  contributionId: string,
+  input: SaveMemoryDraftInput,
+): Promise<GroupWishMemory> {
+  const existing = findMemoryForContribution(contributionId);
+  if (existing) {
+    Object.assign(existing, input, { updatedAt: new Date().toISOString() });
+    persistGroupWishMemories();
+    return delay(existing);
+  }
+  const memory: GroupWishMemory = {
+    id: `mem-${Math.random().toString(36).slice(2, 10)}`,
+    contributionId,
+    sealed: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...input,
+  };
+  GROUP_WISH_MEMORIES.unshift(memory);
+  persistGroupWishMemories();
+  return delay(memory);
+}
+
+export async function sealMemoryDraft(contributionId: string): Promise<GroupWishMemory> {
+  const memory = findMemoryForContribution(contributionId);
+  if (!memory) throw new Error(`No memory draft for ${contributionId}`);
+  memory.sealed = true;
+  memory.updatedAt = new Date().toISOString();
+  persistGroupWishMemories();
+  return delay(memory);
+}
+
+export async function getBirthdayBloom(id: string): Promise<BirthdayBloom | null> {
+  return delay(findBloom(id) ?? null);
+}
+
+export async function markBloomWishOpened(bloomId: string, wishId: string): Promise<BloomWish> {
+  const bloom = findBloom(bloomId);
+  const wish = bloom?.wishes.find((w) => w.id === wishId);
+  if (!bloom || !wish) throw new Error(`Bloom wish ${wishId} not found`);
+  wish.opened = true;
+  persistBirthdayBloom();
+  return delay(wish);
+}
+
+export async function toggleBloomWishFavorite(bloomId: string, wishId: string): Promise<BloomWish> {
+  const bloom = findBloom(bloomId);
+  const wish = bloom?.wishes.find((w) => w.id === wishId);
+  if (!bloom || !wish) throw new Error(`Bloom wish ${wishId} not found`);
+  wish.favorited = !wish.favorited;
+  persistBirthdayBloom();
+  return delay(wish);
 }

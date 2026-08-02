@@ -171,3 +171,114 @@ export interface CircleStats {
   peopleCount: number;
   momentsCount: number;
 }
+
+export type GroupWishFormat = "notes" | "photos" | "voice" | "video";
+
+export interface GroupWishActivityEvent {
+  id: string;
+  message: string;
+}
+
+/** A group wish the current user organizes. */
+export interface GroupWish {
+  id: string;
+  title: string;
+  recipientName: string;
+  occasion: string;
+  deliveryDateLabel: string;
+  collectByLabel: string;
+  context?: string;
+  formats: GroupWishFormat[];
+  namesVisible: boolean;
+  joinedCount: number;
+  invitedCount: number;
+  viewedCount: number;
+  declinedCount: number;
+  memoriesCount: number;
+  activity: GroupWishActivityEvent[];
+  createdAt: string;
+}
+
+export type GroupWishInvitationStatus = "invited" | "joined" | "declined" | "not-now";
+export type GroupWishUrgencyTone = "urgent" | "new" | null;
+export type GroupWishAvatarTone = "mulberry" | "moss" | "rose";
+
+/** An invitation the current user received to join someone else's group wish. */
+export interface GroupWishInvitation {
+  id: string;
+  title: string;
+  inviterName: string;
+  avatarInitial: string;
+  avatarTone: GroupWishAvatarTone;
+  rowSummaryLabel: string;
+  urgencyLabel: string | null;
+  urgencyTone: GroupWishUrgencyTone;
+  daysLeftLabel: string;
+  collectionClosesLabel: string;
+  deliveredLabel: string;
+  alreadyJoinedLabel: string;
+  participationLabel: string;
+  organizerNote?: string;
+  formats: GroupWishFormat[];
+  status: GroupWishInvitationStatus;
+  needNote?: string;
+}
+
+export type MemoryFormat = "notes" | "photo" | "voice" | "video";
+
+/**
+ * The public-facing shape a guest contributor sees, resolved from either a
+ * GroupWish (its organizer's own record) or a GroupWishInvitation (another
+ * account's received invite) — the guest link doesn't care which.
+ */
+export interface ContributionContext {
+  id: string;
+  title: string;
+  inviterName: string;
+  recipientName: string;
+  deliveredLabel: string;
+  collectionClosesLabel: string;
+  memoriesWaitingLabel: string;
+  memoriesProgress: number;
+  daysLeftLabel: string;
+  formats: GroupWishFormat[];
+}
+
+/** A guest's in-progress or sealed contribution to a group wish. */
+export interface GroupWishMemory {
+  id: string;
+  contributionId: string;
+  format: MemoryFormat;
+  title?: string;
+  body: string;
+  whenWhere?: string;
+  contributorLabel: string;
+  attachment?: Attachment | null;
+  sealed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A single contribution inside a delivered recipient's Birthday Bloom. */
+export type BloomCardType = "note" | "photo-note" | "voice" | "video" | "photo-memory";
+
+export interface BloomWish {
+  id: string;
+  contributorName: string;
+  relationshipLabel: string;
+  group: "family" | "friends";
+  type: BloomCardType;
+  quote?: string;
+  mediaDurationSeconds?: number;
+  opened: boolean;
+  favorited: boolean;
+}
+
+export interface BirthdayBloom {
+  id: string;
+  recipientName: string;
+  deliveryDateLabel: string;
+  organizerName: string;
+  organizerNote: string;
+  wishes: BloomWish[];
+}

@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600&display=swap"
         rel="stylesheet">
     <style>
         :root {
@@ -36,458 +36,376 @@
             width: 100%;
             max-width: 1280px;
             margin: auto;
-            padding: 0 30px 32px
+            padding: 0 30px 38px
         }
 
         .nav {
             height: 68px;
             display: flex;
             align-items: center;
-            gap: 18px;
             border-bottom: 1px solid #F6F0E826
         }
 
         .brand {
             font-size: 21px;
             font-weight: 800;
-            letter-spacing: -1.4px;
-            margin-right: 13px
+            letter-spacing: -1.3px
         }
 
-        .brand b {
+        .brand i {
             display: inline-block;
             width: 6px;
             height: 6px;
-            background: var(--a);
             border-radius: 50%;
+            background: var(--a);
             margin: 0 2px 7px
         }
 
-        .nav a {
-            color: #F6F0E8a7;
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 700
-        }
-
-        .nav a.active {
-            height: 68px;
-            display: flex;
-            align-items: center;
-            color: var(--s);
-            border-bottom: 2px solid var(--a)
+        .crumb {
+            margin-left: 25px;
+            font-size: 10px;
+            color: #F6F0E8b3
         }
 
         .sp {
             flex: 1
         }
 
-        .add {
+        .thanks {
             border: 0;
-            border-radius: 999px;
+            border-radius: 99px;
+            padding: 10px 12px;
             background: var(--a);
             color: var(--p);
-            font: 800 10px Manrope;
-            padding: 10px 14px
+            font: 800 9px Manrope
         }
 
-        .head {
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
-            padding: 28px 0 17px
+        .intro {
+            padding: 24px 0 16px
         }
 
-        .ey {
+        .cap {
             font-size: 9px;
             color: var(--a);
-            letter-spacing: .14em;
-            font-weight: 800
+            font-weight: 800;
+            letter-spacing: .13em
         }
 
-        .head h1 {
-            font: 500 39px 'Playfair Display';
-            margin: 4px 0
+        .intro h1 {
+            font: 500 36px 'Playfair Display';
+            margin: 7px 0
         }
 
-        .head p {
-            font-size: 11px;
-            color: #F6F0E8a7;
-            margin: 0
-        }
-
-        .outline {
-            border: 1px solid #E6C87A62;
-            background: #E6C87A10;
-            color: var(--a);
-            padding: 9px 12px;
-            border-radius: 999px;
-            font: 800 10px Manrope
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 295px;
-            gap: 14px
-        }
-
-        .main {
-            min-width: 0
+        .intro p {
+            margin: 0;
+            font-size: 10px;
+            color: #F6F0E8a8
         }
 
         .filters {
             display: flex;
             gap: 7px;
             flex-wrap: wrap;
-            margin-bottom: 12px
-        }
-
-        .chip {
-            border: 1px solid #F6F0E82b;
-            border-radius: 999px;
-            padding: 7px 10px;
-            color: #F6F0E8ad;
-            background: transparent;
-            font: 800 9px Manrope
-        }
-
-        .chip.active {
+            padding: 12px;
             background: var(--s);
-            color: var(--p)
-        }
-
-        .section {
-            border: 1px solid #F6F0E81d;
             border-radius: 14px;
-            overflow: hidden
+            color: var(--i)
         }
 
-        .section h2 {
-            font: 500 22px 'Playfair Display';
-            margin: 0;
-            padding: 15px 16px 11px;
-            background: #F6F0E809
-        }
-
-        .person {
-            display: grid;
-            grid-template-columns: 1.25fr .8fr .9fr auto;
-            gap: 10px;
-            align-items: center;
-            padding: 13px 16px;
-            border-top: 1px solid #F6F0E817
-        }
-
-        .identity {
-            display: flex;
-            align-items: center;
-            gap: 9px
-        }
-
-        .av {
-            width: 33px;
-            height: 33px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            background: var(--a);
-            color: var(--p);
-            font-size: 10px;
+        .filter {
+            border: 1px solid #2A162921;
+            border-radius: 99px;
+            padding: 7px 9px;
+            font-size: 9px;
             font-weight: 800
         }
 
-        .av.rose {
-            background: var(--r)
-        }
-
-        .av.moss {
-            background: var(--g);
-            color: var(--s)
-        }
-
-        .av.mauve {
+        .active {
             background: var(--m);
+            border-color: var(--m);
             color: var(--s)
         }
 
-        .identity strong {
-            font-size: 11px;
-            display: block
-        }
-
-        .identity span,
-        .meta {
+        .search {
+            margin-left: auto;
+            min-width: 180px;
+            border: 1px solid #2A16291d;
+            border-radius: 99px;
+            padding: 7px 11px;
             font-size: 9px;
-            color: #F6F0E8a4
+            color: #241D2485
         }
 
-        .meta b {
-            display: block;
-            color: var(--s);
-            font-size: 10px
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 210px;
+            gap: 17px;
+            margin-top: 17px
         }
 
-        .state {
-            font: 800 8px Manrope;
-            padding: 5px 7px;
-            border-radius: 999px;
-            background: var(--a);
-            color: var(--p);
-            display: inline-block
+        .group {
+            margin-bottom: 22px
         }
 
-        .state.wait {
-            background: var(--r)
+        .group h2 {
+            font: 500 25px 'Playfair Display';
+            margin: 0 0 9px
         }
 
-        .state.sealed {
-            background: var(--g);
-            color: var(--s)
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px
         }
 
-        .go {
-            background: transparent;
-            border: 0;
-            color: var(--a);
-            font: 800 9px Manrope;
-            white-space: nowrap
-        }
-
-        .side {
+        .card {
+            min-height: 176px;
             border-radius: 14px;
+            padding: 14px;
             background: var(--s);
             color: var(--i);
-            box-shadow: var(--sh);
-            padding: 17px;
-            align-self: start
+            position: relative;
+            box-shadow: 0 8px 20px rgba(13, 6, 14, .14)
         }
 
-        .over {
-            font-size: 9px;
-            font-weight: 800;
-            color: var(--m);
-            letter-spacing: .12em
-        }
-
-        .over b {
-            background: var(--r);
-            padding: 3px 6px;
-            border-radius: 99px;
-            color: var(--p)
-        }
-
-        .inv {
-            padding: 14px 0;
-            border-bottom: 1px solid #2A162918
-        }
-
-        .faces {
-            display: flex;
-            margin-bottom: 10px
-        }
-
-        .faces span {
-            width: 27px;
-            height: 27px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
+        .card.media {
             background: var(--m);
-            color: var(--s);
-            font-size: 7px;
+            color: var(--s)
+        }
+
+        .type {
+            font-size: 8px;
             font-weight: 800;
-            border: 2px solid var(--s);
-            margin-right: -5px
+            letter-spacing: .1em;
+            color: var(--m)
         }
 
-        .faces span:nth-child(2) {
-            background: var(--a);
-            color: var(--p)
+        .media .type {
+            color: var(--a)
         }
 
-        .faces span:nth-child(3) {
-            background: var(--r);
-            color: var(--p)
+        .card h3 {
+            font: 500 21px 'Playfair Display';
+            margin: 24px 0 6px
         }
 
-        .inv h3 {
-            font: 500 23px 'Playfair Display';
-            margin: 5px 0
-        }
-
-        .inv p,
-        .soft {
+        .card p {
             font-size: 10px;
-            line-height: 1.45;
+            line-height: 1.5;
+            margin: 0;
             color: #241D24a8
         }
 
-        .deadline {
+        .media p {
+            color: #F6F0E8b9
+        }
+
+        .meta {
+            position: absolute;
+            bottom: 12px;
+            left: 14px;
             font-size: 9px;
-            font-weight: 800;
-            color: var(--m);
-            margin: 10px 0
+            font-weight: 800
         }
 
-        .inv button {
-            border: 0;
-            border-radius: 999px;
-            background: var(--p);
-            color: var(--s);
-            font: 800 9px Manrope;
-            padding: 9px 11px
+        .heart {
+            position: absolute;
+            right: 12px;
+            top: 11px;
+            color: var(--r);
+            font-size: 16px
         }
 
-        .soft {
-            padding-top: 14px
+        .unopened {
+            border: 1px dashed #E6C87A83;
+            background: transparent;
+            color: var(--s)
         }
 
-        .soft strong {
+        .unopened .type,
+        .unopened p {
+            color: #F6F0E8a5
+        }
+
+        .unopened h3 {
+            font-size: 17px
+        }
+
+        .rail {
+            border: 1px solid #F6F0E825;
+            border-radius: 14px;
+            padding: 15px;
+            height: max-content
+        }
+
+        .rail h2 {
+            font: 500 23px 'Playfair Display';
+            margin: 6px 0
+        }
+
+        .rail p {
+            font-size: 9px;
+            line-height: 1.5;
+            color: #F6F0E8a8
+        }
+
+        .stat {
+            border-top: 1px solid #F6F0E820;
+            padding: 12px 0
+        }
+
+        .stat b {
+            font-size: 18px;
+            color: var(--a)
+        }
+
+        .stat span {
             display: block;
-            color: var(--i);
-            font-size: 11px;
-            margin-bottom: 4px
+            font-size: 9px;
+            color: #F6F0E8a9
         }
 
-        @media(max-width:800px) {
+        .archive {
+            width: 100%;
+            border: 0;
+            border-radius: 99px;
+            padding: 10px;
+            background: #F6F0E814;
+            color: var(--s);
+            font: 800 9px Manrope
+        }
+
+        @media(max-width:820px) {
             .shell {
                 padding: 0 16px 24px
             }
 
-            .layout {
+            .grid {
                 grid-template-columns: 1fr
             }
 
-            .side {
-                order: -1
-            }
-
-            .nav a {
+            .rail {
                 display: none
             }
 
-            .nav a.active {
-                display: flex
-            }
-
-            .head {
-                display: block
-            }
-
-            .outline {
-                margin-top: 12px
-            }
-
-            .person {
-                grid-template-columns: 1fr auto
-            }
-
-            .person .meta,
-            .person .state {
-                display: none
+            .cards {
+                grid-template-columns: repeat(2, 1fr)
             }
         }
 
         @media(max-width:480px) {
             .shell {
-                padding: 0 12px 18px
-            }
-
-            .head h1 {
-                font-size: 33px
+                padding: 0 12px 20px
             }
 
             .nav {
-                height: 58px
+                height: 59px
             }
 
-            .nav a.active {
-                height: 58px
+            .crumb {
+                margin-left: 13px
+            }
+
+            .thanks {
+                font-size: 8px
+            }
+
+            .intro h1 {
+                font-size: 30px
+            }
+
+            .search {
+                margin-left: 0;
+                min-width: 100%
+            }
+
+            .cards {
+                grid-template-columns: 1fr
             }
         }
     </style>
 </head>
 
 <body data-artboard-width="1440" data-device-type="web">
-    <main data-node-id="n1" class="shell" data-page-id="circle-02-overview" data-role="relationship-hub">
-        <nav data-node-id="n2" class="nav" data-component="wd-nav">
-            <div data-node-id="n3" class="brand">Wish<b data-node-id="n4"></b>Dem</div><a data-node-id="n5"
-                href="#">Home</a><a data-node-id="n6" href="#">Wishes</a><a data-node-id="n7" href="#">Calendar</a><a
-                data-node-id="n8" class="active" aria-current="page" href="#">Circle</a>
-            <div data-node-id="n9" class="sp"></div><button data-node-id="n10" class="add">+ Add people</button>
+    <main data-node-id="n1" class="shell" data-page-id="birthday-bloom-02-gallery"
+        data-role="recipient-collection-gallery">
+        <nav data-node-id="n2" class="nav" data-component="wd-bloom-nav">
+            <div data-node-id="n3" class="brand">Wish<i data-node-id="n4"></i>Dem</div><span data-node-id="n5"
+                class="crumb">Maya’s Birthday Bloom</span>
+            <div data-node-id="n6" class="sp"></div><button data-node-id="n7" class="thanks">Thank Maya’s
+                people</button>
         </nav>
-        <header data-node-id="n11" class="head">
-            <div data-node-id="n12"><span data-node-id="n13" class="ey">YOUR PRIVATE CONSTELLATION</span>
-                <h1 data-node-id="n14">Your Circle</h1>
-                <p data-node-id="n15">The people and shared celebrations you’re holding close.</p>
-            </div><button data-node-id="n16" class="outline">Create a group wish</button>
+        <header data-node-id="n8" class="intro"><span data-node-id="n9" class="cap">ALL WISHES · 18 CONTRIBUTIONS</span>
+            <h1 data-node-id="n10">Eighteen pieces of your story, kept for today.</h1>
+            <p data-node-id="n11">11 notes · 4 photos · 2 voice messages · 1 video · Open at your own pace, return
+                whenever you wish.</p>
         </header>
-        <section data-node-id="n17" class="layout">
-            <div data-node-id="n18" class="main">
-                <div data-node-id="n19" class="filters"><button data-node-id="n20" class="chip active">Coming
-                        up</button><button data-node-id="n21" class="chip">Family</button><button data-node-id="n22"
-                        class="chip">Friends</button><button data-node-id="n23" class="chip">Work</button><button
-                        data-node-id="n24" class="chip">Recently added</button></div>
-                <div data-node-id="n25" class="section">
-                    <h2 data-node-id="n26">Coming up</h2>
-                    <article data-node-id="n27" class="person">
-                        <div data-node-id="n28" class="identity">
-                            <div data-node-id="n29" class="av">MC</div>
-                            <div data-node-id="n30"><strong data-node-id="n31">Maya Chen</strong><span
-                                    data-node-id="n32">Best friend</span></div>
-                        </div>
-                        <div data-node-id="n33" class="meta"><b data-node-id="n34">14 June · 42 days</b>Birthday moment
-                        </div>
-                        <div data-node-id="n35"><span data-node-id="n36" class="state wait">8 notes · waiting on
-                                3</span></div><button data-node-id="n37" class="go">View wish →</button>
-                    </article>
-                    <article data-node-id="n38" class="person">
-                        <div data-node-id="n39" class="identity">
-                            <div data-node-id="n40" class="av moss">LH</div>
-                            <div data-node-id="n41"><strong data-node-id="n42">Leo Hart</strong><span
-                                    data-node-id="n43">Friend</span></div>
-                        </div>
-                        <div data-node-id="n44" class="meta"><b data-node-id="n45">2 October · 8 days</b>Birthday moment
-                        </div>
-                        <div data-node-id="n46"><span data-node-id="n47" class="state sealed">Sealed for delivery</span>
-                        </div><button data-node-id="n48" class="go">View wish →</button>
-                    </article>
-                    <article data-node-id="n49" class="person">
-                        <div data-node-id="n50" class="identity">
-                            <div data-node-id="n51" class="av rose">D</div>
-                            <div data-node-id="n52"><strong data-node-id="n53">Dad</strong><span
-                                    data-node-id="n54">Family</span></div>
-                        </div>
-                        <div data-node-id="n55" class="meta"><b data-node-id="n56">28 May · 25 days</b>Birthday moment
-                        </div>
-                        <div data-node-id="n57"><span data-node-id="n58" class="state">No wish started</span></div>
-                        <button data-node-id="n59" class="go">Begin a wish →</button>
-                    </article>
-                    <article data-node-id="n60" class="person">
-                        <div data-node-id="n61" class="identity">
-                            <div data-node-id="n62" class="av mauve">AR</div>
-                            <div data-node-id="n63"><strong data-node-id="n64">Amir Rahman</strong><span
-                                    data-node-id="n65">Colleague</span></div>
-                        </div>
-                        <div data-node-id="n66" class="meta"><b data-node-id="n67">Birthday unknown</b>Add when it feels
-                            right</div>
-                        <div data-node-id="n68"><span data-node-id="n69" class="state">Needs a date</span></div><button
-                            data-node-id="n70" class="go">Add birthday →</button>
-                    </article>
-                </div>
+        <section data-node-id="n12" class="filters" data-role="primary"><span data-node-id="n13"
+                class="filter active">All wishes</span><span data-node-id="n14" class="filter">Unread · 11</span><span
+                data-node-id="n15" class="filter">Favorites · 3</span><span data-node-id="n16"
+                class="filter">Notes</span><span data-node-id="n17" class="filter">Photos</span><span data-node-id="n18"
+                class="filter">Voice</span><span data-node-id="n19" class="filter">Video</span><span data-node-id="n20"
+                class="search">Search a person or memory</span></section>
+        <section data-node-id="n21" class="grid">
+            <div data-node-id="n22" data-role="content">
+                <section data-node-id="n23" class="group">
+                    <h2 data-node-id="n24">From your family</h2>
+                    <div data-node-id="n25" class="cards">
+                        <article data-node-id="n26" class="card"><span data-node-id="n27" class="type">PHOTO +
+                                NOTE</span><span data-node-id="n28" class="heart">♥</span>
+                            <h3 data-node-id="n29">Elena</h3>
+                            <p data-node-id="n30">“You have always made room for everyone, even when the house was
+                                loud.”</p><span data-node-id="n31" class="meta">Your sister · opened</span>
+                        </article>
+                        <article data-node-id="n32" class="card media"><span data-node-id="n33" class="type">VOICE ·
+                                1:12</span>
+                            <h3 data-node-id="n34">David</h3>
+                            <p data-node-id="n35">A warm spoken note from the garden, saved for a quiet moment.</p><span
+                                data-node-id="n36" class="meta">Dad · listen again</span>
+                        </article>
+                        <article data-node-id="n37" class="card unopened"><span data-node-id="n38" class="type">SEALED
+                                NOTE</span>
+                            <h3 data-node-id="n39">Grandma Ruth</h3>
+                            <p data-node-id="n40">A letter is waiting for you.</p><span data-node-id="n41"
+                                class="meta">Family · unopened</span>
+                        </article>
+                    </div>
+                </section>
+                <section data-node-id="n42" class="group">
+                    <h2 data-node-id="n43">From your friends</h2>
+                    <div data-node-id="n44" class="cards">
+                        <article data-node-id="n45" class="card"><span data-node-id="n46" class="type">WRITTEN
+                                MEMORY</span><span data-node-id="n47" class="heart">♥</span>
+                            <h3 data-node-id="n48">Priya</h3>
+                            <p data-node-id="n49">“Thirty looks very good on you already. I still laugh about the yellow
+                                umbrella.”</p><span data-node-id="n50" class="meta">Friend since 2011 · opened</span>
+                        </article>
+                        <article data-node-id="n51" class="card media"><span data-node-id="n52" class="type">VIDEO ·
+                                0:36</span>
+                            <h3 data-node-id="n53">Sam</h3>
+                            <p data-node-id="n54">A little birthday toast from across the city.</p><span
+                                data-node-id="n55" class="meta">College friend · play</span>
+                        </article>
+                        <article data-node-id="n56" class="card unopened"><span data-node-id="n57" class="type">PHOTO
+                                MEMORY</span>
+                            <h3 data-node-id="n58">Aisha</h3>
+                            <p data-node-id="n59">One image and a story are waiting.</p><span data-node-id="n60"
+                                class="meta">Friend · unopened</span>
+                        </article>
+                    </div>
+                </section>
             </div>
-            <aside data-node-id="n71" class="side">
-                <div data-node-id="n72" class="over">SHARED WITH ME <b data-node-id="n73">1</b></div>
-                <article data-node-id="n74" class="inv">
-                    <div data-node-id="n75" class="faces"><span data-node-id="n76">LP</span><span
-                            data-node-id="n77">NC</span><span data-node-id="n78">TR</span></div>
-                    <h3 data-node-id="n79">Maya’s 30th</h3>
-                    <p data-node-id="n80">Lena invited you to add a note to a group birthday wish.</p>
-                    <div data-node-id="n81" class="deadline">Contributions close in 6 days</div><button
-                        data-node-id="n82">Add your message</button>
-                </article>
-                <div data-node-id="n83" class="soft"><strong data-node-id="n84">Your Circle is growing gently.</strong>8
-                    people remembered · 3 birthday moments held for the months ahead.</div>
+            <aside data-node-id="n61" class="rail" data-role="supporting"><span data-node-id="n62" class="cap">YOUR
+                    BLOOM</span>
+                <h2 data-node-id="n63">Nothing is lost.</h2>
+                <p data-node-id="n64">Every message remains here for you to reread, replay, and keep close.</p>
+                <div data-node-id="n65" class="stat"><b data-node-id="n66">7 / 18</b><span data-node-id="n67">wishes
+                        opened so far</span></div>
+                <div data-node-id="n68" class="stat"><b data-node-id="n69">3</b><span data-node-id="n70">wishes kept
+                        close</span></div>
+                <div data-node-id="n71" class="stat"><b data-node-id="n72">11</b><span data-node-id="n73">still waiting,
+                        without hurry</span></div><button data-node-id="n74" class="archive">Keep this Birthday
+                    Bloom</button>
             </aside>
         </section>
     </main>

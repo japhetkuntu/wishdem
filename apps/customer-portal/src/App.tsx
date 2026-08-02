@@ -16,6 +16,16 @@ import PeoplePage from "@/pages/PeoplePage";
 import CirclePage from "@/pages/CirclePage";
 import AddPersonPage from "@/pages/AddPersonPage";
 import RecipientWishPage from "@/pages/RecipientWishPage";
+import GroupWishSetupPage from "@/pages/group-wishes/GroupWishSetupPage";
+import GroupWishLobbyPage from "@/pages/group-wishes/GroupWishLobbyPage";
+import GroupWishesHubPage from "@/pages/group-wishes/GroupWishesHubPage";
+import InvitationPage from "@/pages/group-wishes/InvitationPage";
+import GuestMemoryEntryPage from "@/pages/contribute/GuestMemoryEntryPage";
+import GuestMemoryComposePage from "@/pages/contribute/GuestMemoryComposePage";
+import GuestMemoryPreviewPage from "@/pages/contribute/GuestMemoryPreviewPage";
+import GuestMemorySealedPage from "@/pages/contribute/GuestMemorySealedPage";
+import BloomCoverPage from "@/pages/bloom/BloomCoverPage";
+import BloomGalleryPage from "@/pages/bloom/BloomGalleryPage";
 
 export default function App() {
   return (
@@ -36,6 +46,16 @@ export default function App() {
       <Route path="/people" element={<PeoplePage />} />
       <Route path="/circle" element={<CirclePage />} />
       <Route path="/circle/new" element={<AddPersonPage />} />
+      <Route path="/group-wishes" element={<GroupWishesHubPage />} />
+      <Route path="/group-wishes/new" element={<GroupWishSetupPage />} />
+      <Route path="/group-wishes/:id/invite" element={<GroupWishLobbyPage />} />
+      <Route path="/group-wishes/invitations/:id" element={<InvitationPage />} />
+      <Route path="/contribute/:id" element={<GuestMemoryEntryPage />} />
+      <Route path="/contribute/:id/compose" element={<GuestMemoryComposePage />} />
+      <Route path="/contribute/:id/preview" element={<GuestMemoryPreviewPage />} />
+      <Route path="/contribute/:id/sealed" element={<GuestMemorySealedPage />} />
+      <Route path="/bloom/:id" element={<BloomCoverPage />} />
+      <Route path="/bloom/:id/gallery" element={<BloomGalleryPage />} />
       <Route path="/w/:id" element={<RecipientWishPage />} />
     </Routes>
   );
