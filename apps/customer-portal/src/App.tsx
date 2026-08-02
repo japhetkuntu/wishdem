@@ -16,6 +16,7 @@ import PeoplePage from "@/pages/PeoplePage";
 import CirclePage from "@/pages/CirclePage";
 import AddPersonPage from "@/pages/AddPersonPage";
 import RecipientWishPage from "@/pages/RecipientWishPage";
+import ProfilePage from "@/pages/ProfilePage";
 import GroupWishSetupPage from "@/pages/group-wishes/GroupWishSetupPage";
 import GroupWishLobbyPage from "@/pages/group-wishes/GroupWishLobbyPage";
 import GroupWishesHubPage from "@/pages/group-wishes/GroupWishesHubPage";
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/create/scheduled" element={<CreateScheduledPage />} />
       <Route path="/create/payment-failed" element={<CreatePaymentFailedPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/account" element={<ProfilePage />} />
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/people" element={<PeoplePage />} />
       <Route path="/circle" element={<CirclePage />} />

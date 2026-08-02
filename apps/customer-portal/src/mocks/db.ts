@@ -36,10 +36,33 @@ export const themes: Theme[] = [
   },
 ];
 
-export let currentUser: User | null = null;
+const USER_STORAGE_KEY = "wishdem-mock-user";
+
+function loadCurrentUser(): User | null {
+  if (typeof sessionStorage === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(USER_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as User;
+  } catch {
+    // Corrupt or inaccessible storage — fall back to signed-out.
+  }
+  return null;
+}
+
+export let currentUser: User | null = loadCurrentUser();
 
 export function setCurrentUser(user: User | null) {
   currentUser = user;
+  persistCurrentUser();
+}
+
+export function persistCurrentUser() {
+  try {
+    if (currentUser) sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    else sessionStorage.removeItem(USER_STORAGE_KEY);
+  } catch {
+    // Storage unavailable/full — non-fatal for a mock layer.
+  }
 }
 
 /** Emails treated as already having a WishDem account — everyone else is a new customer. */

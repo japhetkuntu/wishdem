@@ -94,16 +94,15 @@ export default function CalendarPage() {
           The {activeTab} view isn't built yet — Agenda has the full experience.
         </div>
       ) : (
-        <section className="grid gap-[13px] sm:grid-cols-[minmax(0,1fr)_310px] md:grid-cols-[160px_minmax(0,1fr)_310px]">
-          <aside className="hidden rounded-md border border-porcelain/[0.1] bg-porcelain/[0.03] p-[10px] md:block">
-            <h3 className="my-[5px] ml-1 font-display text-[19px]">September</h3>
+        <>
+          <div className="mb-3 flex gap-[7px] overflow-x-auto lg:hidden">
             {days.map((day, i) => (
               <button
                 key={day.id}
                 type="button"
                 onClick={() => setSelectedDayId(day.id)}
                 className={clsx(
-                  "mb-[3px] block w-full rounded-md p-[10px] text-left text-[10px]",
+                  "w-[104px] flex-none rounded-md border border-porcelain/[0.14] p-[10px] text-left text-[10px]",
                   day.id === selectedDayId ? "bg-mulberry text-porcelain" : "text-porcelain/70",
                 )}
               >
@@ -114,9 +113,31 @@ export default function CalendarPage() {
                 {day.summary}
               </button>
             ))}
-          </aside>
+          </div>
 
-          <section className="rounded-md border border-porcelain/[0.1] bg-porcelain/[0.03] p-4">
+          <section className="grid gap-[13px] sm:grid-cols-[minmax(0,1fr)_310px] lg:grid-cols-[160px_minmax(0,1fr)_310px]">
+            <aside className="hidden rounded-md border border-porcelain/[0.1] bg-porcelain/[0.03] p-[10px] lg:block">
+              <h3 className="my-[5px] ml-1 font-display text-[19px]">September</h3>
+              {days.map((day, i) => (
+                <button
+                  key={day.id}
+                  type="button"
+                  onClick={() => setSelectedDayId(day.id)}
+                  className={clsx(
+                    "mb-[3px] block w-full rounded-md p-[10px] text-left text-[10px]",
+                    day.id === selectedDayId ? "bg-mulberry text-porcelain" : "text-porcelain/70",
+                  )}
+                >
+                  <b className="block text-[11px] text-porcelain">
+                    <span className="float-right font-extrabold text-champagne">{i + 1}</span>
+                    {day.weekdayLabel}
+                  </b>
+                  {day.summary}
+                </button>
+              ))}
+            </aside>
+
+            <section className="rounded-md border border-porcelain/[0.1] bg-porcelain/[0.03] p-4">
             <div className="flex items-baseline justify-between border-b border-porcelain/[0.12] pb-3">
               <h2 className="font-display text-[25px]">
                 {selectedDayId === "day-1" ? "Today" : selectedDay?.summary}
@@ -210,7 +231,8 @@ export default function CalendarPage() {
               </div>
             </aside>
           )}
-        </section>
+          </section>
+        </>
       )}
     </main>
   );

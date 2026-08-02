@@ -63,6 +63,12 @@ export interface User {
   name: string;
   email: string;
   authMethod: "google" | "email";
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  dateOfBirth?: string;
+  country?: string;
+  region?: string;
 }
 
 export interface PaymentResult {

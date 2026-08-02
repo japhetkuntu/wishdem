@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { getCurrentUser, signInWithEmail, signInWithGoogle, signOut } from "@/lib/api";
+import {
+  getCurrentUser,
+  signInWithEmail,
+  signInWithGoogle,
+  signOut,
+  updateProfile,
+  type UpdateProfileInput,
+} from "@/lib/api";
 import type { User } from "@/types";
 
 export function useAuth() {
@@ -30,5 +37,11 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  return { user, loading, continueWithGoogle, continueWithEmail, logOut };
+  const saveProfile = useCallback(async (input: UpdateProfileInput) => {
+    const u = await updateProfile(input);
+    setUser(u);
+    return u;
+  }, []);
+
+  return { user, loading, continueWithGoogle, continueWithEmail, logOut, saveProfile };
 }

@@ -10,15 +10,17 @@
         rel="stylesheet">
     <style>
         :root {
-            --p: #2A1629;
-            --bg: #1B111D;
-            --s: #F6F0E8;
-            --i: #241D24;
-            --a: #E6C87A;
-            --m: #4A203D;
-            --r: #D99AA9;
-            --g: #34443A;
-            --sh: 0 12px 32px rgba(13, 6, 14, .24)
+            --primary: #2A1629;
+            --bg: #FCFCFD;
+            --warm: #F9F9FB;
+            --surface: #F6F0E8;
+            --ink: #241D24;
+            --accent: #E6C87A;
+            --mulberry: #4A203D;
+            --shadow: 0 12px 32px rgba(13, 6, 14, .24);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 22px
         }
 
         * {
@@ -28,28 +30,30 @@
         body {
             margin: 0;
             background: var(--bg);
-            color: var(--s);
+            color: var(--ink);
             font-family: Manrope, sans-serif
         }
 
         .shell {
             width: 100%;
-            max-width: 1280px;
+            max-width: 1040px;
             margin: auto;
-            padding: 0 30px 38px
+            padding: 0 28px 40px
         }
 
-        .nav {
+        .top {
             height: 68px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #F6F0E826
+            border-bottom: 1px solid #2A162918
         }
 
         .brand {
             font-size: 21px;
+            line-height: 1;
             font-weight: 800;
-            letter-spacing: -1.3px
+            letter-spacing: -1.4px;
+            color: var(--primary)
         }
 
         .brand i {
@@ -57,356 +61,417 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--a);
+            background: var(--accent);
             margin: 0 2px 7px
         }
 
-        .crumb {
-            margin-left: 25px;
+        .back {
+            margin-left: 30px;
             font-size: 10px;
-            color: #F6F0E8b3
+            font-weight: 800;
+            color: var(--mulberry)
         }
 
-        .sp {
-            flex: 1
-        }
-
-        .thanks {
-            border: 0;
-            border-radius: 99px;
-            padding: 10px 12px;
-            background: var(--a);
-            color: var(--p);
-            font: 800 9px Manrope
+        .wrap {
+            max-width: 800px;
+            margin: 38px auto
         }
 
         .intro {
-            padding: 24px 0 16px
-        }
-
-        .cap {
-            font-size: 9px;
-            color: var(--a);
-            font-weight: 800;
-            letter-spacing: .13em
+            margin-bottom: 23px
         }
 
         .intro h1 {
-            font: 500 36px 'Playfair Display';
-            margin: 7px 0
+            font: 500 38px 'Playfair Display', serif;
+            margin: 0;
+            color: var(--primary)
         }
 
         .intro p {
+            max-width: 490px;
+            font-size: 11px;
+            line-height: 1.55;
+            color: #241D2498;
+            margin: 7px 0 0
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #2A162918;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: 0 8px 24px rgba(13, 6, 14, .07)
+        }
+
+        .section {
+            padding-bottom: 23px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid #2A162916
+        }
+
+        .section:last-of-type {
+            border-bottom: 0;
+            margin-bottom: 0;
+            padding-bottom: 5px
+        }
+
+        .section h2 {
+            font: 500 25px 'Playfair Display', serif;
             margin: 0;
+            color: var(--primary)
+        }
+
+        .section>p {
             font-size: 10px;
-            color: #F6F0E8a8
+            line-height: 1.5;
+            color: #241D2499;
+            margin: 4px 0 17px
         }
 
-        .filters {
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 23px;
+            align-items: start
+        }
+
+        .avatar-block {
+            text-align: center
+        }
+
+        .avatar {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 10px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 4px solid var(--surface);
+            box-shadow: 0 6px 15px rgba(13, 6, 14, .13);
+            font: 500 38px 'Playfair Display', serif;
+            color: var(--primary)
+        }
+
+        .photo-actions {
             display: flex;
-            gap: 7px;
-            flex-wrap: wrap;
-            padding: 12px;
-            background: var(--s);
-            border-radius: 14px;
-            color: var(--i)
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap
         }
 
-        .filter {
-            border: 1px solid #2A162921;
-            border-radius: 99px;
-            padding: 7px 9px;
-            font-size: 9px;
-            font-weight: 800
+        .text-action {
+            font: 800 9px Manrope, sans-serif;
+            color: var(--mulberry)
         }
 
-        .active {
-            background: var(--m);
-            border-color: var(--m);
-            color: var(--s)
+        .text-action.remove {
+            color: #8A3C4F
         }
 
-        .search {
-            margin-left: auto;
-            min-width: 180px;
-            border: 1px solid #2A16291d;
-            border-radius: 99px;
-            padding: 7px 11px;
-            font-size: 9px;
-            color: #241D2485
+        .guide {
+            display: block;
+            margin-top: 8px;
+            font-size: 8px;
+            line-height: 1.4;
+            color: #241D2482
         }
 
-        .grid {
+        .fields {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 210px;
-            gap: 17px;
-            margin-top: 17px
+            grid-template-columns: 1fr 1fr;
+            gap: 13px
         }
 
-        .group {
-            margin-bottom: 22px
+        .field {
+            display: block
         }
 
-        .group h2 {
-            font: 500 25px 'Playfair Display';
-            margin: 0 0 9px
+        .field.full {
+            grid-column: 1/-1
         }
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--primary)
+        }
+
+        .optional {
+            font-weight: 500;
+            color: #241D248a
+        }
+
+        .input {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #2A162925;
+            border-radius: var(--radius-sm);
+            background: var(--warm);
+            padding: 0 11px;
+            font: 500 11px Manrope, sans-serif;
+            color: var(--ink);
+            outline: none
+        }
+
+        .input:focus {
+            border-color: var(--mulberry);
+            box-shadow: 0 0 0 3px #E6C87A55
+        }
+
+        .select {
+            appearance: none;
+            background: var(--warm) linear-gradient(45deg, transparent 50%, var(--mulberry) 50%) calc(100% - 14px) 18px/5px 5px no-repeat, linear-gradient(135deg, var(--mulberry) 50%, transparent 50%) calc(100% - 10px) 18px/5px 5px no-repeat
+        }
+
+        .help {
+            display: block;
+            margin-top: 5px;
+            font-size: 8px;
+            line-height: 1.45;
+            color: #241D248c
+        }
+
+        .preview {
+            margin-top: 17px;
+            border-radius: var(--radius-md);
+            padding: 13px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
             gap: 10px
         }
 
-        .card {
-            min-height: 176px;
-            border-radius: 14px;
-            padding: 14px;
-            background: var(--s);
-            color: var(--i);
-            position: relative;
-            box-shadow: 0 8px 20px rgba(13, 6, 14, .14)
+        .mini-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: grid;
+            place-items: center;
+            font: 500 15px 'Playfair Display';
+            color: var(--primary)
         }
 
-        .card.media {
-            background: var(--m);
-            color: var(--s)
-        }
-
-        .type {
+        .preview small {
+            display: block;
             font-size: 8px;
             font-weight: 800;
-            letter-spacing: .1em;
-            color: var(--m)
+            letter-spacing: .08em;
+            color: var(--mulberry)
         }
 
-        .media .type {
-            color: var(--a)
-        }
-
-        .card h3 {
-            font: 500 21px 'Playfair Display';
-            margin: 24px 0 6px
-        }
-
-        .card p {
-            font-size: 10px;
-            line-height: 1.5;
-            margin: 0;
-            color: #241D24a8
-        }
-
-        .media p {
-            color: #F6F0E8b9
-        }
-
-        .meta {
-            position: absolute;
-            bottom: 12px;
-            left: 14px;
-            font-size: 9px;
-            font-weight: 800
-        }
-
-        .heart {
-            position: absolute;
-            right: 12px;
-            top: 11px;
-            color: var(--r);
-            font-size: 16px
-        }
-
-        .unopened {
-            border: 1px dashed #E6C87A83;
-            background: transparent;
-            color: var(--s)
-        }
-
-        .unopened .type,
-        .unopened p {
-            color: #F6F0E8a5
-        }
-
-        .unopened h3 {
-            font-size: 17px
-        }
-
-        .rail {
-            border: 1px solid #F6F0E825;
-            border-radius: 14px;
-            padding: 15px;
-            height: max-content
-        }
-
-        .rail h2 {
-            font: 500 23px 'Playfair Display';
-            margin: 6px 0
-        }
-
-        .rail p {
-            font-size: 9px;
-            line-height: 1.5;
-            color: #F6F0E8a8
-        }
-
-        .stat {
-            border-top: 1px solid #F6F0E820;
-            padding: 12px 0
-        }
-
-        .stat b {
-            font-size: 18px;
-            color: var(--a)
-        }
-
-        .stat span {
+        .preview b {
             display: block;
-            font-size: 9px;
-            color: #F6F0E8a9
+            margin-top: 2px;
+            font: 500 17px 'Playfair Display';
+            color: var(--primary)
         }
 
-        .archive {
-            width: 100%;
+        .preview span {
+            display: block;
+            margin-top: 1px;
+            font-size: 8px;
+            color: #241D2492
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-top: 20px
+        }
+
+        .save {
             border: 0;
-            border-radius: 99px;
-            padding: 10px;
-            background: #F6F0E814;
-            color: var(--s);
-            font: 800 9px Manrope
+            border-radius: 999px;
+            background: var(--primary);
+            color: var(--surface);
+            padding: 12px 17px;
+            font: 800 10px Manrope, sans-serif;
+            box-shadow: var(--shadow)
         }
 
-        @media(max-width:820px) {
-            .shell {
-                padding: 0 16px 24px
-            }
-
-            .grid {
-                grid-template-columns: 1fr
-            }
-
-            .rail {
-                display: none
-            }
-
-            .cards {
-                grid-template-columns: repeat(2, 1fr)
-            }
+        .cancel {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--mulberry)
         }
 
-        @media(max-width:480px) {
+        .unsaved {
+            margin-left: auto;
+            font-size: 9px;
+            color: #241D2490
+        }
+
+        .links {
+            display: flex;
+            gap: 14px;
+            margin-top: 24px;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 800;
+            color: #241D2487
+        }
+
+        .links span:last-child {
+            color: var(--mulberry)
+        }
+
+        @media(max-width:620px) {
             .shell {
-                padding: 0 12px 20px
+                padding: 0 15px 30px
             }
 
-            .nav {
+            .top {
                 height: 59px
             }
 
-            .crumb {
-                margin-left: 13px
+            .back {
+                margin-left: 18px
             }
 
-            .thanks {
-                font-size: 8px
+            .wrap {
+                margin: 25px auto
             }
 
             .intro h1 {
-                font-size: 30px
+                font-size: 32px
             }
 
-            .search {
-                margin-left: 0;
-                min-width: 100%
+            .panel {
+                padding: 18px
             }
 
-            .cards {
+            .profile-grid {
                 grid-template-columns: 1fr
+            }
+
+            .avatar-block {
+                text-align: left;
+                display: grid;
+                grid-template-columns: 96px 1fr;
+                align-items: center;
+                gap: 12px
+            }
+
+            .avatar {
+                margin: 0
+            }
+
+            .photo-actions {
+                justify-content: flex-start
+            }
+
+            .guide {
+                grid-column: 2
+            }
+
+            .fields {
+                grid-template-columns: 1fr
+            }
+
+            .field.full {
+                grid-column: auto
+            }
+
+            .footer {
+                flex-wrap: wrap
+            }
+
+            .unsaved {
+                margin-left: 0;
+                width: 100%;
+                order: -1
+            }
+
+            .links {
+                flex-wrap: wrap
             }
         }
     </style>
 </head>
 
 <body data-artboard-width="1440" data-device-type="web">
-    <main data-node-id="n1" class="shell" data-page-id="birthday-bloom-02-gallery"
-        data-role="recipient-collection-gallery">
-        <nav data-node-id="n2" class="nav" data-component="wd-bloom-nav">
+    <main data-node-id="n1" class="shell" data-page-id="settings-02-simple-profile"
+        data-role="simple-profile-editor">
+        <nav data-node-id="n2" class="top" data-component="wd-account-nav">
             <div data-node-id="n3" class="brand">Wish<i data-node-id="n4"></i>Dem</div><span data-node-id="n5"
-                class="crumb">Maya’s Birthday Bloom</span>
-            <div data-node-id="n6" class="sp"></div><button data-node-id="n7" class="thanks">Thank Maya’s
-                people</button>
+                class="back">← Back to your wishes</span>
         </nav>
-        <header data-node-id="n8" class="intro"><span data-node-id="n9" class="cap">ALL WISHES · 18 CONTRIBUTIONS</span>
-            <h1 data-node-id="n10">Eighteen pieces of your story, kept for today.</h1>
-            <p data-node-id="n11">11 notes · 4 photos · 2 voice messages · 1 video · Open at your own pace, return
-                whenever you wish.</p>
-        </header>
-        <section data-node-id="n12" class="filters" data-role="primary"><span data-node-id="n13"
-                class="filter active">All wishes</span><span data-node-id="n14" class="filter">Unread · 11</span><span
-                data-node-id="n15" class="filter">Favorites · 3</span><span data-node-id="n16"
-                class="filter">Notes</span><span data-node-id="n17" class="filter">Photos</span><span data-node-id="n18"
-                class="filter">Voice</span><span data-node-id="n19" class="filter">Video</span><span data-node-id="n20"
-                class="search">Search a person or memory</span></section>
-        <section data-node-id="n21" class="grid">
-            <div data-node-id="n22" data-role="content">
-                <section data-node-id="n23" class="group">
-                    <h2 data-node-id="n24">From your family</h2>
-                    <div data-node-id="n25" class="cards">
-                        <article data-node-id="n26" class="card"><span data-node-id="n27" class="type">PHOTO +
-                                NOTE</span><span data-node-id="n28" class="heart">♥</span>
-                            <h3 data-node-id="n29">Elena</h3>
-                            <p data-node-id="n30">“You have always made room for everyone, even when the house was
-                                loud.”</p><span data-node-id="n31" class="meta">Your sister · opened</span>
-                        </article>
-                        <article data-node-id="n32" class="card media"><span data-node-id="n33" class="type">VOICE ·
-                                1:12</span>
-                            <h3 data-node-id="n34">David</h3>
-                            <p data-node-id="n35">A warm spoken note from the garden, saved for a quiet moment.</p><span
-                                data-node-id="n36" class="meta">Dad · listen again</span>
-                        </article>
-                        <article data-node-id="n37" class="card unopened"><span data-node-id="n38" class="type">SEALED
-                                NOTE</span>
-                            <h3 data-node-id="n39">Grandma Ruth</h3>
-                            <p data-node-id="n40">A letter is waiting for you.</p><span data-node-id="n41"
-                                class="meta">Family · unopened</span>
-                        </article>
+        <section data-node-id="n6" class="wrap">
+            <header data-node-id="n7" class="intro">
+                <h1 data-node-id="n8">Profile &amp; settings</h1>
+                <p data-node-id="n9">Keep your WishDem details personal, accurate, and ready for every future
+                    delivery.</p>
+            </header>
+            <form data-node-id="n10" class="panel" data-role="primary">
+                <section data-node-id="n11" class="section">
+                    <h2 data-node-id="n12">Your profile</h2>
+                    <p data-node-id="n13">This is how you’ll appear as the sender of a wish.</p>
+                    <div data-node-id="n14" class="profile-grid">
+                        <div data-node-id="n15" class="avatar-block">
+                            <div data-node-id="n16" class="avatar" aria-label="Maya Chen profile picture
+                                placeholder">MC</div>
+                            <div data-node-id="n17" class="photo-actions"><span data-node-id="n18"
+                                    class="text-action">Upload photo</span><span data-node-id="n19"
+                                    class="text-action">Change photo</span><span data-node-id="n20"
+                                    class="text-action remove">Remove</span></div><small data-node-id="n21"
+                                class="guide">JPG, PNG, or WEBP · up to 10 MB</small>
+                        </div>
+                        <div data-node-id="n22">
+                            <div data-node-id="n23" class="fields"><label data-node-id="n24" class="field"><span
+                                        data-node-id="n25">First name</span><input data-node-id="n26"
+                                        class="input" type="text" value="Maya" aria-label="First
+                                        name"></label><label data-node-id="n27" class="field"><span
+                                        data-node-id="n28">Last name <em data-node-id="n29"
+                                            class="optional">optional</em></span><input data-node-id="n30"
+                                        class="input" type="text" value="Chen" aria-label="Last name"></label>
+                            </div>
+                            <div data-node-id="n31" class="preview" data-role="feedback">
+                                <div data-node-id="n32" class="mini-avatar">MC</div>
+                                <div data-node-id="n33"><small data-node-id="n34">YOUR SENDER SIGNATURE</small><b
+                                        data-node-id="n35">A wish from Maya Chen</b><span data-node-id="n36">Sent
+                                        with WishDem</span></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
-                <section data-node-id="n42" class="group">
-                    <h2 data-node-id="n43">From your friends</h2>
-                    <div data-node-id="n44" class="cards">
-                        <article data-node-id="n45" class="card"><span data-node-id="n46" class="type">WRITTEN
-                                MEMORY</span><span data-node-id="n47" class="heart">♥</span>
-                            <h3 data-node-id="n48">Priya</h3>
-                            <p data-node-id="n49">“Thirty looks very good on you already. I still laugh about the yellow
-                                umbrella.”</p><span data-node-id="n50" class="meta">Friend since 2011 · opened</span>
-                        </article>
-                        <article data-node-id="n51" class="card media"><span data-node-id="n52" class="type">VIDEO ·
-                                0:36</span>
-                            <h3 data-node-id="n53">Sam</h3>
-                            <p data-node-id="n54">A little birthday toast from across the city.</p><span
-                                data-node-id="n55" class="meta">College friend · play</span>
-                        </article>
-                        <article data-node-id="n56" class="card unopened"><span data-node-id="n57" class="type">PHOTO
-                                MEMORY</span>
-                            <h3 data-node-id="n58">Aisha</h3>
-                            <p data-node-id="n59">One image and a story are waiting.</p><span data-node-id="n60"
-                                class="meta">Friend · unopened</span>
-                        </article>
-                    </div>
+                <section data-node-id="n37" class="section">
+                    <h2 data-node-id="n38">A little about you</h2>
+                    <p data-node-id="n39">These details are private and help WishDem recognize the right moments in
+                        the right place.</p>
+                    <div data-node-id="n40" class="fields"><label data-node-id="n41" class="field"><span
+                                data-node-id="n42">Date of birth <em data-node-id="n43"
+                                    class="optional">optional</em></span><input data-node-id="n44" class="input"
+                                type="date" value="1992-09-14" aria-label="Date of birth"><small
+                                data-node-id="n45" class="help">Private to you. We use this to recognize your
+                                birthday in WishDem.</small></label><label data-node-id="n46" class="field"><span
+                                data-node-id="n47">Country</span><select data-node-id="n48" class="input select"
+                                aria-label="Country">
+                                <option data-node-id="n49">United Kingdom</option>
+                                <option data-node-id="n50">United States</option>
+                                <option data-node-id="n51">Canada</option>
+                                <option data-node-id="n52">Australia</option>
+                                <option data-node-id="n53">Portugal</option>
+                                <option data-node-id="n54">Other</option>
+                            </select><small data-node-id="n55" class="help">This helps us handle local birthday
+                                dates correctly.</small></label><label data-node-id="n56" class="field full"><span
+                                data-node-id="n57">Region <em data-node-id="n58"
+                                    class="optional">optional</em></span><input data-node-id="n59" class="input"
+                                type="text" value="England" aria-label="Region"><small data-node-id="n60"
+                                class="help">For the United Kingdom, you can add your region. This changes naturally
+                                if your country changes.</small></label></div>
                 </section>
-            </div>
-            <aside data-node-id="n61" class="rail" data-role="supporting"><span data-node-id="n62" class="cap">YOUR
-                    BLOOM</span>
-                <h2 data-node-id="n63">Nothing is lost.</h2>
-                <p data-node-id="n64">Every message remains here for you to reread, replay, and keep close.</p>
-                <div data-node-id="n65" class="stat"><b data-node-id="n66">7 / 18</b><span data-node-id="n67">wishes
-                        opened so far</span></div>
-                <div data-node-id="n68" class="stat"><b data-node-id="n69">3</b><span data-node-id="n70">wishes kept
-                        close</span></div>
-                <div data-node-id="n71" class="stat"><b data-node-id="n72">11</b><span data-node-id="n73">still waiting,
-                        without hurry</span></div><button data-node-id="n74" class="archive">Keep this Birthday
-                    Bloom</button>
-            </aside>
+                <div data-node-id="n61" class="footer" data-role="persistent-action"><span data-node-id="n62"
+                        class="unsaved">You have unsaved changes.</span><button data-node-id="n63" class="save"
+                        type="button">Save changes</button><span data-node-id="n64" class="cancel">Cancel</span>
+                </div>
+            </form>
+            <footer data-node-id="n65" class="links"><span data-node-id="n66">Account &amp; security</span><span
+                    data-node-id="n67">Privacy</span><span data-node-id="n68">Sign out</span></footer>
         </section>
     </main>
 </body>

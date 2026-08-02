@@ -43,7 +43,7 @@ export default function CreateThemePage() {
       <h1 className="font-display text-[clamp(32px,5vw,54px)] leading-[1.03]">
         Choose the vessel
         <br />
-        for {recipient?.name ?? "their"} letter.
+        for {recipient?.name ? `${recipient.name}'s` : "their"} letter.
       </h1>
       <p className="mb-6 mt-2 text-porcelain/70">
         The words stay the same. The way they arrive becomes yours to choose.

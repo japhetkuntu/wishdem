@@ -2,11 +2,14 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { requestOtp } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { continueWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -21,6 +24,13 @@ export default function LoginPage() {
         maskedEmail: result.maskedEmail,
       },
     });
+  }
+
+  async function handleGoogle() {
+    setGoogleLoading(true);
+    await continueWithGoogle();
+    setGoogleLoading(false);
+    navigate("/dashboard");
   }
 
   return (
@@ -66,12 +76,32 @@ export default function LoginPage() {
 
       <section className="w-full rounded-lg bg-porcelain p-6 text-ink shadow-card sm:p-8">
         <span className="text-[9px] font-extrabold tracking-[0.11em] text-mulberry">
-          01 · EMAIL ACCESS
+          SIGN IN OR CREATE AN ACCOUNT
         </span>
         <h2 className="my-2 font-display text-[34px] tracking-[-0.7px]">
-          Enter your email
+          Continue to WishDem
         </h2>
-        <p className="mb-[22px] text-[12px] leading-[1.55] text-ink/58">
+
+        <Button
+          type="button"
+          variant="outline-inverse"
+          disabled={googleLoading}
+          onClick={handleGoogle}
+          className="w-full border-plum/20 text-ink"
+        >
+          {googleLoading ? "Connecting…" : "Continue with Google"}
+        </Button>
+
+        <div className="my-[17px] flex items-center gap-3 text-[10px] font-bold text-ink/40">
+          <span className="h-px flex-1 bg-plum/[0.13]" />
+          or
+          <span className="h-px flex-1 bg-plum/[0.13]" />
+        </div>
+
+        <span className="text-[9px] font-extrabold tracking-[0.11em] text-mulberry">
+          EMAIL ACCESS
+        </span>
+        <p className="mb-[14px] mt-1 text-[12px] leading-[1.55] text-ink/58">
           We will send a six-digit private code. No password to remember, reset, or
           share.
         </p>

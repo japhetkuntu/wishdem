@@ -2,6 +2,7 @@ import {
   currentUser,
   EXISTING_EMAILS,
   findWish,
+  persistCurrentUser,
   persistWishes,
   setCurrentUser,
   themes,
@@ -218,6 +219,28 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function signOut(): Promise<void> {
   setCurrentUser(null);
   return delay(undefined);
+}
+
+export interface UpdateProfileInput {
+  firstName: string;
+  lastName?: string;
+  avatarUrl?: string | null;
+  dateOfBirth?: string;
+  country?: string;
+  region?: string;
+}
+
+export async function updateProfile(input: UpdateProfileInput): Promise<User> {
+  if (!currentUser) throw new Error("Not signed in");
+  currentUser.firstName = input.firstName;
+  currentUser.lastName = input.lastName;
+  currentUser.avatarUrl = input.avatarUrl ?? undefined;
+  currentUser.dateOfBirth = input.dateOfBirth;
+  currentUser.country = input.country;
+  currentUser.region = input.region;
+  currentUser.name = [input.firstName, input.lastName].filter(Boolean).join(" ") || currentUser.name;
+  persistCurrentUser();
+  return delay(currentUser);
 }
 
 export async function signInWithGoogle(): Promise<User> {

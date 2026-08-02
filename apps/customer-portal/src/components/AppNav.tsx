@@ -106,7 +106,7 @@ export function AppNav({ active }: { active: AppNavKey }) {
               <span className="text-porcelain">{user?.email ?? "you@example.com"}</span>
             </div>
             <Link
-              to="/dashboard"
+              to="/account"
               onClick={() => setMenuOpen(false)}
               className="block rounded-sm px-3 py-2 text-[12px] font-bold text-porcelain hover:bg-porcelain/10"
             >

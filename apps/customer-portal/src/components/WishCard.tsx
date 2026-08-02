@@ -51,7 +51,12 @@ export function WishCard({ wish }: { wish: Wish }) {
         <div className="flex min-w-0 items-center gap-2">
           <b className="truncate text-[14px] sm:min-w-0 sm:flex-1">
             {wish.recipient.name}
-            {wish.recipient.relationship ? ` · ${wish.recipient.relationship}` : ""}
+            {wish.recipient.relationship ? (
+              <span className="hidden font-normal text-porcelain/60 lg:inline">
+                {" "}
+                · {wish.recipient.relationship}
+              </span>
+            ) : null}
           </b>
           <Badge tone={status.tone}>{status.label}</Badge>
         </div>
