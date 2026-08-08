@@ -32,7 +32,10 @@ export default function PaymentsModerationPage() {
             OPERATIONS / FINANCE &amp; SAFETY
           </span>
           <br />
-          <b className="text-[12px]">GMT / Accra · Last refresh 09:48</b>
+          <b className="text-[12px]">
+            GMT / Accra · Last refresh{" "}
+            {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+          </b>
         </div>
         <input
           placeholder="Search transaction, case, wish or phone"

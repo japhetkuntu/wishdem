@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { ShareLinks } from "@/components/ShareLinks";
 import { useWizardStore } from "@/store/wizardStore";
 import { daysUntil, formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
 
 export default function CreateScheduledPage() {
   const navigate = useNavigate();
-  const { recipient, themeId, channel, reset } = useWizardStore();
+  const { wishId, recipient, themeId, channel, reset } = useWizardStore();
   const vesselImage = getThemeImage(themeId, "scheduled");
 
   useEffect(() => {
@@ -49,8 +50,27 @@ export default function CreateScheduledPage() {
           View on dashboard
         </Button>
         <div className="mt-5 text-[11px] font-extrabold text-champagne">
-          £1.49 paid · {channelLabel} ready
+          GH₵1.49 paid · {channelLabel} ready
         </div>
+
+        {wishId && (
+          <div className="mt-7 max-w-[460px] rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04] p-5">
+            <p className="mb-3 text-[11px] font-extrabold tracking-[0.1em] text-champagne">
+              {channel === "link" ? "YOUR PRIVATE LINK" : "WANT TO SHARE IT YOURSELF TOO?"}
+            </p>
+            <p className="mb-4 text-[12px] leading-[1.6] text-porcelain/70">
+              {channel === "link"
+                ? "Nothing is sent automatically for this channel — send this link to " +
+                  `${recipient.name} yourself, whenever feels right.`
+                : `We'll deliver it automatically, but you're welcome to send this link to ${recipient.name} directly too.`}
+            </p>
+            <ShareLinks
+              url={`${window.location.origin}/w/${wishId}`}
+              shareText={`I've saved something for you on WishDem 💛`}
+              tone="dark"
+            />
+          </div>
+        )}
       </section>
 
       <div className="relative order-first mx-auto w-full max-w-[410px] justify-self-center sm:order-none">

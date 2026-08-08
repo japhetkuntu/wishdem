@@ -1,0 +1,12 @@
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.deps.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.GeneratedMSBuildEditorConfig.editorconfig
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.AssemblyInfoInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.AssemblyInfo.cs
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.csproj.CoreCompileInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.sourcelink.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/refint/WishDem.Common.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/WishDem.Common.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/Debug/net8.0/ref/WishDem.Common.Sdk.dll

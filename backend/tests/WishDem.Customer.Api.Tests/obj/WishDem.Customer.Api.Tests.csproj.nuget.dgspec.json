@@ -1,0 +1,703 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Customer.Api.Tests/WishDem.Customer.Api.Tests.csproj": {}
+  },
+  "projects": {
+    "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj",
+        "projectName": "WishDem.Customer.Api",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/WishDem.Actors.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/WishDem.Actors.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[11.3.1, )"
+            },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.68.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.Identity": {
+              "target": "Package",
+              "version": "[2.3.1, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.6.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/WishDem.Actors.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/WishDem.Actors.Sdk.csproj",
+        "projectName": "WishDem.Actors.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/WishDem.Actors.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Actors.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Akka": {
+              "target": "Package",
+              "version": "[1.5.30, )"
+            },
+            "Akka.DependencyInjection": {
+              "target": "Package",
+              "version": "[1.5.30, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Options.ConfigurationExtensions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj",
+        "projectName": "WishDem.Cache.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.8.16, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj",
+        "projectName": "WishDem.Common.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj",
+        "projectName": "WishDem.Messaging.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/WishDem.Messaging.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.17.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj",
+        "projectName": "WishDem.Postgres.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/WishDem.Postgres.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Postgres.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj",
+        "projectName": "WishDem.Storage.Sdk",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Common.Sdk/WishDem.Common.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "AWSSDK.S3": {
+              "target": "Package",
+              "version": "[3.7.405.7, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Options.ConfigurationExtensions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Customer.Api.Tests/WishDem.Customer.Api.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Customer.Api.Tests/WishDem.Customer.Api.Tests.csproj",
+        "projectName": "WishDem.Customer.Api.Tests",
+        "projectPath": "/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Customer.Api.Tests/WishDem.Customer.Api.Tests.csproj",
+        "packagesPath": "/Users/joe/.nuget/packages/",
+        "outputPath": "/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Customer.Api.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/joe/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/hubtel/_packaging/hubtel/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj"
+              },
+              "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj": {
+                "projectPath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/WishDem.Storage.Sdk.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.1, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.8.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -13,6 +13,12 @@ const FORMAT_LABELS: Record<GroupWishFormat, string> = {
   video: "Short videos",
 };
 
+function dateLabel(iso: string | null): string {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+}
+
 export default function InvitationPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -51,7 +57,7 @@ export default function InvitationPage() {
     );
   }
 
-  const recipientFirst = invitation.title.split("'s")[0] || invitation.title;
+  const recipientFirst = invitation.recipientName.split(" ")[0] || invitation.recipientName;
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
@@ -60,7 +66,7 @@ export default function InvitationPage() {
       <section className="grid gap-8 py-8 sm:grid-cols-[1.15fr_.85fr] sm:gap-14">
         <div>
           <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
-            INVITATION · {invitation.daysLeftLabel.toUpperCase()}
+            INVITATION
           </span>
           <h1 className="my-3 max-w-[560px] font-display text-[clamp(30px,4vw,42px)] leading-[1.1]">
             {invitation.inviterName} invited you to {invitation.title}.
@@ -72,10 +78,9 @@ export default function InvitationPage() {
 
           <div className="mb-6 grid grid-cols-2 gap-[10px] sm:grid-cols-4">
             {[
-              { label: "Collection closes", value: invitation.collectionClosesLabel },
-              { label: `Delivered to ${recipientFirst}`, value: invitation.deliveredLabel },
-              { label: "Already joined", value: invitation.alreadyJoinedLabel },
-              { label: "Participation visibility", value: invitation.participationLabel },
+              { label: "Collection closes", value: dateLabel(invitation.collectByDate) },
+              { label: `Delivered to ${recipientFirst}`, value: dateLabel(invitation.deliveryDate) },
+              { label: "Occasion", value: invitation.occasion ?? "—" },
             ].map((fact) => (
               <div key={fact.label} className="rounded-md border border-porcelain/[0.14] p-3">
                 <span className="mb-1 block text-[8px] font-extrabold tracking-[0.08em] text-champagne">
@@ -102,9 +107,10 @@ export default function InvitationPage() {
           {invitation.status === "joined" ? (
             <div className="rounded-md bg-moss/20 p-4">
               <p className="mb-3 text-[12px] font-bold text-moss">
-                You've joined this group wish. {invitation.needNote}
+                You've joined this group wish. Add a note, photo, voice note, or short video
+                whenever you're ready.
               </p>
-              <Link to={`/contribute/${invitation.id}`}>
+              <Link to={`/contribute/${invitation.inviteToken}`}>
                 <Button variant="dark" size="sm">
                   Add your memory
                 </Button>

@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "wfY7RB3V5Wc=",
+  "success": true,
+  "projectFilePath": "/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Cache.Sdk/WishDem.Cache.Sdk.csproj",
+  "expectedPackageFiles": [
+    "/Users/joe/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "/Users/joe/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "/Users/joe/.nuget/packages/microsoft.extensions.logging.abstractions/6.0.0/microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
+    "/Users/joe/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "/Users/joe/.nuget/packages/pipelines.sockets.unofficial/2.2.8/pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
+    "/Users/joe/.nuget/packages/stackexchange.redis/2.8.16/stackexchange.redis.2.8.16.nupkg.sha512",
+    "/Users/joe/.nuget/packages/system.io.pipelines/5.0.1/system.io.pipelines.5.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

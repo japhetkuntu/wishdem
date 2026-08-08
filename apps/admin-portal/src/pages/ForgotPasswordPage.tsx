@@ -11,9 +11,10 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     if (!email.trim()) return;
     setSending(true);
-    const { maskedEmail } = await requestPasswordResetCode(email.trim());
+    const trimmedEmail = email.trim();
+    const { maskedEmail } = await requestPasswordResetCode(trimmedEmail);
     setSending(false);
-    navigate("/reset-password", { state: { maskedEmail } });
+    navigate("/reset-password", { state: { email: trimmedEmail, maskedEmail } });
   }
 
   return (

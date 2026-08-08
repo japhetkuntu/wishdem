@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/wwwroot/.gitkeep",
+      "PackagePath": "staticwebassets/.gitkeep"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WishDem.Customer.Api.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.WishDem.Customer.Api.props",
+      "PackagePath": "build\\WishDem.Customer.Api.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.WishDem.Customer.Api.props",
+      "PackagePath": "buildMultiTargeting\\WishDem.Customer.Api.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.WishDem.Customer.Api.props",
+      "PackagePath": "buildTransitive\\WishDem.Customer.Api.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

@@ -24,7 +24,9 @@ const STEPS = [
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const maskedEmail = (location.state as { maskedEmail?: string } | null)?.maskedEmail ?? "a•••••@mail.com";
+  const navState = location.state as { email?: string; maskedEmail?: string } | null;
+  const maskedEmail = navState?.maskedEmail ?? "a•••••@mail.com";
+  const email = navState?.email ?? "";
 
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -69,11 +71,11 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!codeComplete || !matches || expiresIn === 0) return;
+    if (!codeComplete || !matches || expiresIn === 0 || !email) return;
     setSaving(true);
     setError(null);
     try {
-      await resetPasswordWithCode(code, next);
+      await resetPasswordWithCode(email, code, next);
       navigate("/reset-password/success", { state: { returnTo: "/login" } });
     } catch {
       setError("We couldn't reset your password just now. Please try again.");
@@ -225,7 +227,7 @@ export default function ResetPasswordPage() {
 
           <button
             type="submit"
-            disabled={saving || !codeComplete || !matches || expiresIn === 0}
+            disabled={saving || !codeComplete || !matches || expiresIn === 0 || !email}
             className="mt-[14px] w-full rounded-pill bg-plum px-3 py-[11px] text-[9px] font-extrabold text-porcelain disabled:opacity-50"
           >
             {saving ? "Resetting…" : "Reset password"}

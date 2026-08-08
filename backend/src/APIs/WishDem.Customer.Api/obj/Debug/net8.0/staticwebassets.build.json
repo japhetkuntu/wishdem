@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "PxXwrf9gjAFlisdvaMa1E9p+uyhBX+TfhEhvVlBmGOs=",
+  "Source": "WishDem.Customer.Api",
+  "BasePath": "_content/WishDem.Customer.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "WishDem.Customer.Api/wwwroot",
+      "Source": "WishDem.Customer.Api",
+      "ContentRoot": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/wwwroot/",
+      "BasePath": "_content/WishDem.Customer.Api",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/wwwroot/.gitkeep",
+      "SourceId": "WishDem.Customer.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/wwwroot/",
+      "BasePath": "_content/WishDem.Customer.Api",
+      "RelativePath": ".gitkeep",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/.gitkeep"
+    }
+  ]
+}

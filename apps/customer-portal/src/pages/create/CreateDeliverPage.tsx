@@ -33,10 +33,13 @@ const ROUTES: {
   },
 ];
 
+const NEEDS_PHONE_NUMBER: DeliveryChannel[] = ["whatsapp", "sms"];
+
 export default function CreateDeliverPage() {
   const navigate = useNavigate();
-  const { wishId, recipient, channel, setChannel, markSaved } = useWizardStore();
+  const { wishId, recipient, channel, setChannel, setRecipient, markSaved } = useWizardStore();
   const [selected, setSelected] = useState<DeliveryChannel | null>(channel);
+  const [phoneNumber, setPhoneNumber] = useState(recipient?.phoneNumber ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,13 +47,18 @@ export default function CreateDeliverPage() {
     if (!wishId) navigate("/create/who", { replace: true });
   }, [wishId, navigate]);
 
+  const needsPhoneNumber = selected !== null && NEEDS_PHONE_NUMBER.includes(selected);
+  const canContinue = !!selected && (!needsPhoneNumber || phoneNumber.trim().length > 0);
+
   async function handleContinue() {
-    if (!wishId || !selected) return;
+    if (!wishId || !selected || !canContinue) return;
     setSaving(true);
     setError(null);
     try {
-      await saveDeliverStep(wishId, selected, recipient ?? undefined);
+      const trimmedPhone = needsPhoneNumber ? phoneNumber.trim() : undefined;
+      await saveDeliverStep(wishId, selected, recipient ?? undefined, trimmedPhone);
       setChannel(selected);
+      if (recipient && trimmedPhone) setRecipient({ ...recipient, phoneNumber: trimmedPhone });
       markSaved();
       navigate("/create/seal");
     } catch {
@@ -96,10 +104,28 @@ export default function CreateDeliverPage() {
         })}
       </div>
 
+      {needsPhoneNumber && (
+        <div className="mt-6 max-w-[360px]">
+          <label className="mb-1 block text-[10px] font-extrabold tracking-[0.1em] text-champagne">
+            {recipient?.name ?? "THEIR"} PHONE NUMBER
+          </label>
+          <input
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="e.g. 024 123 4567"
+            className="w-full rounded-md border border-porcelain/25 bg-transparent px-3 py-[12px] text-[13px] font-bold text-porcelain outline-none placeholder:font-normal placeholder:text-porcelain/40"
+          />
+          <p className="mt-2 text-[11px] leading-[1.5] text-porcelain/60">
+            {selected === "whatsapp" ? "WhatsApp" : "SMS"} delivery needs a number to reach
+            them — they never need a WishDem account.
+          </p>
+        </div>
+      )}
+
       <Button
         type="button"
         onClick={handleContinue}
-        disabled={!selected || saving}
+        disabled={!canContinue || saving}
         className="mt-7"
       >
         {saving ? "Saving…" : "Continue to seal →"}

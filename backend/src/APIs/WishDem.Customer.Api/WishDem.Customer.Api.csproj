@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SDKs\WishDem.Common.Sdk\WishDem.Common.Sdk.csproj" />
+    <ProjectReference Include="..\..\SDKs\WishDem.Postgres.Sdk\WishDem.Postgres.Sdk.csproj" />
+    <ProjectReference Include="..\..\SDKs\WishDem.Cache.Sdk\WishDem.Cache.Sdk.csproj" />
+    <ProjectReference Include="..\..\SDKs\WishDem.Messaging.Sdk\WishDem.Messaging.Sdk.csproj" />
+    <ProjectReference Include="..\..\SDKs\WishDem.Storage.Sdk\WishDem.Storage.Sdk.csproj" />
+    <ProjectReference Include="..\..\SDKs\WishDem.Actors.Sdk\WishDem.Actors.Sdk.csproj" />
+  </ItemGroup>
+
+</Project>

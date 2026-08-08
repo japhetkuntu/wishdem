@@ -1,0 +1,496 @@
+using System.IO;
+using System.Linq.Expressions;
+using System.Text;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Moq;
+using WishDem.Common.Sdk.Enums;
+using WishDem.Common.Sdk.Responses;
+using WishDem.Customer.Api.Models.Requests;
+using WishDem.Customer.Api.Services;
+using WishDem.Postgres.Sdk.Entities;
+using WishDem.Postgres.Sdk.Repositories;
+using WishDem.Storage.Sdk;
+using Xunit;
+
+namespace WishDem.Customer.Api.Tests.Services;
+
+public class WishServiceTests
+{
+    private readonly Mock<IRepository<Wish>> _wishes = new();
+    private readonly Mock<IStorageService> _storageService = new();
+    private readonly WishService _sut;
+
+    public WishServiceTests()
+    {
+        _storageService.Setup(s => s.BuildPublicUrl(It.IsAny<string>()))
+            .Returns((string key) => $"http://localhost:9000/wishdem/{key}");
+
+        _sut = new WishService(_wishes.Object, _storageService.Object, Mock.Of<ILogger<WishService>>());
+    }
+
+    private static SaveWishRequest ValidRequest() => new(
+        FromName: "Ama",
+        RecipientName: "Kojo",
+        RecipientRelationship: "Brother",
+        RecipientBirthday: new DateOnly(2000, 1, 1),
+        DeliveryTime: new TimeOnly(9, 0),
+        RecipientTimezone: "Africa/Accra",
+        RecipientPhoneNumber: "0244123456",
+        Message: "Happy birthday!",
+        AttachmentKind: null,
+        AttachmentUrl: null,
+        AttachmentDurationSeconds: null,
+        ThemeId: "confetti",
+        Channel: DeliveryChannel.WhatsApp);
+
+    [Fact]
+    public async Task GetByIdAsync_WhenWishIsOwnedByCaller_ReturnsOk()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetByIdAsync(customerUserId, wish.Id);
+
+        response.Code.Should().Be(200);
+        response.Data!.Id.Should().Be(wish.Id);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenWishBelongsToSomeoneElse_ReturnsNotFound()
+    {
+        var wish = new Wish
+        {
+            CustomerUserId = Guid.NewGuid(),
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetByIdAsync(Guid.NewGuid(), wish.Id);
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenWishDoesNotExist_ReturnsNotFound()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
+
+        var response = await _sut.GetByIdAsync(Guid.NewGuid(), Guid.NewGuid());
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenRepositoryThrows_ReturnsInternalError()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("db down"));
+
+        var response = await _sut.GetByIdAsync(Guid.NewGuid(), Guid.NewGuid());
+
+        response.Code.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ReturnsCreatedWithDraftStatus()
+    {
+        var customerUserId = Guid.NewGuid();
+        _wishes.Setup(r => r.AddAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var response = await _sut.CreateAsync(customerUserId, ValidRequest());
+
+        response.Code.Should().Be(201);
+        response.Data!.Status.Should().Be(WishStatus.Draft);
+        response.Data.RecipientName.Should().Be("Kojo");
+        response.Data.RecipientPhoneNumber.Should().Be("0244123456");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenAlreadySealed_ReturnsConflict()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.UpdateAsync(customerUserId, wish.Id, ValidRequest());
+
+        response.Code.Should().Be(409);
+        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SealAsync_WhenDraft_SealsAndReturnsOk()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _wishes.Setup(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var response = await _sut.SealAsync(customerUserId, wish.Id, new SealWishRequest(null));
+
+        response.Code.Should().Be(200);
+        response.Data!.Status.Should().Be(WishStatus.Sealed);
+        response.Data.SealedAtUtc.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task SealAsync_WhenAlreadySealed_ReturnsConflict()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.SealAsync(customerUserId, wish.Id, new SealWishRequest(null));
+
+        response.Code.Should().Be(409);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenOwned_RemovesAndReturnsOk()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _wishes.Setup(r => r.RemoveAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var response = await _sut.DeleteAsync(customerUserId, wish.Id);
+
+        response.Code.Should().Be(200);
+        response.Data.Should().BeTrue();
+        _wishes.Verify(r => r.RemoveAsync(wish, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetMyWishesAsync_ReturnsPagedResultWrappedInOk()
+    {
+        var customerUserId = Guid.NewGuid();
+        var paged = new PagedResult<Wish>
+        {
+            Items = [new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" }],
+            PageIndex = 0,
+            PageSize = 20,
+            TotalCount = 1,
+        };
+        _wishes.Setup(r => r.GetPagedAsync(
+                0, 20,
+                It.IsAny<Expression<Func<Wish, bool>>>(),
+                It.IsAny<Func<IQueryable<Wish>, IOrderedQueryable<Wish>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paged);
+
+        var response = await _sut.GetMyWishesAsync(customerUserId, 0, 20);
+
+        response.Code.Should().Be(200);
+        response.Data!.TotalCount.Should().Be(1);
+        response.Data.Items.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenSealed_ReturnsOk()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetPublicAsync(wish.Id);
+
+        response.Code.Should().Be(200);
+        response.Data!.Id.Should().Be(wish.Id);
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenNotYetOpened_HidesMessageAndAttachment()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Message = "Happy birthday, this is a surprise!",
+            AttachmentKind = AttachmentKind.Image,
+            AttachmentUrl = "https://cdn.example.com/photo.png",
+            AttachmentDurationSeconds = null,
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetPublicAsync(wish.Id);
+
+        response.Data!.Message.Should().BeEmpty();
+        response.Data.AttachmentKind.Should().BeNull();
+        response.Data.AttachmentUrl.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenAlreadyOpened_ReturnsFullContent()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Message = "Happy birthday, this is a surprise!",
+            AttachmentUrl = "https://cdn.example.com/photo.png",
+            Status = WishStatus.Opened,
+            OpenedAtUtc = DateTime.UtcNow,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetPublicAsync(wish.Id);
+
+        response.Data!.Message.Should().Be("Happy birthday, this is a surprise!");
+        response.Data.AttachmentUrl.Should().Be("https://cdn.example.com/photo.png");
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenDraft_ReturnsNotFound()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Draft,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.GetPublicAsync(wish.Id);
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenNotFound_ReturnsNotFound()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
+
+        var response = await _sut.GetPublicAsync(Guid.NewGuid());
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetPublicAsync_WhenRepositoryThrows_ReturnsInternalError()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("db down"));
+
+        var response = await _sut.GetPublicAsync(Guid.NewGuid());
+
+        response.Code.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenSealed_MarksOpenedAndStampsDelivery()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Message = "Happy birthday, this is a surprise!",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.MarkOpenedAsync(wish.Id);
+
+        response.Code.Should().Be(200);
+        response.Data!.Status.Should().Be(WishStatus.Opened);
+        response.Data.OpenedAtUtc.Should().NotBeNull();
+        response.Data.DeliveredAtUtc.Should().NotBeNull();
+        // This is the actual "break the seal" reveal — unlike GetPublicAsync, it must return
+        // the real message, not a blanked-out one.
+        response.Data.Message.Should().Be("Happy birthday, this is a surprise!");
+        _wishes.Verify(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenAlreadyOpened_IsIdempotentAndReturnsOk()
+    {
+        var openedAt = DateTime.UtcNow.AddHours(-1);
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Opened,
+            OpenedAtUtc = openedAt,
+            DeliveredAtUtc = openedAt,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.MarkOpenedAsync(wish.Id);
+
+        response.Code.Should().Be(200);
+        response.Data!.OpenedAtUtc.Should().Be(openedAt);
+        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenDraft_ReturnsNotFound()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Draft,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.MarkOpenedAsync(wish.Id);
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenRepositoryThrows_ReturnsInternalError()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("db down"));
+
+        var response = await _sut.MarkOpenedAsync(Guid.NewGuid());
+
+        response.Code.Should().Be(500);
+    }
+
+    private static IFormFile MakeFormFile(string fileName, string contentType, byte[] content)
+    {
+        var stream = new MemoryStream(content);
+        return new FormFile(stream, 0, content.Length, "file", fileName)
+        {
+            Headers = new Microsoft.AspNetCore.Http.HeaderDictionary(),
+            ContentType = contentType,
+        };
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenValidImage_UploadsToStorageAndReturnsCreated()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _storageService.Setup(s => s.UploadAsync(It.Is<UploadFileRequest>(r => r.Folder == $"wishes/{wish.Id}"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync($"wishes/{wish.Id}/2026/08/03/abc123def456.png");
+
+        var file = MakeFormFile("photo.png", "image/png", Encoding.UTF8.GetBytes("fake-image-bytes"));
+
+        var response = await _sut.UploadAttachmentAsync(customerUserId, wish.Id, file);
+
+        response.Code.Should().Be(201);
+        response.Data!.Kind.Should().Be(AttachmentKind.Image);
+        response.Data.Url.Should().Be($"http://localhost:9000/wishdem/wishes/{wish.Id}/2026/08/03/abc123def456.png");
+        _storageService.Verify(s => s.UploadAsync(It.IsAny<UploadFileRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenFileTooLarge_ReturnsBadRequest()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var oversized = new byte[26 * 1024 * 1024];
+        var file = MakeFormFile("video.mp4", "video/mp4", oversized);
+
+        var response = await _sut.UploadAttachmentAsync(customerUserId, wish.Id, file);
+
+        response.Code.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenUnsupportedContentType_ReturnsBadRequest()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var file = MakeFormFile("doc.exe", "application/x-msdownload", Encoding.UTF8.GetBytes("data"));
+
+        var response = await _sut.UploadAttachmentAsync(customerUserId, wish.Id, file);
+
+        response.Code.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenWishNotOwned_ReturnsNotFound()
+    {
+        var wish = new Wish { CustomerUserId = Guid.NewGuid(), RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var file = MakeFormFile("photo.png", "image/png", Encoding.UTF8.GetBytes("fake"));
+
+        var response = await _sut.UploadAttachmentAsync(Guid.NewGuid(), wish.Id, file);
+
+        response.Code.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenRepositoryThrows_ReturnsInternalError()
+    {
+        _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("db down"));
+
+        var file = MakeFormFile("photo.png", "image/png", Encoding.UTF8.GetBytes("fake"));
+
+        var response = await _sut.UploadAttachmentAsync(Guid.NewGuid(), Guid.NewGuid(), file);
+
+        response.Code.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task UploadAttachmentAsync_WhenStorageProviderRejectsUpload_ReturnsInternalError()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _storageService.Setup(s => s.UploadAsync(It.IsAny<UploadFileRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new StorageException("bucket unreachable"));
+
+        var file = MakeFormFile("photo.png", "image/png", Encoding.UTF8.GetBytes("fake"));
+
+        var response = await _sut.UploadAttachmentAsync(customerUserId, wish.Id, file);
+
+        response.Code.Should().Be(500);
+    }
+}

@@ -4,9 +4,9 @@ export type RecorderStatus = "idle" | "requesting" | "recording" | "stopped" | "
 
 /**
  * Thin wrapper over getUserMedia + MediaRecorder for capturing voice/video
- * attachments client-side, capped at `maxSeconds`. No server involved —
- * the resulting blob is exposed as an object URL for immediate playback,
- * matching the mock-data-layer pattern used elsewhere in the app.
+ * attachments client-side, capped at `maxSeconds`. The resulting blob is exposed
+ * both as an object URL (for immediate local playback) and as the raw Blob
+ * (for the caller to upload to object storage).
  */
 export function useMediaRecorder({
   video = false,
@@ -18,6 +18,7 @@ export function useMediaRecorder({
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [blob, setBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -63,10 +64,11 @@ export function useMediaRecorder({
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, {
+        const recordedBlob = new Blob(chunksRef.current, {
           type: video ? "video/webm" : "audio/webm",
         });
-        setBlobUrl(URL.createObjectURL(blob));
+        setBlob(recordedBlob);
+        setBlobUrl(URL.createObjectURL(recordedBlob));
         setStatus("stopped");
         clearTimer();
         cleanupStream();
@@ -98,6 +100,7 @@ export function useMediaRecorder({
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+    setBlob(null);
     clearTimer();
     cleanupStream();
     setStatus("idle");
@@ -117,5 +120,5 @@ export function useMediaRecorder({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { status, elapsed, blobUrl, error, stream, start, stop, reset };
+  return { status, elapsed, blobUrl, blob, error, stream, start, stop, reset };
 }

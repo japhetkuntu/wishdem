@@ -3,14 +3,15 @@ import { Link, useParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { SealButton } from "@/components/SealButton";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
-import { useWish } from "@/hooks/useWishes";
+import { ShareLinks } from "@/components/ShareLinks";
+import { usePublicWish } from "@/hooks/useWishes";
 import { markOpened } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
 
 export default function RecipientWishPage() {
   const { id } = useParams<{ id: string }>();
-  const { wish, loading } = useWish(id);
+  const { wish, loading, setWish } = usePublicWish(id);
   const [revealed, setRevealed] = useState(false);
 
   if (loading) {
@@ -33,8 +34,11 @@ export default function RecipientWishPage() {
 
   async function handleOpen() {
     if (!id) return;
+    // The public GET never includes the message/attachment before the wish is opened —
+    // markOpened's response is what actually reveals the content, so we store that.
+    const revealedWish = await markOpened(id);
+    setWish(revealedWish);
     setRevealed(true);
-    await markOpened(id);
   }
 
   if (!isOpened) {
@@ -100,9 +104,16 @@ export default function RecipientWishPage() {
             <AttachmentDisplay attachment={wish.attachment} fromName={wish.fromName} />
           )}
 
-          <a className="mt-[18px] inline-block text-[12px] font-extrabold text-mulberry">
-            Keep this wish
-          </a>
+          <div className="mt-[22px] border-t border-ink/10 pt-[18px]">
+            <p className="mb-3 text-[11px] font-extrabold tracking-[0.08em] text-mulberry">
+              SHARE THE FEELING
+            </p>
+            <ShareLinks
+              url={window.location.href}
+              shareText={`Someone remembered — sending this kindness forward. 💛`}
+              tone="light"
+            />
+          </div>
         </article>
 
         <aside className="grid gap-[15px] sm:grid-cols-2">

@@ -31,15 +31,22 @@ import type {
 export function useOverview() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
+    setLoading(true);
     getOverview().then((d) => {
       setData(d);
       setLoading(false);
+      setLastRefreshedAt(new Date());
     });
   }, []);
 
-  return { data, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { data, loading, refresh, lastRefreshedAt };
 }
 
 export function useAdminWishes() {

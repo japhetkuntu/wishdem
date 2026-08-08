@@ -38,7 +38,7 @@ export default function CreatePaymentFailedPage() {
           <span>
             {recipient.name} · {formatWeekdayDate(recipient.birthdayISO)}
           </span>
-          <b className="text-champagne">£1.49</b>
+          <b className="text-champagne">GH₵1.49</b>
         </div>
         <Button type="button" onClick={() => navigate("/create/seal")}>
           Try payment again

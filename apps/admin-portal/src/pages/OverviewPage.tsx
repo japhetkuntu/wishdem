@@ -16,8 +16,14 @@ const WAVE_BAR_CLASSES = {
   bad: "bg-rose",
 };
 
+const TODAY_LABEL = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+}).format(new Date()).toUpperCase();
+
 export default function OverviewPage() {
-  const { data, loading } = useOverview();
+  const { data, loading, refresh, lastRefreshedAt } = useOverview();
 
   if (loading || !data) {
     return (
@@ -28,6 +34,9 @@ export default function OverviewPage() {
   }
 
   const { kpis } = data;
+  const openModerationCount = Number(
+    data.signals.find((s) => s.label === "Open moderation cases")?.value ?? 0,
+  );
 
   return (
     <AdminLayout active="overview">
@@ -38,8 +47,16 @@ export default function OverviewPage() {
         />
         <div className="flex items-center gap-3 text-[11px]">
           <b className="rounded-pill bg-champagne/25 px-2 py-[6px] text-[10px]">GMT / ACCRA</b>
-          <span className="hidden text-ink/55 sm:inline">Last refreshed 09:48</span>
-          <button type="button" className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-porcelain">
+          <span className="hidden text-ink/55 sm:inline">
+            {lastRefreshedAt
+              ? `Last refreshed ${lastRefreshedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+              : "Refreshing…"}
+          </span>
+          <button
+            type="button"
+            onClick={refresh}
+            className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-porcelain"
+          >
             Refresh data
           </button>
         </div>
@@ -48,12 +65,14 @@ export default function OverviewPage() {
       <section className="my-[17px] flex flex-wrap items-end justify-between gap-3">
         <div>
           <span className="text-[10px] font-extrabold tracking-[0.13em] text-mulberry">
-            TUESDAY, 12 NOVEMBER
+            {TODAY_LABEL}
           </span>
           <h1 className="mt-1 font-display text-[34px]">Today's operating condition</h1>
         </div>
         <p className="text-[11px] text-ink/60">
-          All core systems reporting · 3 urgent issues assigned to you
+          {openModerationCount > 0
+            ? `${openModerationCount} case${openModerationCount === 1 ? "" : "s"} awaiting review`
+            : "All core systems reporting"}
         </p>
       </section>
 
@@ -90,10 +109,15 @@ export default function OverviewPage() {
             <div className="flex items-center justify-between">
               <h2 className="font-display text-[21px]">Needs attention</h2>
               <Link to="/attention" className="text-[10px] font-extrabold text-mulberry">
-                Open all 18 →
+                Open all {openModerationCount} →
               </Link>
             </div>
             <div className="mt-[10px]">
+              {data.attention.length === 0 && (
+                <p className="py-[11px] text-[11px] text-ink/55">
+                  Nothing needs attention right now.
+                </p>
+              )}
               {data.attention.map((item) => (
                 <div
                   key={item.id}
@@ -134,27 +158,24 @@ export default function OverviewPage() {
                 Live schedule →
               </Link>
             </div>
-            {data.waves.map((wave) => (
-              <div
-                key={wave.id}
-                className="grid grid-cols-[70px_1fr_60px] items-center gap-2 border-t border-plum/[0.09] py-[10px] text-[10px] sm:grid-cols-[94px_1fr_44px]"
-              >
-                <b>{wave.label}</b>
-                <div className="h-[7px] overflow-hidden rounded-pill bg-plum/[0.08]">
-                  <i className={clsx("block h-full", WAVE_BAR_CLASSES[wave.tone])} style={{ width: `${wave.percent}%` }} />
+            {data.waves.length === 0 ? (
+              <p className="border-t border-plum/[0.09] py-[11px] text-[11px] text-ink/55">
+                See live counts on the Delivery Health page.
+              </p>
+            ) : (
+              data.waves.map((wave) => (
+                <div
+                  key={wave.id}
+                  className="grid grid-cols-[70px_1fr_60px] items-center gap-2 border-t border-plum/[0.09] py-[10px] text-[10px] sm:grid-cols-[94px_1fr_44px]"
+                >
+                  <b>{wave.label}</b>
+                  <div className="h-[7px] overflow-hidden rounded-pill bg-plum/[0.08]">
+                    <i className={clsx("block h-full", WAVE_BAR_CLASSES[wave.tone])} style={{ width: `${wave.percent}%` }} />
+                  </div>
+                  <span>{wave.ratioLabel}</span>
                 </div>
-                <span>{wave.ratioLabel}</span>
-              </div>
-            ))}
-            <div className="grid grid-cols-[70px_1fr_60px] items-center gap-2 border-t border-plum/[0.09] py-[10px] text-[10px] sm:grid-cols-[94px_1fr_44px]">
-              <b>Next wave</b>
-              <div>
-                <b>14:00 GMT</b>
-                <br />
-                <small className="text-ink/55">23 scheduled deliveries</small>
-              </div>
-              <span>queued</span>
-            </div>
+              ))
+            )}
           </article>
         </div>
 
@@ -166,6 +187,11 @@ export default function OverviewPage() {
             </Link>
           </div>
           <div className="mt-[9px]">
+            {data.activity.length === 0 && (
+              <p className="border-t border-plum/[0.09] py-[10px] text-[10px] text-ink/55">
+                Activity log isn't available yet.
+              </p>
+            )}
             {data.activity.map((event) => (
               <div key={event.id} className="border-t border-plum/[0.09] py-[10px] text-[10px] leading-[1.45]">
                 <time className="font-extrabold text-mulberry">{event.time}</time> · {event.message}

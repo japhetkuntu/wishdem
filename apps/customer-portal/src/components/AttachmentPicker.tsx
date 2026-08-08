@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
 import { useMediaRecorder } from "@/hooks/useMediaRecorder";
 import { formatDuration } from "@/lib/format";
+import { uploadAttachment } from "@/lib/api";
 import { GIF_LIBRARY, findGifTile } from "@/mocks/gifLibrary";
 import type { Attachment, AttachmentKind } from "@/types";
 
@@ -13,12 +14,19 @@ const TABS: { kind: AttachmentKind; label: string }[] = [
   { kind: "voice", label: "Voice note" },
 ];
 
-export interface PanelProps {
+export interface PickerProps {
   value: Attachment | null;
   onChange: (attachment: Attachment | null) => void;
+  /** The wish this attachment belongs to — attachments upload to object storage
+   * (DigitalOcean Spaces in production, MinIO locally) under this wish's folder.
+   * Omitted by the unauthenticated group-wish guest contribution flow, which has
+   * no wish/JWT to upload against yet and still uses local blob URLs only. */
+  wishId?: string;
 }
 
-export function AttachmentPicker({ value, onChange }: PanelProps) {
+type PanelProps = PickerProps;
+
+export function AttachmentPicker({ value, onChange, wishId }: PickerProps) {
   const [activeKind, setActiveKind] = useState<AttachmentKind>(value?.kind ?? "gif");
 
   useEffect(() => {
@@ -53,10 +61,10 @@ export function AttachmentPicker({ value, onChange }: PanelProps) {
       </div>
 
       <div className="mt-3 rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04] p-4">
-        {activeKind === "gif" && <GifPanel value={value} onChange={onChange} />}
-        {activeKind === "image" && <ImagePanel value={value} onChange={onChange} />}
-        {activeKind === "video" && <VideoPanel value={value} onChange={onChange} />}
-        {activeKind === "voice" && <VoicePanel value={value} onChange={onChange} />}
+        {activeKind === "gif" && <GifPanel value={value} onChange={onChange} wishId={wishId} />}
+        {activeKind === "image" && <ImagePanel value={value} onChange={onChange} wishId={wishId} />}
+        {activeKind === "video" && <VideoPanel value={value} onChange={onChange} wishId={wishId} />}
+        {activeKind === "voice" && <VoicePanel value={value} onChange={onChange} wishId={wishId} />}
       </div>
     </div>
   );
@@ -107,14 +115,29 @@ function GifPanel({ value, onChange }: PanelProps) {
   );
 }
 
-export function ImagePanel({ value, onChange }: PanelProps) {
+export function ImagePanel({ value, onChange, wishId }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const hasImage = value?.kind === "image" && value.url;
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    onChange({ kind: "image", url: URL.createObjectURL(file) });
+    if (!wishId) {
+      onChange({ kind: "image", url: URL.createObjectURL(file) });
+      return;
+    }
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const attachment = await uploadAttachment(wishId, file, file.name);
+      onChange(attachment);
+    } catch {
+      setUploadError("We couldn't upload that photo. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   if (hasImage) {
@@ -140,22 +163,26 @@ export function ImagePanel({ value, onChange }: PanelProps) {
         accept="image/*"
         className="hidden"
         onChange={handleFile}
+        disabled={uploading}
       />
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
+        disabled={uploading}
         className="flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-porcelain/40 text-[13px] font-bold text-porcelain/75"
       >
-        <span className="text-[22px]">🖼️</span>
-        Choose a photo to keep with your letter
+        <span className="text-[22px]">{uploading ? "⏳" : "🖼️"}</span>
+        {uploading ? "Uploading…" : "Choose a photo to keep with your letter"}
       </button>
+      {uploadError && <p className="mt-2 text-[12px] text-rose">{uploadError}</p>}
     </div>
   );
 }
 
-export function VideoPanel({ value, onChange }: PanelProps) {
+export function VideoPanel({ value, onChange, wishId }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const recorder = useMediaRecorder({ video: true, maxSeconds: 30 });
 
@@ -164,27 +191,51 @@ export function VideoPanel({ value, onChange }: PanelProps) {
   }, [recorder.stream]);
 
   useEffect(() => {
-    if (recorder.status === "stopped" && recorder.blobUrl) {
-      onChange({ kind: "video", url: recorder.blobUrl, durationSeconds: recorder.elapsed });
+    if (recorder.status === "stopped" && recorder.blob) {
+      if (!wishId) {
+        onChange({ kind: "video", url: recorder.blobUrl!, durationSeconds: recorder.elapsed });
+        return;
+      }
+      setUploadError(null);
+      setUploading(true);
+      uploadAttachment(wishId, recorder.blob, "recording.webm")
+        .then((attachment) => onChange({ ...attachment, durationSeconds: recorder.elapsed }))
+        .catch(() => setUploadError("We couldn't upload that clip. Please try again."))
+        .finally(() => setUploading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.status, recorder.blobUrl]);
+  }, [recorder.status, recorder.blob]);
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadError(null);
-    const url = URL.createObjectURL(file);
+
+    const probeUrl = URL.createObjectURL(file);
     const probe = document.createElement("video");
     probe.preload = "metadata";
-    probe.src = url;
-    probe.onloadedmetadata = () => {
+    probe.src = probeUrl;
+    probe.onloadedmetadata = async () => {
+      const duration = Math.round(probe.duration);
       if (probe.duration > 30) {
         setUploadError("Please choose a clip under 30 seconds.");
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(probeUrl);
         return;
       }
-      onChange({ kind: "video", url, durationSeconds: Math.round(probe.duration) });
+      if (!wishId) {
+        onChange({ kind: "video", url: probeUrl, durationSeconds: duration });
+        return;
+      }
+      URL.revokeObjectURL(probeUrl);
+      setUploading(true);
+      try {
+        const attachment = await uploadAttachment(wishId, file, file.name);
+        onChange({ ...attachment, durationSeconds: duration });
+      } catch {
+        setUploadError("We couldn't upload that clip. Please try again.");
+      } finally {
+        setUploading(false);
+      }
     };
   }
 
@@ -201,6 +252,15 @@ export function VideoPanel({ value, onChange }: PanelProps) {
         <Button type="button" variant="outline" onClick={recorder.stop} className="mt-3">
           Stop recording
         </Button>
+      </div>
+    );
+  }
+
+  if (uploading) {
+    return (
+      <div className="flex min-h-[140px] flex-col items-center justify-center gap-2 text-[13px] font-bold text-porcelain/75">
+        <span className="text-[22px]">⏳</span>
+        Uploading…
       </div>
     );
   }
@@ -245,15 +305,26 @@ export function VideoPanel({ value, onChange }: PanelProps) {
   );
 }
 
-export function VoicePanel({ value, onChange }: PanelProps) {
+export function VoicePanel({ value, onChange, wishId }: PanelProps) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const recorder = useMediaRecorder({ video: false, maxSeconds: 30 });
 
   useEffect(() => {
-    if (recorder.status === "stopped" && recorder.blobUrl) {
-      onChange({ kind: "voice", url: recorder.blobUrl, durationSeconds: recorder.elapsed });
+    if (recorder.status === "stopped" && recorder.blob) {
+      if (!wishId) {
+        onChange({ kind: "voice", url: recorder.blobUrl!, durationSeconds: recorder.elapsed });
+        return;
+      }
+      setUploadError(null);
+      setUploading(true);
+      uploadAttachment(wishId, recorder.blob, "voice-note.webm")
+        .then((attachment) => onChange({ ...attachment, durationSeconds: recorder.elapsed }))
+        .catch(() => setUploadError("We couldn't upload that voice note. Please try again."))
+        .finally(() => setUploading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.status, recorder.blobUrl]);
+  }, [recorder.status, recorder.blob]);
 
   const hasVoice = value?.kind === "voice" && value.url;
 
@@ -276,6 +347,15 @@ export function VoicePanel({ value, onChange }: PanelProps) {
         <Button type="button" variant="outline" onClick={recorder.stop}>
           Stop recording
         </Button>
+      </div>
+    );
+  }
+
+  if (uploading) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-4 text-center text-[13px] font-bold text-porcelain/75">
+        <span className="text-[22px]">⏳</span>
+        Uploading…
       </div>
     );
   }
@@ -305,7 +385,7 @@ export function VoicePanel({ value, onChange }: PanelProps) {
       <Button type="button" onClick={recorder.start}>
         🎙️ Record voice note
       </Button>
-      {recorder.error && <p className="text-[12px] text-rose">{recorder.error}</p>}
+      {(recorder.error || uploadError) && <p className="text-[12px] text-rose">{recorder.error ?? uploadError}</p>}
     </div>
   );
 }

@@ -13,8 +13,8 @@ export function useAdminAuth() {
     });
   }, []);
 
-  const signIn = useCallback(async (email: string) => {
-    const u = await signInAdmin(email);
+  const signIn = useCallback(async (email: string, password: string) => {
+    const u = await signInAdmin(email, password);
     setUser(u);
     return u;
   }, []);

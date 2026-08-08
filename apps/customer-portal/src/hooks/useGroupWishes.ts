@@ -2,24 +2,26 @@ import { useCallback, useEffect, useState } from "react";
 import {
   createGroupWish,
   getGroupWish,
-  getGroupWishInvitation,
+  getGroupWishInvitationContext,
   listGroupWishes,
   listGroupWishInvitations,
-  respondToGroupWishInvitation,
+  respondToInvitationToken,
   type CreateGroupWishInput,
 } from "@/lib/api";
-import type { GroupWish, GroupWishInvitation } from "@/types";
+import type { GroupWish, GroupWishFormat, GroupWishInvitation, GroupWishInvitationStatus } from "@/types";
 
 export function useGroupWishes() {
   const [groupWishes, setGroupWishes] = useState<GroupWish[]>([]);
-  const [invitations, setInvitations] = useState<GroupWishInvitation[]>([]);
+  // Always empty — group-wish guests are invite-token based and never tied
+  // to a logged-in CustomerUser, so there's no backend concept of
+  // "invitations the current account received." See listGroupWishInvitations.
+  const [invitations] = useState<GroupWishInvitation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(() => {
     setLoading(true);
-    Promise.all([listGroupWishes(), listGroupWishInvitations()]).then(([wishes, invites]) => {
+    Promise.all([listGroupWishes(), listGroupWishInvitations()]).then(([wishes]) => {
       setGroupWishes(wishes);
-      setInvitations(invites);
       setLoading(false);
     });
   }, []);
@@ -34,13 +36,7 @@ export function useGroupWishes() {
     return wish;
   }, []);
 
-  const respond = useCallback(async (id: string, status: "joined" | "declined" | "not-now") => {
-    const updated = await respondToGroupWishInvitation(id, status);
-    setInvitations((prev) => prev.map((i) => (i.id === id ? updated : i)));
-    return updated;
-  }, []);
-
-  return { groupWishes, invitations, loading, create, respond, refresh };
+  return { groupWishes, invitations, loading, create, refresh };
 }
 
 export function useGroupWish(id: string | undefined) {
@@ -62,8 +58,37 @@ export function useGroupWish(id: string | undefined) {
   return { groupWish, loading };
 }
 
+/**
+ * Guest invite view — `id` here is the opaque invite token from the URL
+ * (route `/group-wishes/invitations/:id`), resolved via the no-auth
+ * `GET /api/group-wishes/invitations/{token}` endpoint. This shape is
+ * distinct from the organizer-facing `GroupWish` type, so pages consuming
+ * this hook read the raw context fields directly.
+ */
+export interface GuestInvitationContext {
+  inviteToken: string;
+  title: string;
+  inviterName: string;
+  recipientName: string;
+  occasion: string | null;
+  deliveryDate: string | null;
+  collectByDate: string | null;
+  formats: GroupWishFormat[];
+  guestName: string;
+  status: GroupWishInvitationStatus;
+  organizerNote: string | null;
+}
+
+function mapInvitationStatus(status: "invited" | "joined" | "declined" | "notNow"): GroupWishInvitationStatus {
+  return status === "notNow" ? "not-now" : status;
+}
+
+function mapFormat(format: string): GroupWishFormat {
+  return format === "photo" ? "photos" : (format as GroupWishFormat);
+}
+
 export function useGroupWishInvitation(id: string | undefined) {
-  const [invitation, setInvitation] = useState<GroupWishInvitation | null>(null);
+  const [invitation, setInvitation] = useState<GuestInvitationContext | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(() => {
@@ -72,10 +97,24 @@ export function useGroupWishInvitation(id: string | undefined) {
       return;
     }
     setLoading(true);
-    getGroupWishInvitation(id).then((invite) => {
-      setInvitation(invite);
-      setLoading(false);
-    });
+    getGroupWishInvitationContext(id)
+      .then((ctx) =>
+        setInvitation({
+          inviteToken: ctx.inviteToken,
+          title: ctx.title,
+          inviterName: ctx.inviterName,
+          recipientName: ctx.recipientName,
+          occasion: ctx.occasion,
+          deliveryDate: ctx.deliveryDate,
+          collectByDate: ctx.collectByDate,
+          formats: ctx.formats.map(mapFormat),
+          guestName: ctx.guestName,
+          status: mapInvitationStatus(ctx.status),
+          organizerNote: ctx.organizerNote,
+        }),
+      )
+      .catch(() => setInvitation(null))
+      .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
@@ -85,8 +124,21 @@ export function useGroupWishInvitation(id: string | undefined) {
   const respond = useCallback(
     async (status: "joined" | "declined" | "not-now") => {
       if (!id) return;
-      const updated = await respondToGroupWishInvitation(id, status);
-      setInvitation(updated);
+      const backendStatus = status === "not-now" ? "notNow" : status;
+      const updated = await respondToInvitationToken(id, backendStatus);
+      setInvitation({
+        inviteToken: updated.inviteToken,
+        title: updated.title,
+        inviterName: updated.inviterName,
+        recipientName: updated.recipientName,
+        occasion: updated.occasion,
+        deliveryDate: updated.deliveryDate,
+        collectByDate: updated.collectByDate,
+        formats: updated.formats.map(mapFormat),
+        guestName: updated.guestName,
+        status: mapInvitationStatus(updated.status),
+        organizerNote: updated.organizerNote,
+      });
       return updated;
     },
     [id],

@@ -8,7 +8,7 @@ import { chargeMobileMoney } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
 
-const PRICE_LABEL = "£1.49";
+const PRICE_LABEL = "GH₵1.49";
 
 export default function CreateSealPage() {
   const navigate = useNavigate();

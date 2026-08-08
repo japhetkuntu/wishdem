@@ -1,152 +1,656 @@
-import {
-  ATTENTION_CASES,
-  AUDIT_EVENTS,
-  CUSTOMERS,
-  DELIVERY_ATTEMPTS,
-  DELIVERY_STATS,
-  MODERATION_CASE,
-  MOMO_TRANSACTIONS,
-  OVERVIEW,
-  TEAM_MEMBERS,
-  WISHES,
-} from "@/mocks/adminData";
-import type { AdminUser, ModerationCase } from "@/types";
+import { apiRequest, ApiError, clearTokens, hasSession, setTokens } from "@/lib/httpClient";
+import type {
+  AdminCustomer,
+  AdminUser,
+  AdminWish,
+  AttentionCase,
+  AuditEvent,
+  DeliveryAttempt,
+  DeliveryAttemptStatus,
+  DeliveryStat,
+  DeliveryStatus,
+  ModerationCase,
+  MoMoStatus,
+  MoMoTransaction,
+  OverviewData,
+  PaymentStatus,
+  Severity,
+  TeamMember,
+} from "@/types";
 
-const LATENCY_MS = 220;
+/* -------------------------------------------------------------------------
+ * Backend DTO shapes (Admin.Api). These mirror the real API responses; the
+ * functions below map them onto this app's richer frontend types wherever a
+ * reasonable, non-fabricated mapping exists.
+ * ---------------------------------------------------------------------- */
 
-function delay<T>(value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), LATENCY_MS));
+interface LoginResponseDto {
+  accessToken: string;
+  refreshToken: string;
+  expiresAtUtc: string;
+  user: { id: string; email: string; fullName: string; role: string };
 }
 
-const AUTH_KEY = "wishdem-admin-user";
+interface PagedResult<T> {
+  items: T[];
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
 
-function loadUser(): AdminUser | null {
-  if (typeof sessionStorage === "undefined") return null;
+type BackendWishStatus = "draft" | "sealed" | "delivered" | "opened";
+
+interface AdminWishResponseDto {
+  id: string;
+  customerUserId: string;
+  customerEmail: string;
+  customerName: string;
+  fromName: string;
+  recipientName: string;
+  recipientRelationship: string;
+  recipientBirthday: string | null;
+  channel: string;
+  status: BackendWishStatus;
+  priceLabel: string;
+  sealedAtUtc: string | null;
+  deliveredAtUtc: string | null;
+  openedAtUtc: string | null;
+  createdAtUtc: string;
+}
+
+type BackendPaymentStatus = "pending" | "succeeded" | "failed" | "reversed" | "refundPending";
+type BackendProvider = "mtn" | "telecel" | "airtelTigo";
+
+interface AdminPaymentResponseDto {
+  id: string;
+  wishId: string;
+  senderName: string;
+  phoneNumber: string;
+  provider: BackendProvider;
+  amount: number;
+  status: BackendPaymentStatus;
+  failureReason: string | null;
+  reconciliationMismatch: boolean;
+  refundAmount: number | null;
+  refundReason: string | null;
+  refundedAtUtc: string | null;
+  settledAtUtc: string | null;
+  createdAtUtc: string;
+}
+
+type BackendSeverity = "info" | "medium" | "high" | "critical";
+type BackendModerationStatus = "underReview" | "resolved";
+type BackendDecision = "approved" | "removed" | null;
+
+interface ModerationCaseResponseDto {
+  id: string;
+  wishId: string;
+  title: string;
+  description: string | null;
+  evidenceQuote: string | null;
+  contentType: string | null;
+  severity: BackendSeverity;
+  status: BackendModerationStatus;
+  reviewerName: string | null;
+  decision: BackendDecision;
+  decisionReason: string | null;
+  decidedAtUtc: string | null;
+  createdAtUtc: string;
+}
+
+interface DeliveryHealthDto {
+  draft: number;
+  due: number;
+  delivered: number;
+  opened: number;
+}
+
+interface CustomerResponseDto {
+  id: string;
+  email: string;
+  name: string;
+  createdAtUtc: string;
+  lastLoginAtUtc: string | null;
+  totalWishCount: number;
+  wishCountByStatus: Record<string, number>;
+  totalAmountPaid: number;
+}
+
+/* -------------------------------------------------------------------------
+ * Auth
+ *
+ * The backend has no GET /api/auth/me-style endpoint, so the logged-in user
+ * object returned by login/refresh is persisted here (sessionStorage, kept
+ * separate from httpClient's token storage) and read back by
+ * getCurrentAdmin() without a network call.
+ * ---------------------------------------------------------------------- */
+
+const PERSISTED_USER_KEY = "wishdem-admin-user";
+
+function persistUser(user: AdminUser) {
   try {
-    const raw = sessionStorage.getItem(AUTH_KEY);
+    sessionStorage.setItem(PERSISTED_USER_KEY, JSON.stringify(user));
+  } catch {
+    // Non-fatal — session just won't survive a reload.
+  }
+}
+
+function loadPersistedUser(): AdminUser | null {
+  try {
+    const raw = sessionStorage.getItem(PERSISTED_USER_KEY);
     return raw ? (JSON.parse(raw) as AdminUser) : null;
   } catch {
     return null;
   }
 }
 
-let currentUser: AdminUser | null = loadUser();
-
-export async function getCurrentAdmin(): Promise<AdminUser | null> {
-  return delay(currentUser);
+function clearPersistedUser() {
+  try {
+    sessionStorage.removeItem(PERSISTED_USER_KEY);
+  } catch {
+    // Nothing to clean up if storage isn't available.
+  }
 }
 
-export async function signInAdmin(email: string): Promise<AdminUser> {
-  const user: AdminUser = {
-    id: "admin-1",
-    name: email.split("@")[0]?.replace(/[._]/g, " ") || "Team member",
-    email,
-    role: "Operations Admin",
-  };
-  currentUser = user;
-  try {
-    sessionStorage.setItem(AUTH_KEY, JSON.stringify(user));
-  } catch {
-    // non-fatal for a mock layer
-  }
-  return delay(user);
+function mapUser(dto: LoginResponseDto["user"]): AdminUser {
+  return { id: dto.id, name: dto.fullName, email: dto.email, role: dto.role };
+}
+
+export async function getCurrentAdmin(): Promise<AdminUser | null> {
+  if (!hasSession()) return null;
+  return loadPersistedUser();
+}
+
+export async function signInAdmin(email: string, password: string): Promise<AdminUser> {
+  const result = await apiRequest<LoginResponseDto>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+    skipAuth: true,
+  });
+  setTokens(result.accessToken, result.refreshToken);
+  const user = mapUser(result.user);
+  persistUser(user);
+  return user;
 }
 
 export async function signOutAdmin(): Promise<void> {
-  currentUser = null;
   try {
-    sessionStorage.removeItem(AUTH_KEY);
+    await apiRequest("/api/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: getStoredRefreshTokenForLogout() }),
+    });
   } catch {
-    // non-fatal
+    // Best-effort — logout should never block clearing local session state.
   }
-  return delay(undefined);
+  clearTokens();
+  clearPersistedUser();
 }
 
-export async function getOverview() {
-  return delay(OVERVIEW);
-}
-
-export async function listWishes() {
-  return delay([...WISHES]);
-}
-
-export async function retryWishDelivery(wishId: string) {
-  const wish = WISHES.find((w) => w.id === wishId);
-  if (wish) {
-    wish.deliveryStatus = "SCHEDULED";
-    wish.deliveryDetail = "Retry queued";
-    wish.investigation.timeline.unshift({ time: "Just now", note: "Retry queued by admin" });
+// httpClient doesn't expose the raw refresh token (by design, to keep a
+// single source of truth for token storage), so logout best-effort reads it
+// straight from sessionStorage using the same key httpClient uses internally.
+function getStoredRefreshTokenForLogout(): string | null {
+  try {
+    return sessionStorage.getItem("wishdem-admin-refresh-token");
+  } catch {
+    return null;
   }
-  return delay(wish ?? null);
 }
 
-export async function listMoMoTransactions() {
-  return delay([...MOMO_TRANSACTIONS]);
-}
-
-export async function getModerationCase() {
-  return delay({ ...MODERATION_CASE } as ModerationCase);
-}
-
-export async function decideModerationCase(decision: "approved" | "removed") {
-  MODERATION_CASE.status = "resolved";
-  MODERATION_CASE.description =
-    decision === "approved"
-      ? "Content was reviewed and approved for delivery."
-      : "Content was removed and is no longer available to sender or recipient.";
-  return delay({ ...MODERATION_CASE });
-}
-
-export async function listDeliveryStats() {
-  return delay([...DELIVERY_STATS]);
-}
-
-export async function listDeliveryAttempts() {
-  return delay([...DELIVERY_ATTEMPTS]);
-}
-
-export async function retryDeliveryAttempt(id: string) {
-  const attempt = DELIVERY_ATTEMPTS.find((d) => d.id === id);
-  if (attempt) {
-    attempt.status = "QUEUED";
-    attempt.detail = attempt.detail.replace(/Provider timeout.*/, "Retry queued by admin");
-    attempt.actionLabel = "Open";
-  }
-  return delay(attempt ?? null);
-}
-
-export async function listAttentionCases() {
-  return delay([...ATTENTION_CASES]);
-}
-
-export async function assignAttentionCase(id: string, owner: string) {
-  const item = ATTENTION_CASES.find((a) => a.id === id);
-  if (item) item.detail.owner = owner;
-  return delay(item ?? null);
-}
-
-export async function listCustomers() {
-  return delay([...CUSTOMERS]);
-}
-
-export async function listTeamMembers() {
-  return delay([...TEAM_MEMBERS]);
-}
-
-export async function listAuditEvents() {
-  return delay([...AUDIT_EVENTS]);
-}
-
-export async function changePassword(_current: string, _next: string): Promise<{ success: true }> {
-  return delay({ success: true });
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ success: true }> {
+  await apiRequest<boolean>("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return { success: true };
 }
 
 export async function requestPasswordResetCode(email: string): Promise<{ maskedEmail: string }> {
-  const [name, domain] = email.split("@");
-  const masked = `${name?.[0] ?? "a"}${"•".repeat(Math.max(3, (name?.length ?? 4) - 1))}@${domain ?? "mail.com"}`;
-  return delay({ maskedEmail: masked });
+  const result = await apiRequest<{ maskedEmail: string; expirySeconds: number; devCode?: string | null }>(
+    "/api/auth/forgot-password",
+    { method: "POST", body: JSON.stringify({ email }), skipAuth: true },
+  );
+  // devCode is only present outside Production — there's no real email
+  // provider wired up yet, so log it for local dev convenience.
+  if (result.devCode) {
+    // eslint-disable-next-line no-console
+    console.info(`[dev] Password reset code for ${email}: ${result.devCode}`);
+  }
+  return { maskedEmail: result.maskedEmail };
 }
 
-export async function resetPasswordWithCode(_code: string, _next: string): Promise<{ success: true }> {
-  return delay({ success: true });
+export async function resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<{ success: true }> {
+  await apiRequest<boolean>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, code, newPassword }),
+    skipAuth: true,
+  });
+  return { success: true };
+}
+
+/* -------------------------------------------------------------------------
+ * Dashboard overview
+ *
+ * The backend overview DTO is deliberately much flatter than OverviewData
+ * (no waves/signals/activity-feed concept exists server-side). Real counts
+ * are mapped in; everything else is left empty/zero rather than fabricated.
+ * ---------------------------------------------------------------------- */
+
+interface DashboardOverviewDto {
+  totalWishes: number;
+  sealedTodayCount: number;
+  openedTodayCount: number;
+  openModerationCasesCount: number;
+  totalRevenue: number;
+  totalCustomers: number;
+}
+
+export async function getOverview(): Promise<OverviewData> {
+  const dto = await apiRequest<DashboardOverviewDto>("/api/dashboard/overview");
+
+  return {
+    kpis: {
+      // "Created today" isn't tracked distinctly from "sealed today" by the
+      // backend — sealedTodayCount is the closest real signal.
+      createdToday: dto.sealedTodayCount,
+      createdTodayNote: "",
+      createdWeek: dto.totalWishes,
+      createdWeekNote: "All-time total",
+      // No "due today" concept server-side (see delivery-health for buckets).
+      dueToday: 0,
+      dueTodayNote: "",
+      deliveredToday: dto.openedTodayCount,
+      deliveredTodayNote: "",
+      // No failed-delivery concept exists yet.
+      failedDelivery: 0,
+      failedDeliveryNote: "",
+      revenueWeek: formatCurrency(dto.totalRevenue),
+      revenueWeekNote: "All-time total, not week-scoped",
+    },
+    // No backend "attention case" summary feed for the overview page — the
+    // full attention queue is fetched separately from /api/moderation by
+    // listAttentionCases(); we don't duplicate/fabricate a preview here.
+    attention: [],
+    // No delivery-wave concept server-side.
+    waves: [],
+    // No activity-feed/audit-log entity exists server-side.
+    activity: [],
+    signals: [
+      { value: String(dto.totalCustomers), label: "Total customers" },
+      { value: String(dto.openModerationCasesCount), label: "Open moderation cases" },
+    ],
+  };
+}
+
+function formatCurrency(amount: number): string {
+  return `GH₵${amount.toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/* -------------------------------------------------------------------------
+ * Wishes oversight
+ * ---------------------------------------------------------------------- */
+
+function formatDateLabel(iso: string | null): string {
+  if (!iso) return "—";
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(
+    new Date(iso),
+  );
+}
+
+function mapWishDeliveryStatus(status: BackendWishStatus, deliveredAtUtc: string | null): DeliveryStatus {
+  if (status === "delivered" || status === "opened" || deliveredAtUtc) return "DELIVERED";
+  if (status === "sealed") return "SCHEDULED";
+  // "draft" has no real delivery-status equivalent in the mock's enum; the
+  // closest honest mapping is SCHEDULED (not yet attempted, not failed).
+  return "SCHEDULED";
+}
+
+function mapWish(dto: AdminWishResponseDto): AdminWish {
+  const deliveryStatus = mapWishDeliveryStatus(dto.status, dto.deliveredAtUtc);
+  const statusBadge = dto.status.toUpperCase();
+
+  return {
+    id: dto.id,
+    createdLabel: `Created ${formatDateLabel(dto.createdAtUtc)} · ${dto.channel}`,
+    channel: dto.channel,
+    senderName: dto.fromName || dto.customerName,
+    recipientName: dto.recipientName,
+    scheduleLabel: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "—",
+    timezoneLabel: "GMT / Accra",
+    deliveryStatus,
+    // No per-attempt/retry count tracked server-side — leave blank rather
+    // than fabricate a "3 attempts" style detail.
+    deliveryDetail: "",
+    // The backend has no payment-status field on the wish itself (that
+    // lives on the payment record) — PAID is the only honest default here
+    // since sealed/delivered/opened wishes imply payment succeeded.
+    paymentStatus: "PAID" as PaymentStatus,
+    type: dto.channel,
+    investigation: {
+      statusBadge,
+      // No per-wish audit trail exists server-side — these facts are built
+      // only from real fields already on the wish, not an invented narrative.
+      facts: [
+        { label: "Status", value: statusBadge },
+        { label: "Channel", value: dto.channel },
+        { label: "Recipient", value: `${dto.recipientName} (${dto.recipientRelationship})` },
+        { label: "Sealed", value: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "Not sealed" },
+      ],
+      timeline: [
+        dto.openedAtUtc && { time: formatDateLabel(dto.openedAtUtc), note: "Opened by recipient" },
+        dto.deliveredAtUtc && { time: formatDateLabel(dto.deliveredAtUtc), note: "Delivered" },
+        dto.sealedAtUtc && { time: formatDateLabel(dto.sealedAtUtc), note: "Sealed" },
+        { time: formatDateLabel(dto.createdAtUtc), note: "Wish created" },
+      ].filter((x): x is { time: string; note: string } => Boolean(x)),
+    },
+  };
+}
+
+export async function listWishes(): Promise<AdminWish[]> {
+  const page = await apiRequest<PagedResult<AdminWishResponseDto>>("/api/wishes?pageIndex=0&pageSize=100");
+  return page.items.map(mapWish);
+}
+
+export async function retryWishDelivery(wishId: string): Promise<AdminWish | null> {
+  try {
+    const dto = await apiRequest<AdminWishResponseDto>(`/api/wishes/${wishId}/redeliver`, { method: "POST" });
+    return mapWish(dto);
+  } catch (err) {
+    if (err instanceof ApiError && err.code === 404) return null;
+    throw err;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Payments oversight
+ * ---------------------------------------------------------------------- */
+
+const MOMO_STATUS_MAP: Record<BackendPaymentStatus, MoMoStatus> = {
+  pending: "PENDING",
+  succeeded: "SUCCESSFUL",
+  failed: "FAILED",
+  reversed: "FAILED",
+  refundPending: "REFUND_PENDING",
+};
+
+const PROVIDER_LABEL_MAP: Record<BackendProvider, string> = {
+  mtn: "MTN",
+  telecel: "Telecel",
+  airtelTigo: "AirtelTigo",
+};
+
+function mapPayment(dto: AdminPaymentResponseDto): MoMoTransaction {
+  const status = MOMO_STATUS_MAP[dto.status];
+  const reconciliationLabel = dto.reconciliationMismatch
+    ? "Reconciliation mismatch"
+    : dto.settledAtUtc
+      ? `Reconciled · ${formatDateLabel(dto.settledAtUtc)}`
+      : "Awaiting settlement";
+
+  const actionLabel =
+    status === "FAILED" ? "View event" : status === "PENDING" ? "Investigate" : status === "REFUND_PENDING" ? "Review" : "Open";
+
+  return {
+    id: dto.id,
+    wishId: dto.wishId,
+    senderName: dto.senderName,
+    provider: PROVIDER_LABEL_MAP[dto.provider],
+    amount: formatCurrency(dto.amount),
+    statusNote: dto.failureReason ?? (dto.settledAtUtc ? `Settled ${formatDateLabel(dto.settledAtUtc)}` : "—"),
+    status,
+    reconciliationLabel,
+    actionLabel,
+  };
+}
+
+export async function listMoMoTransactions(): Promise<MoMoTransaction[]> {
+  const page = await apiRequest<PagedResult<AdminPaymentResponseDto>>("/api/payments?pageIndex=0&pageSize=100");
+  return page.items.map(mapPayment);
+}
+
+/* -------------------------------------------------------------------------
+ * Moderation
+ *
+ * Backs both PaymentsModerationPage's ModerationCase and AttentionPage's
+ * richer AttentionCase from the same /api/moderation endpoint — there's one
+ * real "flagged content" concept server-side, presented two ways in the UI.
+ * ---------------------------------------------------------------------- */
+
+const SEVERITY_MAP: Record<BackendSeverity, Severity | "info"> = {
+  info: "info",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+};
+
+function timeAgoLabel(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 60) return `Flagged ${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Flagged ${hours}h ago`;
+  return `Flagged ${Math.floor(hours / 24)}d ago`;
+}
+
+function mapModerationCase(dto: ModerationCaseResponseDto): ModerationCase {
+  return {
+    id: dto.id,
+    wishId: dto.wishId,
+    status: dto.status === "resolved" ? "resolved" : "under-review",
+    severity: SEVERITY_MAP[dto.severity],
+    title: dto.title,
+    flaggedAgo: timeAgoLabel(dto.createdAtUtc),
+    description: dto.description ?? "",
+    evidenceQuote: dto.evidenceQuote ?? "",
+    contentType: dto.contentType ?? "Unknown",
+    reviewer: dto.reviewerName ?? "Unassigned",
+    // No sender-account-status join available on this DTO — wishId is the
+    // only real linked identifier we have without an extra lookup.
+    sender: dto.wishId,
+    // No "prior cases" count tracked server-side.
+    priorCases: "—",
+  };
+}
+
+let cachedModerationCases: ModerationCaseResponseDto[] | null = null;
+
+async function fetchModerationCases(): Promise<ModerationCaseResponseDto[]> {
+  const page = await apiRequest<PagedResult<ModerationCaseResponseDto>>("/api/moderation?pageIndex=0&pageSize=100");
+  cachedModerationCases = page.items;
+  return page.items;
+}
+
+export async function getModerationCase(): Promise<ModerationCase | null> {
+  const cases = await fetchModerationCases();
+  const underReview = cases.find((c) => c.status === "underReview") ?? cases[0];
+  return underReview ? mapModerationCase(underReview) : null;
+}
+
+export async function decideModerationCase(decision: "approved" | "removed"): Promise<ModerationCase | null> {
+  const cases = cachedModerationCases ?? (await fetchModerationCases());
+  const target = cases.find((c) => c.status === "underReview") ?? cases[0];
+  if (!target) return null;
+  const dto = await apiRequest<ModerationCaseResponseDto>(`/api/moderation/${target.id}/decide`, {
+    method: "POST",
+    body: JSON.stringify({ decision, reason: decision === "approved" ? "Approved by admin" : "Removed by admin" }),
+  });
+  return mapModerationCase(dto);
+}
+
+function mapModerationSeverityToUrgency(severity: BackendSeverity): AttentionCase["urgency"] {
+  if (severity === "critical" || severity === "high") return "now";
+  if (severity === "medium") return "today";
+  return "soon";
+}
+
+function mapModerationCaseToAttentionCase(dto: ModerationCaseResponseDto): AttentionCase {
+  const owner = dto.reviewerName ?? "Unassigned";
+  const urgency = mapModerationSeverityToUrgency(dto.severity);
+  return {
+    id: dto.id,
+    urgency,
+    urgencyLabel: `${urgency.toUpperCase()} · ${dto.severity.toUpperCase()}`,
+    title: dto.title,
+    description: dto.description ?? dto.evidenceQuote ?? "",
+    actionLabel: "Review",
+    detail: {
+      label: `QUICK RESOLUTION · CASE ${dto.id}`,
+      title: dto.title,
+      description: dto.description ?? "",
+      facts: [
+        { label: "WISH", value: dto.wishId },
+        { label: "SEVERITY", value: dto.severity.toUpperCase() },
+        { label: "CONTENT TYPE", value: dto.contentType ?? "Unknown" },
+        { label: "OWNER", value: owner },
+      ],
+      // No real "impact of your action" copy exists server-side for a
+      // moderation case — a neutral, mechanical note instead of invented
+      // narrative text.
+      impactNote: "Reviewing this case records your decision and reason in the case history.",
+      owner,
+    },
+  };
+}
+
+export async function listAttentionCases(): Promise<AttentionCase[]> {
+  const cases = await fetchModerationCases();
+  return cases.filter((c) => c.status === "underReview").map(mapModerationCaseToAttentionCase);
+}
+
+// No backend endpoint exists for case assignment/ownership (no owner field
+// beyond reviewerName, no assignment endpoint on /api/moderation) — this is
+// a no-op that returns the case unchanged locally rather than pretending an
+// assignment persisted server-side.
+export async function assignAttentionCase(id: string, _owner: string): Promise<AttentionCase | null> {
+  const cases = cachedModerationCases ?? (await fetchModerationCases());
+  const dto = cases.find((c) => c.id === id);
+  return dto ? mapModerationCaseToAttentionCase(dto) : null;
+}
+
+/* -------------------------------------------------------------------------
+ * Delivery health
+ * ---------------------------------------------------------------------- */
+
+export async function listDeliveryStats(): Promise<DeliveryStat[]> {
+  const dto = await apiRequest<DeliveryHealthDto>("/api/delivery-health");
+  return [
+    { label: "DUE (SEALED)", value: String(dto.due), note: `${dto.due} wishes` },
+    { label: "DELIVERED", value: String(dto.delivered), note: `${dto.delivered} wishes` },
+    { label: "OPENED", value: String(dto.opened), note: `${dto.opened} wishes` },
+    { label: "DRAFT", value: String(dto.draft), note: `${dto.draft} wishes` },
+  ];
+}
+
+const DELIVERY_ATTEMPT_STATUS: DeliveryAttemptStatus = "QUEUED";
+
+export async function listDeliveryAttempts(): Promise<DeliveryAttempt[]> {
+  // There's no per-attempt entity server-side. The best real proxy is the
+  // set of wishes that are sealed (i.e. "due"/stuck awaiting delivery),
+  // shown here as synthetic QUEUED rows rather than invented failure detail.
+  const page = await apiRequest<PagedResult<AdminWishResponseDto>>(
+    "/api/wishes?pageIndex=0&pageSize=100&status=sealed",
+  );
+  return page.items.map((dto) => ({
+    id: dto.id,
+    wishId: dto.id,
+    status: DELIVERY_ATTEMPT_STATUS,
+    detail: `${dto.channel} · sealed ${dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "—"}`,
+    actionLabel: "Retry delivery",
+  }));
+}
+
+export async function retryDeliveryAttempt(id: string): Promise<DeliveryAttempt | null> {
+  // id is treated as the wishId — there's no separate attempt-id concept.
+  const updated = await retryWishDelivery(id);
+  if (!updated) return null;
+  return {
+    id: updated.id,
+    wishId: updated.id,
+    status: DELIVERY_ATTEMPT_STATUS,
+    detail: `${updated.channel} · retry queued`,
+    actionLabel: "Retry delivery",
+  };
+}
+
+/* -------------------------------------------------------------------------
+ * Customers
+ *
+ * No GET /api/customers list endpoint exists — only get-by-id. We derive a
+ * small directory by collecting distinct customerUserIds already visible
+ * from the wishes list (dev dataset is small, so N+1 lookups are acceptable)
+ * and resolving each via GET /api/customers/{id}.
+ * ---------------------------------------------------------------------- */
+
+function mapCustomerStatus(): AdminCustomer["status"] {
+  // No status/flag concept exists on the backend customer DTO — ACTIVE is
+  // the only honest default without fabricating moderation/payment state.
+  return "ACTIVE";
+}
+
+function mapCustomer(dto: CustomerResponseDto): AdminCustomer {
+  return {
+    id: dto.id,
+    name: dto.name,
+    email: dto.email,
+    verified: true,
+    status: mapCustomerStatus(),
+    meta: `${dto.totalWishCount} wish${dto.totalWishCount === 1 ? "" : "es"}`,
+    profile: {
+      memberSince: formatDateLabel(dto.createdAtUtc),
+      activeWishes: dto.totalWishCount,
+      nextDelivery: "—",
+      timezoneNote: dto.lastLoginAtUtc ? `Last login ${formatDateLabel(dto.lastLoginAtUtc)}` : "Never logged in",
+      summary: `${dto.name} has ${dto.totalWishCount} wish${dto.totalWishCount === 1 ? "" : "es"} totalling ${formatCurrency(dto.totalAmountPaid)} paid.`,
+      // No per-wish schedule detail available from this DTO alone without
+      // extra requests we're not making here — left empty rather than
+      // fabricated.
+      scheduledWishes: [],
+      paymentNote: `${formatCurrency(dto.totalAmountPaid)} paid in total across ${Object.entries(dto.wishCountByStatus)
+        .map(([status, count]) => `${count} ${status}`)
+        .join(", ")}.`,
+      careNotes: [],
+    },
+  };
+}
+
+export async function listCustomers(): Promise<AdminCustomer[]> {
+  // Gap: there is no backend list endpoint for customers. We reconstruct a
+  // best-effort directory from customerUserIds seen in the wishes list, then
+  // resolve each via GET /api/customers/{id}. If that also fails, this
+  // returns an empty array rather than fabricated rows.
+  let wishPage: PagedResult<AdminWishResponseDto>;
+  try {
+    wishPage = await apiRequest<PagedResult<AdminWishResponseDto>>("/api/wishes?pageIndex=0&pageSize=100");
+  } catch {
+    return [];
+  }
+
+  const customerIds = Array.from(new Set(wishPage.items.map((w) => w.customerUserId)));
+  const customers = await Promise.all(
+    customerIds.map(async (id) => {
+      try {
+        const dto = await apiRequest<CustomerResponseDto>(`/api/customers/${id}`);
+        return mapCustomer(dto);
+      } catch (err) {
+        if (err instanceof ApiError && err.code === 404) return null;
+        throw err;
+      }
+    }),
+  );
+  return customers.filter((c): c is AdminCustomer => c !== null);
+}
+
+/* -------------------------------------------------------------------------
+ * Team & Audit — no backend equivalent exists (no team/invitation entity,
+ * no audit log entity). Returning empty arrays by design, not by error
+ * swallowing — there is nothing to fetch.
+ * ---------------------------------------------------------------------- */
+
+export async function listTeamMembers(): Promise<TeamMember[]> {
+  return [];
+}
+
+export async function listAuditEvents(): Promise<AuditEvent[]> {
+  return [];
 }

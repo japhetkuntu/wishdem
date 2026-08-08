@@ -1,0 +1,16 @@
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/bin/Debug/net8.0/WishDem.Messaging.Sdk.deps.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/bin/Debug/net8.0/WishDem.Messaging.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/bin/Debug/net8.0/WishDem.Messaging.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.csproj.AssemblyReference.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.GeneratedMSBuildEditorConfig.editorconfig
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.AssemblyInfoInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.AssemblyInfo.cs
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.csproj.CoreCompileInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.sourcelink.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem..E6AFF04F.Up2Date
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/refint/WishDem.Messaging.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/WishDem.Messaging.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Messaging.Sdk/obj/Debug/net8.0/ref/WishDem.Messaging.Sdk.dll

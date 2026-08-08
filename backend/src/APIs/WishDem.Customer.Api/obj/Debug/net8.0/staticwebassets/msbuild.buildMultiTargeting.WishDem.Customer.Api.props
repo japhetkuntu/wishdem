@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/WishDem.Customer.Api.props" />
+</Project>

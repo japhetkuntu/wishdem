@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/WishDem.Admin.Api.props" />
+</Project>

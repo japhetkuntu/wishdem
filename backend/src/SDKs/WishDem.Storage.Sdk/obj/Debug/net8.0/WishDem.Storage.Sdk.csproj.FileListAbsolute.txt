@@ -1,0 +1,16 @@
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.csproj.AssemblyReference.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.GeneratedMSBuildEditorConfig.editorconfig
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.AssemblyInfoInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.AssemblyInfo.cs
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.csproj.CoreCompileInputs.cache
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.sourcelink.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/bin/Debug/net8.0/WishDem.Storage.Sdk.deps.json
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/bin/Debug/net8.0/WishDem.Storage.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/bin/Debug/net8.0/WishDem.Storage.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/bin/Debug/net8.0/WishDem.Common.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem..E3FE34D2.Up2Date
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/refint/WishDem.Storage.Sdk.dll
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/WishDem.Storage.Sdk.pdb
+/Users/joe/Work/Others/WishDem/backend/src/SDKs/WishDem.Storage.Sdk/obj/Debug/net8.0/ref/WishDem.Storage.Sdk.dll

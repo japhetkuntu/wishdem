@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { listAttentionCases, listDeliveryStats } from "@/lib/api";
 
 export type SidebarKey =
   | "overview"
@@ -11,18 +13,52 @@ export type SidebarKey =
   | "delivery"
   | "activity";
 
-const LINKS: { key: SidebarKey; label: string; to: string; count?: number }[] = [
+const BASE_LINKS: { key: SidebarKey; label: string; to: string }[] = [
   { key: "overview", label: "Overview", to: "/overview" },
-  { key: "attention", label: "Attention", to: "/attention", count: 18 },
+  { key: "attention", label: "Attention", to: "/attention" },
   { key: "wishes", label: "Wishes", to: "/wishes" },
   { key: "users", label: "Users", to: "/users" },
-  { key: "payments", label: "Payments & Moderation", to: "/payments", count: 4 },
-  { key: "delivery", label: "Delivery Health", to: "/delivery", count: 12 },
+  { key: "payments", label: "Payments & Moderation", to: "/payments" },
+  { key: "delivery", label: "Delivery Health", to: "/delivery" },
   { key: "activity", label: "Activity Log", to: "/activity" },
 ];
 
 export function Sidebar({ active }: { active: SidebarKey }) {
   const { user } = useAdminAuth();
+  // Real counts only — no badge is shown until its number is known, rather
+  // than displaying a stale/fabricated placeholder.
+  const [counts, setCounts] = useState<Partial<Record<SidebarKey, number>>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    listAttentionCases()
+      .then((cases) => {
+        if (cancelled) return;
+        // Attention and Payments & Moderation both surface the same
+        // underlying open-moderation-case count from /api/moderation.
+        setCounts((prev) => ({ ...prev, attention: cases.length, payments: cases.length }));
+      })
+      .catch(() => {
+        // Leave the badge hidden rather than showing a wrong count.
+      });
+
+    listDeliveryStats()
+      .then((stats) => {
+        if (cancelled) return;
+        const due = stats.find((s) => s.label === "DUE (SEALED)");
+        if (due) setCounts((prev) => ({ ...prev, delivery: Number(due.value) }));
+      })
+      .catch(() => {
+        // Leave the badge hidden rather than showing a wrong count.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const links = BASE_LINKS.map((link) => ({ ...link, count: counts[link.key] }));
 
   return (
     <aside className="border-b border-porcelain/[0.1] bg-plum px-3 py-5 text-porcelain lg:min-h-screen lg:border-b-0 lg:border-r lg:py-5">
@@ -39,7 +75,7 @@ export function Sidebar({ active }: { active: SidebarKey }) {
       </div>
 
       <nav className="flex gap-[4px] overflow-x-auto lg:grid lg:overflow-visible">
-        {LINKS.map((link) => (
+        {links.map((link) => (
           <Link
             key={link.key}
             to={link.to}

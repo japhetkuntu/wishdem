@@ -41,6 +41,9 @@ export interface Recipient {
   birthdayISO: string; // yyyy-mm-dd
   deliveryTime: string; // HH:mm
   timezone: string;
+  /** Required for whatsapp/sms delivery — the recipient never has a WishDem account,
+   * so this is the only way to reach them for those channels. Not needed for "link". */
+  phoneNumber?: string;
 }
 
 export interface Wish {

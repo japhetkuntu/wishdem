@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
 import { AppNav } from "@/components/AppNav";
 import { useCircle } from "@/hooks/useCircle";
-import { useGroupWishInvitation } from "@/hooks/useGroupWishes";
 import { daysUntil, formatWishDate } from "@/lib/date";
 import type { CircleAvatarTone, CirclePerson, CircleStateTone } from "@/types";
 
@@ -94,11 +93,6 @@ function PersonRow({ person }: { person: CirclePerson }) {
 export default function CirclePage() {
   const { people, invitations, stats, loading } = useCircle();
   const [filter, setFilter] = useState<FilterKey>("up");
-  const { invitation: mayaInvitation } = useGroupWishInvitation("invite-maya-jordan");
-  const mayaMessageHref =
-    mayaInvitation?.status === "joined"
-      ? "/contribute/invite-maya-jordan"
-      : "/group-wishes/invitations/invite-maya-jordan";
 
   const filtered = useMemo(() => {
     if (filter === "family") return people.filter((p) => p.group === "family");
@@ -198,7 +192,7 @@ export default function CirclePage() {
                   <div className="my-[10px] text-[9px] font-extrabold text-mulberry">
                     {invite.deadlineLabel}
                   </div>
-                  <Link to={mayaMessageHref}>
+                  <Link to={`/group-wishes/invitations/${invite.id}`}>
                     <Button variant="dark" size="sm" className="min-h-0 py-[9px] text-[9px]">
                       {invite.actionLabel}
                     </Button>

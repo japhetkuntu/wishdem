@@ -41,8 +41,10 @@ export default function CreateMessagePage() {
   }
 
   async function handleEmail(email: string) {
+    // continueWithEmail sends the user to the OTP verify page — the wizard
+    // draft is already safely persisted in sessionStorage by useWizardStore,
+    // so there's nothing further to save until they return signed in.
     await continueWithEmail(email);
-    await persistAndContinue();
   }
 
   return (
@@ -69,7 +71,7 @@ export default function CreateMessagePage() {
             optional attachment per wish.
           </p>
           <div className="mt-2">
-            <AttachmentPicker value={attachment} onChange={setAttachment} />
+            <AttachmentPicker value={attachment} onChange={setAttachment} wishId={wishId ?? ""} />
           </div>
         </div>
 

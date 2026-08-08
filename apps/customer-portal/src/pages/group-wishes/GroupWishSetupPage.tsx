@@ -55,6 +55,8 @@ export default function GroupWishSetupPage() {
         occasion,
         deliveryDateLabel: formatDateLabel(deliveryDateISO),
         collectByLabel: formatDateLabel(collectByISO),
+        deliveryDateISO,
+        collectByISO,
         context: context.trim() || undefined,
         formats,
         namesVisible,

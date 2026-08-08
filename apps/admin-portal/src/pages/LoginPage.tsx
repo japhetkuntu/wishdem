@@ -5,8 +5,8 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAdminAuth();
-  const [email, setEmail] = useState("maya.chen@wishdem.com");
-  const [password, setPassword] = useState("••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [signing, setSigning] = useState(false);
@@ -18,10 +18,10 @@ export default function LoginPage() {
     setSigning(true);
     setError(null);
     try {
-      await signIn(email.trim().toLowerCase());
+      await signIn(email.trim().toLowerCase(), password);
       navigate("/overview");
     } catch {
-      setError("We couldn't sign you in just now. Please try again.");
+      setError("We couldn't sign you in just now. Please check your email and password and try again.");
     } finally {
       setSigning(false);
     }

@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "0MJplJBrVSgxlJ/JGArbH6iX0Uxt10AT//8dgSpKS6I=",
+  "Source": "WishDem.Admin.Api",
+  "BasePath": "_content/WishDem.Admin.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
