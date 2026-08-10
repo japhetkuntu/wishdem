@@ -20,6 +20,14 @@ RestartSec=5
 Environment=ASPNETCORE_ENVIRONMENT=Production
 # Loopback-only — Nginx is the only thing that talks to this port, never the internet.
 Environment=ASPNETCORE_URLS=http://127.0.0.1:5001
+# wishdem is a homeless system user (and ProtectHome=true blocks /home anyway), so the
+# dotnet host's one-time "first run" setup — which tries to write to ~/.dotnet — must be
+# suppressed, or every start crashes with UnauthorizedAccessException before the app even
+# loads. DOTNET_CLI_HOME redirects anything that slips through to a path this unit can write.
+Environment=DOTNET_NOLOGO=1
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+Environment=DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+Environment=DOTNET_CLI_HOME=/var/www/wishdem/admin-api/logs
 EnvironmentFile=/etc/wishdem/admin-api.env
 
 NoNewPrivileges=true
