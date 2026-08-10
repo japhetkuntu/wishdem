@@ -113,6 +113,11 @@ for f in customer-api admin-api; do
 done
 
 systemctl daemon-reload
+# `WantedBy=multi-user.target` in the unit files only takes effect once explicitly
+# enabled — without this, the services would work fine right after deploy.sh but
+# silently not come back on a droplet reboot. Not started here (--now) since nothing's
+# published to /var/www/wishdem yet; deploy.sh's `systemctl restart` does that part.
+systemctl enable wishdem-customer-api wishdem-admin-api
 systemctl reload nginx
 
 echo "== 8/8: firewall =="
