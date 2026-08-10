@@ -8,8 +8,7 @@ Certbot gets/renews the HTTPS certificates.
 The frontends (`customer-portal`, `admin-portal`) stay on Netlify — this only covers
 the backend. Everything referenced below lives in [`backend/deploy/`](deploy/).
 
-This droplet: `206.81.16.168`. Repo: `git@github.com:japhetkuntu/wishdem.git`
-(https://github.com/japhetkuntu/wishdem).
+This droplet: `206.81.16.168`. Repo: https://github.com/japhetkuntu/wishdem (public).
 
 ## 1. Point DNS at the droplet first
 
@@ -26,33 +25,20 @@ Confirm propagation with `dig api.yourdomain.com` before running certbot.
 
 ## 2. Provision the droplet
 
-The `wishdem` repo is **private**, so the droplet needs its own SSH access to GitHub
-before it can clone it — a plain `curl` of a raw file won't work (GitHub 404s
-unauthenticated requests to private repos rather than revealing they exist).
-
-Generate a key on the droplet and add it as a **read-only Deploy Key** on the repo
-(GitHub -> repo -> Settings -> Deploy keys -> Add deploy key — no need for a full
-personal access token just to clone):
+The repo is public, so the droplet can clone it over plain HTTPS — no deploy key
+needed. SSH in, then run the provisioning script (installs .NET 8 SDK, PostgreSQL,
+Redis, Nginx + Certbot, creates the `wishdem` system user/directories, clones the
+repo, installs the systemd units and Nginx site config):
 
 ```bash
 ssh root@206.81.16.168
-ssh-keygen -t ed25519 -C "wishdem-droplet" -f ~/.ssh/id_ed25519 -N ""
-cat ~/.ssh/id_ed25519.pub
+curl -o install.sh https://raw.githubusercontent.com/japhetkuntu/wishdem/main/backend/deploy/install.sh
+REPO_URL=https://github.com/japhetkuntu/wishdem.git sudo -E bash install.sh
 ```
 
-Paste that public key into the repo's Deploy keys page, then clone and run the
-provisioning script (installs .NET 8 SDK, PostgreSQL, Redis, Nginx + Certbot, creates
-the `wishdem` system user/directories, installs the systemd units and Nginx site
-config):
-
-```bash
-ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-git clone git@github.com:japhetkuntu/wishdem.git /opt/wishdem-src
-REPO_URL=git@github.com:japhetkuntu/wishdem.git sudo -E bash /opt/wishdem-src/backend/deploy/install.sh
-```
-
-(`install.sh` skips the clone since `/opt/wishdem-src` already exists — `REPO_URL` is
-still required as a sanity check.)
+(Or `git clone https://github.com/japhetkuntu/wishdem.git /opt/wishdem-src` yourself
+first and run `backend/deploy/install.sh` from inside it — either way works, the
+script skips the clone if `/opt/wishdem-src` already exists.)
 
 It will prompt you for:
 - the Customer API domain (e.g. `api.yourdomain.com`)
