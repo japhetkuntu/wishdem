@@ -12,16 +12,26 @@ This droplet: `206.81.16.168`. Repo: https://github.com/japhetkuntu/wishdem (pub
 
 ## 1. Point DNS at the droplet first
 
-Certbot needs to complete an HTTP challenge, so get DNS live before requesting
-certificates (you can provision and deploy before this finishes propagating, just not
-run certbot yet):
+Your domain itself can stay wherever it already lives (Netlify, a registrar, whoever
+you bought it from) — DigitalOcean is never involved in DNS here, and doesn't need to
+be. You're just adding two subdomain records in whatever DNS panel is authoritative
+for the domain today (for a Netlify-managed domain: Netlify -> Domains -> your domain
+-> DNS panel -> Add record):
 
 | Type | Host                    | Value            |
 |------|-------------------------|-------------------|
 | A    | api (or your subdomain) | `206.81.16.168`   |
 | A    | admin-api (or your sub) | `206.81.16.168`   |
 
-Confirm propagation with `dig api.yourdomain.com` before running certbot.
+Everything else about the domain (the apex, `www`, the actual frontend sites) keeps
+pointing at Netlify exactly as it does now — adding these two A records doesn't move
+or affect any of that, it just carves out two subdomains that resolve to the droplet
+instead.
+
+Certbot needs to complete an HTTP challenge, so get DNS live before requesting
+certificates (you can still provision and deploy before this finishes propagating,
+just not run certbot yet). Confirm propagation with `dig api.yourdomain.com` before
+running certbot.
 
 ## 2. Provision the droplet
 
@@ -104,15 +114,34 @@ Both should return `Healthy`. If certbot fails, double-check DNS actually resolv
 the droplet's IP first (`dig`), and that port 80 is reachable (`ufw status`,
 `systemctl status nginx`).
 
-## 5. Deploying updates
+## 5. Everyday workflow: shipping updates
+
+Every future release is the same two steps, whether it's a code change, a config
+change, or both:
+
+**Code changed?** Push to `main` as usual, then on the droplet:
 
 ```bash
 sudo bash /opt/wishdem-src/backend/deploy/deploy.sh
 ```
 
-Same script — pulls latest, republishes, restarts both services in order, and any
-new EF migrations get applied automatically by `customer-api` on restart. Nginx/certbot
-don't need touching again unless you change domains.
+That's the whole release process — `git pull`, republish both APIs, restart
+`wishdem-customer-api` (applying any new EF migrations automatically), health-check
+it, then restart and health-check `wishdem-admin-api`. Nginx/certbot don't need
+touching again unless you're changing domains.
+
+**Only an env var changed** (new API key, rotated secret, CORS origin, etc.) — no
+need to rebuild anything, just edit the file and restart that one service:
+
+```bash
+sudo nano /etc/wishdem/customer-api.env    # or admin-api.env
+sudo systemctl restart wishdem-customer-api
+```
+
+You can do this at any time, independently of `deploy.sh` — env files are only read
+when the service starts, so a restart is what picks up the change (there's no live
+reload). If both a code change and an env change are going out together, edit the env
+file first, then run `deploy.sh` — its restart will pick up both.
 
 ## 6. Useful commands
 
