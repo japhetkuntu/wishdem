@@ -49,7 +49,7 @@ public class AuthServiceTests
 
         response.Code.Should().Be(200);
         response.Data!.IsNewCustomer.Should().BeTrue();
-        _emailSender.Verify(e => e.SendAsync("test@example.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _emailSender.Verify(e => e.SendAsync("test@example.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

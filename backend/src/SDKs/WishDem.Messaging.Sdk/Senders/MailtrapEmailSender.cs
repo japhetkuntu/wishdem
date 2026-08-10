@@ -21,19 +21,21 @@ public class MailtrapEmailSender(HttpClient httpClient, IOptions<MailtrapOptions
         [property: JsonPropertyName("from")] Address From,
         [property: JsonPropertyName("to")] Address[] To,
         [property: JsonPropertyName("subject")] string Subject,
-        [property: JsonPropertyName("text")] string Text);
+        [property: JsonPropertyName("text")] string Text,
+        [property: JsonPropertyName("html")] string? Html);
 
     private record SendEmailResponse(
         [property: JsonPropertyName("success")] bool Success,
         [property: JsonPropertyName("errors")] string[]? Errors);
 
-    public async Task SendAsync(string toEmail, string subject, string body, CancellationToken ct = default)
+    public async Task SendAsync(string toEmail, string subject, string textBody, string? htmlBody = null, CancellationToken ct = default)
     {
         var request = new SendEmailRequest(
             From: new Address(_options.FromEmail, _options.FromName),
             To: [new Address(toEmail)],
             Subject: subject,
-            Text: body);
+            Text: textBody,
+            Html: htmlBody);
 
         // Mailtrap's sandbox (testing) endpoint is scoped to a specific test inbox;
         // the live sending endpoint is a single shared path.

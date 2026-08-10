@@ -8,6 +8,7 @@ using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Exceptions;
 using WishDem.Common.Sdk.Responses;
 using WishDem.Messaging.Sdk.Abstractions;
+using WishDem.Messaging.Sdk.Templates;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -134,11 +135,18 @@ public class AuthService(
             if (user is not null)
             {
                 await cache.SetAsync(ResetCodeKey(normalizedEmail), code, TimeSpan.FromSeconds(_passwordReset.ExpirySeconds));
-                await emailSender.SendAsync(
-                    normalizedEmail,
-                    "Reset your WishDem admin password",
-                    $"Your password reset code is {code}. It expires in {_passwordReset.ExpirySeconds / 60} minutes.",
-                    ct);
+
+                var expiryMinutes = _passwordReset.ExpirySeconds / 60;
+                var subject = $"{code} is your WishDem admin reset code";
+                var textBody = $"Your password reset code is {code}. It expires in {expiryMinutes} minutes.";
+                var htmlBody = EmailTemplate.Shell(subject, $"""
+                    <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">Reset your password</h1>
+                    <p style="margin:0;">Hi {EmailTemplate.Encode(user.FullName)}, use this code to reset your WishDem Admin password.</p>
+                    {EmailTemplate.CodeBox(code)}
+                    <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">This code expires in {expiryMinutes} minutes. If you didn't request this, let a teammate know.</p>
+                    """);
+
+                await emailSender.SendAsync(normalizedEmail, subject, textBody, htmlBody, ct);
             }
 
             await cache.SetAsync(cooldownKey, true, TimeSpan.FromSeconds(_passwordReset.ResendCooldownSeconds));

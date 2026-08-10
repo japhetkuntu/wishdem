@@ -15,6 +15,7 @@ public static class ApplicationServiceExtensions
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<SuperAdminOptions>(configuration.GetSection(SuperAdminOptions.SectionName));
         services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
+        services.Configure<AdminPortalOptions>(configuration.GetSection(AdminPortalOptions.SectionName));
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();

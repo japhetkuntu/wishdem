@@ -169,7 +169,7 @@ public class AuthServiceTests
         response.Code.Should().Be(200);
         response.Data!.MaskedEmail.Should().StartWith("a").And.EndWith("@wishdem.com");
         response.Data.DevCode.Should().NotBeNull();
-        _emailSender.Verify(e => e.SendAsync(user.Email, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _emailSender.Verify(e => e.SendAsync(user.Email, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class AuthServiceTests
 
         response.Code.Should().Be(200);
         response.Data!.DevCode.Should().BeNull();
-        _emailSender.Verify(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _emailSender.Verify(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

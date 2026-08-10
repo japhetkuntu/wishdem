@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using WishDem.Admin.Api.Configuration;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
 using WishDem.Admin.Api.Models.Responses;
@@ -7,6 +9,7 @@ using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Exceptions;
 using WishDem.Common.Sdk.Responses;
 using WishDem.Messaging.Sdk.Abstractions;
+using WishDem.Messaging.Sdk.Templates;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -17,8 +20,11 @@ public class AdminUserService(
     IPasswordHasher<AdminUser> passwordHasher,
     IEmailSender emailSender,
     IAuditLogService auditLog,
+    IOptions<AdminPortalOptions> adminPortalOptions,
     ILogger<AdminUserService> logger) : IAdminUserService
 {
+    private readonly AdminPortalOptions _adminPortal = adminPortalOptions.Value;
+
     public async Task<IApiResponse<IReadOnlyList<TeamMemberResponse>>> ListAsync(CancellationToken ct = default)
     {
         try
@@ -146,13 +152,23 @@ public class AdminUserService(
     private async Task<AdminUser> GetUserAsync(Guid adminUserId, CancellationToken ct) =>
         await adminUsers.GetByIdAsync(adminUserId, ct) ?? throw new NotFoundException("That team member could not be found.");
 
-    private Task SendInviteEmailAsync(string email, string fullName, string tempPassword, CancellationToken ct) =>
-        emailSender.SendAsync(
-            email,
-            "You've been invited to WishDem Admin",
-            $"Hi {fullName}, you've been added to the WishDem operations workspace. " +
-            $"Sign in with {email} and the temporary password {tempPassword} — you'll be asked to change it.",
-            ct);
+    private Task SendInviteEmailAsync(string email, string fullName, string tempPassword, CancellationToken ct)
+    {
+        const string subject = "You've been invited to WishDem Admin";
+        var textBody = $"Hi {fullName}, you've been added to the WishDem operations workspace. " +
+            $"Sign in with {email} and the temporary password {tempPassword} — you'll be asked to change it.";
+        var htmlBody = EmailTemplate.Shell(subject, $"""
+            <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">Welcome to the team</h1>
+            <p style="margin:0;">Hi {EmailTemplate.Encode(fullName)}, you've been added to the WishDem operations workspace. Sign in with the credentials below — you'll be asked to change your password.</p>
+            {EmailTemplate.CredentialBox(
+                EmailTemplate.CredentialRow("Email", email) +
+                EmailTemplate.CredentialRow("Temporary password", tempPassword))}
+            {EmailTemplate.Button("Sign in", _adminPortal.Url)}
+            <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">If you weren't expecting this invite, you can ignore this email.</p>
+            """);
+
+        return emailSender.SendAsync(email, subject, textBody, htmlBody, ct);
+    }
 
     private static string GenerateTempPassword()
     {

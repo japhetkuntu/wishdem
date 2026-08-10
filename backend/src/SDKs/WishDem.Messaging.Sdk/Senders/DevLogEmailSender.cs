@@ -8,11 +8,11 @@ namespace WishDem.Messaging.Sdk.Senders;
 /// credentials — nothing calling this interface needs to change.</summary>
 public class DevLogEmailSender(ILogger<DevLogEmailSender> logger) : IEmailSender
 {
-    public Task SendAsync(string toEmail, string subject, string body, CancellationToken ct = default)
+    public Task SendAsync(string toEmail, string subject, string textBody, string? htmlBody = null, CancellationToken ct = default)
     {
         logger.LogInformation(
-            "[DEV EMAIL] To: {ToEmail} | Subject: {Subject}\n{Body}",
-            toEmail, subject, body);
+            "[DEV EMAIL] To: {ToEmail} | Subject: {Subject} | HTML: {HasHtml}\n{Body}",
+            toEmail, subject, htmlBody is not null, textBody);
         return Task.CompletedTask;
     }
 }

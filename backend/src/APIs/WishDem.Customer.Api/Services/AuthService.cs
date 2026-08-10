@@ -8,6 +8,7 @@ using WishDem.Customer.Api.Configuration;
 using WishDem.Customer.Api.Interfaces;
 using WishDem.Customer.Api.Models.Responses;
 using WishDem.Messaging.Sdk.Abstractions;
+using WishDem.Messaging.Sdk.Templates;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -41,11 +42,19 @@ public class AuthService(
 
             var isNewCustomer = !await customerUsers.ExistsAsync(u => u.Email == normalizedEmail, ct);
 
-            await emailSender.SendAsync(
-                normalizedEmail,
-                "Your WishDem sign-in code",
-                $"Your one-time code is {code}. It expires in {_otp.ExpirySeconds / 60} minutes.",
-                ct);
+            var expiryMinutes = _otp.ExpirySeconds / 60;
+            var subject = $"{code} is your WishDem sign-in code";
+            var textBody = $"Your one-time code is {code}. It expires in {expiryMinutes} minutes.";
+            var htmlBody = EmailTemplate.Shell(subject, $"""
+                <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">{(isNewCustomer ? "Welcome to WishDem" : "Welcome back")}</h1>
+                <p style="margin:0;">{(isNewCustomer
+                    ? "Enter this code to finish setting up your account — WishDem will keep your birthday wishes safe until it's their day."
+                    : "Enter this code to sign back in and pick up right where you left off.")}</p>
+                {EmailTemplate.CodeBox(code)}
+                <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">This code expires in {expiryMinutes} minutes. If you didn't request it, you can safely ignore this email.</p>
+                """);
+
+            await emailSender.SendAsync(normalizedEmail, subject, textBody, htmlBody, ct);
 
             var devCode = _otp.ReturnCodeInResponse && !environment.IsProduction() ? code : null;
 
