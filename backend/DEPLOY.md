@@ -211,6 +211,12 @@ sudo -u postgres pg_dump WishDem > "backup-$(date +%F).sql"
 - **certbot's nginx plugin edits `/etc/nginx/sites-available/wishdem` directly** —
   seeing new `listen 443 ssl` blocks and certificate paths appear in that file after
   running certbot is expected, not something to revert.
+- **`install.sh` adds a 2G swapfile** — on the smallest droplets (512MB-1GB RAM),
+  `dotnet publish` gets OOM-killed partway through compiling (`MSB6006`, exit code
+  137) without it. If `deploy.sh` ever fails with that error on a droplet that
+  predates this, add swap manually: `fallocate -l 2G /swapfile && chmod 600
+  /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw
+  0 0' >> /etc/fstab`.
 - Backups: set up a cron job (`crontab -e` as root) calling the `pg_dump` command
   above on a schedule, piped somewhere off-droplet (e.g. a Spaces bucket) — this repo
   doesn't automate that for you.

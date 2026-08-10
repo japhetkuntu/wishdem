@@ -32,11 +32,24 @@ if [[ -z "$CUSTOMER_API_DOMAIN" || -z "$ADMIN_API_DOMAIN" || -z "$ACME_EMAIL" ]]
   exit 1
 fi
 
-echo "== 1/8: base packages =="
+echo "== 1/9: base packages =="
 apt-get update
 apt-get install -y curl wget gnupg apt-transport-https software-properties-common ca-certificates lsb-release git ufw
 
-echo "== 2/8: .NET 8 SDK (Microsoft package feed) =="
+echo "== 2/9: swap =="
+# The smallest DigitalOcean droplets (512MB-1GB RAM) don't have enough memory for the
+# Roslyn C# compiler to build this many projects — without swap, `dotnet publish` gets
+# SIGKILLed by the OOM killer partway through (MSB6006, exit code 137). 2G is enough
+# headroom regardless of droplet size, and idempotent: skipped if swap already exists.
+if [[ "$(swapon --show | wc -l)" -eq 0 && ! -f /swapfile ]]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+echo "== 3/9: .NET 8 SDK (Microsoft package feed) =="
 if ! command -v dotnet >/dev/null 2>&1; then
   UBUNTU_VERSION="$(lsb_release -rs)"
   wget "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/packages-microsoft-prod.deb" -O /tmp/packages-microsoft-prod.deb
@@ -47,7 +60,7 @@ if ! command -v dotnet >/dev/null 2>&1; then
 fi
 dotnet --version
 
-echo "== 3/8: PostgreSQL =="
+echo "== 4/9: PostgreSQL =="
 apt-get install -y postgresql postgresql-contrib
 systemctl enable --now postgresql
 
@@ -69,7 +82,7 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'WishDem')\gexec
 SQL
 echo "Remember this password — put it in the ConnectionStrings__Postgres line of both env files."
 
-echo "== 4/8: Redis (localhost only) =="
+echo "== 5/9: Redis (localhost only) =="
 apt-get install -y redis-server
 sed -i 's/^# *bind .*/bind 127.0.0.1 -::1/' /etc/redis/redis.conf
 sed -i 's/^bind .*/bind 127.0.0.1 -::1/' /etc/redis/redis.conf
@@ -77,12 +90,12 @@ sed -i 's/^protected-mode .*/protected-mode yes/' /etc/redis/redis.conf
 systemctl enable --now redis-server
 systemctl restart redis-server
 
-echo "== 5/8: Nginx + Certbot =="
+echo "== 6/9: Nginx + Certbot =="
 apt-get install -y nginx certbot python3-certbot-nginx
 rm -f /etc/nginx/sites-enabled/default
 systemctl enable --now nginx
 
-echo "== 6/8: app directories =="
+echo "== 7/9: app directories =="
 # Runs as www-data (the user Nginx already runs as) rather than a dedicated custom
 # user — no home directory quirks to work around, and one less account to manage.
 mkdir -p /var/www/wishdem/customer-api/logs /var/www/wishdem/admin-api/logs
@@ -90,7 +103,7 @@ chown -R www-data:www-data /var/www/wishdem
 mkdir -p /etc/wishdem
 chmod 700 /etc/wishdem
 
-echo "== 7/8: clone source, install service/proxy config =="
+echo "== 8/9: clone source, install service/proxy config =="
 if [[ ! -d "$SRC_DIR/.git" ]]; then
   git clone "$REPO_URL" "$SRC_DIR"
 fi
@@ -121,7 +134,7 @@ systemctl daemon-reload
 systemctl enable wishdem-customer-api wishdem-admin-api
 systemctl reload nginx
 
-echo "== 8/8: firewall =="
+echo "== 9/9: firewall =="
 ufw allow OpenSSH
 ufw allow 80/tcp
 ufw allow 443/tcp
