@@ -17,4 +17,10 @@ public sealed class StorageSettings
     /// <summary>MinIO requires path-style URLs (host/bucket/key); DigitalOcean Spaces expects
     /// virtual-hosted-style (bucket.host/key). Must match whichever provider Endpoint points at.</summary>
     public bool ForcePathStyle { get; set; }
+
+    /// <summary>Prefixed onto every object key (e.g. "wishdem") — lets one Spaces bucket be
+    /// shared across several unrelated projects/apps without their objects colliding or mixing
+    /// together, each living under its own top-level folder. Leave empty for a bucket dedicated
+    /// to a single project.</summary>
+    public string RootFolder { get; set; } = string.Empty;
 }

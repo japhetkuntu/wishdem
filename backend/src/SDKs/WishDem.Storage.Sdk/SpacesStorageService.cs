@@ -17,7 +17,7 @@ public sealed class SpacesStorageService(IAmazonS3 s3, IOptions<StorageSettings>
     {
         try
         {
-            var key = BuildKey(request.Folder, request.OriginalFileName);
+            var key = BuildKey(_settings.RootFolder, request.Folder, request.OriginalFileName);
 
             await using var stream = request.OpenContent();
             var uploadRequest = new TransferUtilityUploadRequest
@@ -64,12 +64,15 @@ public sealed class SpacesStorageService(IAmazonS3 s3, IOptions<StorageSettings>
             : $"{endpoint}/{key}";
     }
 
-    // {folder}/{yyyy/MM/dd}/{12-char-guid}{ext}
-    private static string BuildKey(string folder, string originalFileName)
+    // {rootFolder}/{folder}/{yyyy/MM/dd}/{12-char-guid}{ext} — rootFolder segment is
+    // omitted entirely when unset, so a single-project bucket's keys are unaffected.
+    private static string BuildKey(string rootFolder, string folder, string originalFileName)
     {
         var datePart = DateTime.UtcNow.ToString("yyyy/MM/dd");
         var shortGuid = Guid.NewGuid().ToString("N")[..12];
         var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
-        return $"{folder}/{datePart}/{shortGuid}{ext}";
+        var trimmedRoot = rootFolder.Trim('/');
+        var prefix = string.IsNullOrEmpty(trimmedRoot) ? folder : $"{trimmedRoot}/{folder}";
+        return $"{prefix}/{datePart}/{shortGuid}{ext}";
     }
 }

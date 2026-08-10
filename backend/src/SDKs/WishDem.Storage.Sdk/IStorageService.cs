@@ -3,7 +3,8 @@ namespace WishDem.Storage.Sdk;
 /// <summary>Upload returns the generated object key only — never a URL. Callers store that key
 /// and turn it into a public URL via <see cref="IStorageService.BuildPublicUrl"/> only when
 /// serving it back to a client.
-/// Key format: {folder}/{yyyy/MM/dd}/{12-char-guid}{ext}</summary>
+/// Key format: {Storage:RootFolder}/{folder}/{yyyy/MM/dd}/{12-char-guid}{ext} — the RootFolder
+/// segment is omitted when unconfigured (see <see cref="WishDem.Storage.Sdk.Configuration.StorageSettings.RootFolder"/>).</summary>
 public interface IStorageService
 {
     Task<string> UploadAsync(UploadFileRequest request, CancellationToken ct = default);
