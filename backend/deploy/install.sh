@@ -82,10 +82,11 @@ apt-get install -y nginx certbot python3-certbot-nginx
 rm -f /etc/nginx/sites-enabled/default
 systemctl enable --now nginx
 
-echo "== 6/8: wishdem system user + directories =="
-id -u wishdem &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin wishdem
+echo "== 6/8: app directories =="
+# Runs as www-data (the user Nginx already runs as) rather than a dedicated custom
+# user — no home directory quirks to work around, and one less account to manage.
 mkdir -p /var/www/wishdem/customer-api/logs /var/www/wishdem/admin-api/logs
-chown -R wishdem:wishdem /var/www/wishdem
+chown -R www-data:www-data /var/www/wishdem
 mkdir -p /etc/wishdem
 chmod 700 /etc/wishdem
 

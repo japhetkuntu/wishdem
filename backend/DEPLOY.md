@@ -10,6 +10,24 @@ the backend. Everything referenced below lives in [`backend/deploy/`](deploy/).
 
 This droplet: `206.81.16.168`. Repo: https://github.com/japhetkuntu/wishdem (public).
 
+## 0. Starting over on a droplet that's already been deployed to
+
+If you've run `install.sh`/`deploy.sh` here before and want a genuinely clean slate
+(e.g. after changing how the services are configured), wipe the previous attempt
+first. This stops/removes the systemd services, the published app, the Nginx site,
+and **drops the `WishDem` Postgres database/role and flushes Redis** — only run it if
+there's no real data on the droplet worth keeping:
+
+```bash
+curl -o /tmp/cleanup.sh https://raw.githubusercontent.com/japhetkuntu/wishdem/main/backend/deploy/cleanup.sh
+sudo bash /tmp/cleanup.sh
+```
+
+(Run it from `/tmp`, not from inside a cloned repo — it deletes `/opt/wishdem-src`,
+which would otherwise be the very script running.) Dependencies themselves (.NET,
+Postgres, Redis, Nginx, Certbot) are left installed; only the WishDem-specific parts
+go. After this, start again from step 1.
+
 ## 1. Point DNS at the droplet first
 
 Your domain itself can stay wherever it already lives (Netlify, a registrar, whoever

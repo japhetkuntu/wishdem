@@ -35,7 +35,7 @@ echo "== publishing admin-api =="
 dotnet publish "$SRC_DIR/backend/src/APIs/WishDem.Admin.Api/WishDem.Admin.Api.csproj" \
   -c Release -o "$ADMIN_OUT"
 
-chown -R wishdem:wishdem "$CUSTOMER_OUT" "$ADMIN_OUT"
+chown -R www-data:www-data "$CUSTOMER_OUT" "$ADMIN_OUT"
 
 echo "== restarting customer-api (applies any new EF migrations on boot) =="
 systemctl restart wishdem-customer-api
