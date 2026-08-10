@@ -26,19 +26,33 @@ Confirm propagation with `dig api.yourdomain.com` before running certbot.
 
 ## 2. Provision the droplet
 
-SSH in, then run the provisioning script (installs .NET 8 SDK, PostgreSQL, Redis,
-Nginx + Certbot, creates the `wishdem` system user/directories, clones the repo,
-installs the systemd units and the Nginx site config):
+The `wishdem` repo is **private**, so the droplet needs its own SSH access to GitHub
+before it can clone it — a plain `curl` of a raw file won't work (GitHub 404s
+unauthenticated requests to private repos rather than revealing they exist).
+
+Generate a key on the droplet and add it as a **read-only Deploy Key** on the repo
+(GitHub -> repo -> Settings -> Deploy keys -> Add deploy key — no need for a full
+personal access token just to clone):
 
 ```bash
 ssh root@206.81.16.168
-curl -o install.sh https://raw.githubusercontent.com/japhetkuntu/wishdem/main/backend/deploy/install.sh
-REPO_URL=git@github.com:japhetkuntu/wishdem.git sudo -E bash install.sh
+ssh-keygen -t ed25519 -C "wishdem-droplet" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
 ```
 
-(Or `git clone git@github.com:japhetkuntu/wishdem.git` yourself first and run
-`backend/deploy/install.sh` directly — either way works, the script clones into
-`/opt/wishdem-src` if it isn't there yet.)
+Paste that public key into the repo's Deploy keys page, then clone and run the
+provisioning script (installs .NET 8 SDK, PostgreSQL, Redis, Nginx + Certbot, creates
+the `wishdem` system user/directories, installs the systemd units and Nginx site
+config):
+
+```bash
+ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+git clone git@github.com:japhetkuntu/wishdem.git /opt/wishdem-src
+REPO_URL=git@github.com:japhetkuntu/wishdem.git sudo -E bash /opt/wishdem-src/backend/deploy/install.sh
+```
+
+(`install.sh` skips the clone since `/opt/wishdem-src` already exists — `REPO_URL` is
+still required as a sanity check.)
 
 It will prompt you for:
 - the Customer API domain (e.g. `api.yourdomain.com`)
