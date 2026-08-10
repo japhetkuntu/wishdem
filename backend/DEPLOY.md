@@ -55,8 +55,9 @@ running certbot.
 
 The repo is public, so the droplet can clone it over plain HTTPS — no deploy key
 needed. SSH in, then run the provisioning script (installs .NET 8 SDK, PostgreSQL,
-Redis, Nginx + Certbot, creates the `wishdem` system user/directories, clones the
-repo, installs the systemd units and Nginx site config):
+Redis, Nginx + Certbot, creates the app directories, clones the repo, installs the
+systemd units and Nginx site config — the services run as `www-data`, no dedicated
+custom user needed):
 
 ```bash
 ssh root@206.81.16.168
