@@ -31,3 +31,21 @@
     @apply bg-midnight text-porcelain font-sans antialiased;
   }
 }
+
+/* iOS Safari auto-zooms the whole page when a focused form field's computed
+   font-size is under 16px — most inputs/selects/textareas here use smaller
+   sizes for their compact layouts, which is what causes the page to "bulge"
+   on focus until the user manually pinches back out. Forces a 16px floor
+   specifically on small screens (where iOS actually does this) instead of
+   touching every field's own font-size class individually. This is Tailwind
+   v3, where @layer is a build-time bucket (not real CSS cascade layers) and
+   plain type selectors still lose to utility class selectors on specificity
+   — !important is the standard, deliberate escape hatch for exactly this
+   override, not a design-vs-design conflict. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
