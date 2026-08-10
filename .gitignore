@@ -7,3 +7,8 @@ dist
 .env.local
 .env.production
 .env.*.local
+
+# Real deploy secrets (systemd EnvironmentFiles) — only the *.env.example templates
+# in backend/deploy/ should ever be committed.
+backend/deploy/*.env
+!backend/deploy/*.env.example
