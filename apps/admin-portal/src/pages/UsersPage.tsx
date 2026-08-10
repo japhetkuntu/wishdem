@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import clsx from "clsx";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useAdminCustomers, useTeamMembers } from "@/hooks/useAdminData";
-import type { CustomerStatus, TeamStatus } from "@/types";
+import type { CustomerStatus, TeamMember, TeamStatus } from "@/types";
 
 type Tab = "customers" | "team" | "invitations" | "offboarding";
 
@@ -21,16 +21,45 @@ const TEAM_BADGE: Record<TeamStatus, string> = {
 
 export default function UsersPage() {
   const { customers, loading: customersLoading } = useAdminCustomers();
-  const { members, loading: membersLoading } = useTeamMembers();
+  const { members, loading: membersLoading, error: inviteError, invite, resendInvite, deactivate, reactivate } = useTeamMembers();
   const [tab, setTab] = useState<Tab>("customers");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [reason, setReason] = useState("Recipient cannot access delivery confirmation.");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState("Operations");
+  const [inviting, setInviting] = useState(false);
+  const [actioningId, setActioningId] = useState<string | null>(null);
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId) ?? customers[0];
 
   const invitationsCount = members.filter((m) => m.status === "INVITED").length;
   const offboardingCount = members.filter((m) => m.status === "OFFBOARDING").length;
+
+  async function handleInvite(e: FormEvent) {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !inviteName.trim()) return;
+    setInviting(true);
+    try {
+      const member = await invite({ email: inviteEmail.trim(), fullName: inviteName.trim(), role: inviteRole.trim() || "Operations" });
+      if (member) {
+        setInviteEmail("");
+        setInviteName("");
+      }
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function handleTeamAction(member: TeamMember) {
+    setActioningId(member.id);
+    try {
+      if (member.status === "INVITED") await resendInvite(member.id);
+      else if (member.status === "OFFBOARDING") await reactivate(member.id);
+      else await deactivate(member.id);
+    } finally {
+      setActioningId(null);
+    }
+  }
 
   return (
     <AdminLayout active="users">
@@ -45,7 +74,7 @@ export default function UsersPage() {
       </div>
 
       <h1 className="mt-4 font-display text-[34px]">Users</h1>
-      <p className="mb-4 text-[11px] text-ink/55">
+      <p className="mb-4 text-[11px] text-porcelain/60">
         Help people manage their promises with the smallest relevant amount of context.
       </p>
 
@@ -74,7 +103,7 @@ export default function UsersPage() {
 
       {tab === "customers" && (
         <section className="grid gap-[15px] lg:grid-cols-[.9fr_1.1fr]">
-          <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white">
+          <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white text-ink">
             <header className="flex items-center justify-between border-b border-plum/[0.09] p-4">
               <h2 className="font-display text-[20px]">Directory</h2>
               <span className="rounded-pill bg-champagne/50 px-[7px] py-[6px] text-[9px] font-extrabold">Payment action</span>
@@ -108,7 +137,7 @@ export default function UsersPage() {
           </article>
 
           {selectedCustomer && (
-            <article className="rounded-md border border-plum/[0.11] bg-white p-4">
+            <article className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <span className={clsx("w-max rounded-pill px-[6px] py-1 text-[8px] font-extrabold", CUSTOMER_BADGE[selectedCustomer.status])}>
@@ -121,21 +150,24 @@ export default function UsersPage() {
                     {selectedCustomer.profile.timezoneNote}
                   </p>
                 </div>
-                <button type="button" className="rounded-pill bg-plum px-[11px] py-[9px] text-[10px] font-extrabold text-porcelain">
+                <a
+                  href={`mailto:${selectedCustomer.email}`}
+                  className="rounded-pill bg-plum px-[11px] py-[9px] text-[10px] font-extrabold text-[#F6F0E8]"
+                >
                   Contact {selectedCustomer.name.split(" ")[0]}
-                </button>
+                </a>
               </div>
 
               <div className="my-3 grid grid-cols-3 gap-[7px]">
-                <div className="rounded-sm bg-porcelain p-[9px] text-[9px] text-ink/55">
+                <div className="rounded-sm bg-paper p-[9px] text-[9px] text-ink/55">
                   MEMBER SINCE
                   <b className="mt-[3px] block text-[11px] text-ink">{selectedCustomer.profile.memberSince}</b>
                 </div>
-                <div className="rounded-sm bg-porcelain p-[9px] text-[9px] text-ink/55">
+                <div className="rounded-sm bg-paper p-[9px] text-[9px] text-ink/55">
                   ACTIVE WISHES
                   <b className="mt-[3px] block text-[11px] text-ink">{selectedCustomer.profile.activeWishes}</b>
                 </div>
-                <div className="rounded-sm bg-porcelain p-[9px] text-[9px] text-ink/55">
+                <div className="rounded-sm bg-paper p-[9px] text-[9px] text-ink/55">
                   NEXT DELIVERY
                   <b className="mt-[3px] block text-[11px] text-ink">{selectedCustomer.profile.nextDelivery}</b>
                 </div>
@@ -174,15 +206,6 @@ export default function UsersPage() {
                   {note.note}
                 </div>
               ))}
-
-              <div className="mt-3 flex flex-wrap gap-[7px]">
-                <button type="button" className="rounded-pill border border-plum/[0.15] bg-white px-[11px] py-[9px] text-[10px] font-extrabold text-plum">
-                  Request protected content access
-                </button>
-                <button type="button" className="rounded-pill border border-plum/[0.15] bg-white px-[11px] py-[9px] text-[10px] font-extrabold text-plum">
-                  View full activity
-                </button>
-              </div>
             </article>
           )}
         </section>
@@ -190,12 +213,11 @@ export default function UsersPage() {
 
       {tab === "team" && (
         <section className="grid gap-[15px] lg:grid-cols-[minmax(0,1fr)_310px]">
-          <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white">
-            <div className="hidden grid-cols-[1.45fr_1fr_.8fr_.7fr_.9fr_.55fr] gap-[8px] bg-porcelain px-[13px] py-[11px] text-[8px] font-extrabold tracking-[0.07em] text-ink/50 lg:grid">
+          <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white text-ink">
+            <div className="hidden grid-cols-[1.45fr_1fr_.8fr_.9fr_.55fr] gap-[8px] bg-paper px-[13px] py-[11px] text-[8px] font-extrabold tracking-[0.07em] text-ink/50 lg:grid">
               <span>PERSON</span>
-              <span>ROLE &amp; TEAM</span>
+              <span>ROLE</span>
               <span>STATUS</span>
-              <span>MFA</span>
               <span>LAST ACTIVE</span>
               <span />
             </div>
@@ -205,7 +227,7 @@ export default function UsersPage() {
               members.map((member) => (
                 <div
                   key={member.id}
-                  className="grid grid-cols-2 gap-[8px] border-t border-plum/[0.08] px-[13px] py-3 text-[10px] first:border-0 lg:grid-cols-[1.45fr_1fr_.8fr_.7fr_.9fr_.55fr] lg:items-center"
+                  className="grid grid-cols-2 gap-[8px] border-t border-plum/[0.08] px-[13px] py-3 text-[10px] first:border-0 lg:grid-cols-[1.45fr_1fr_.8fr_.9fr_.55fr] lg:items-center"
                 >
                   <div>
                     <b className="block">{member.name}</b>
@@ -213,60 +235,72 @@ export default function UsersPage() {
                   </div>
                   <div>
                     <b className="block">{member.role}</b>
-                    <small className="text-ink/50">{member.team}</small>
                   </div>
                   <div>
                     <span className={clsx("w-max rounded-pill px-[6px] py-1 text-[8px] font-extrabold", TEAM_BADGE[member.status])}>
                       {member.status}
                     </span>
                   </div>
-                  <div className="font-extrabold text-moss">{member.mfa}</div>
-                  <div>
-                    {member.lastActive}
-                    <small className="block text-ink/50">{member.locationNote}</small>
-                  </div>
-                  <div className="font-extrabold text-mulberry">{member.actionLabel} →</div>
+                  <div>{member.lastActive}</div>
+                  <button
+                    type="button"
+                    onClick={() => handleTeamAction(member)}
+                    disabled={actioningId === member.id}
+                    className="w-max font-extrabold text-mulberry disabled:opacity-50"
+                  >
+                    {actioningId === member.id ? "Working…" : `${member.actionLabel} →`}
+                  </button>
                 </div>
               ))
             )}
           </article>
 
-          <aside className="h-max rounded-md border border-plum/[0.11] bg-white p-4">
-            <h2 className="font-display text-[22px]">Support session</h2>
-            <p className="text-[10px] text-ink/55">Impersonation is always scoped, time-limited, and recorded.</p>
-            <div className="my-3 rounded-md bg-porcelain p-[10px] text-[10px] leading-[1.45]">
-              <b>View as Nina Park</b>
-              <br />
-              Read-only customer account and delivery metadata.
-              <br />
-              <br />
-              <b>Blocked:</b> wish content, payment changes, account closure, and security changes.
-            </div>
-            <label className="mb-1 mt-[10px] block text-[9px] font-extrabold text-plum">SUPPORT CASE REASON</label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-              className="w-full rounded-sm border border-plum/[0.15] bg-background p-2 text-[10px] outline-none"
-            />
-            <div className="mt-[9px] border-l-2 border-champagne pl-2 text-[9px] leading-[1.45] text-ink/60">
-              This session will be visible in Nina's account timeline and the audit log. It ends
-              after 15 minutes.
-            </div>
-            <button
-              type="button"
-              onClick={() => setSessionStarted(true)}
-              disabled={sessionStarted}
-              className="mt-3 w-full rounded-pill bg-plum px-[11px] py-[10px] text-[10px] font-extrabold text-porcelain disabled:opacity-60"
-            >
-              {sessionStarted ? "Session started ✓" : "Start protected session"}
-            </button>
+          <aside className="h-max rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
+            <h2 className="font-display text-[22px]">Invite a team member</h2>
+            <p className="text-[10px] text-ink/55">
+              They'll get a temporary password by email and be asked to change it on first sign-in.
+            </p>
+            <form onSubmit={handleInvite} className="mt-3 grid gap-[8px]">
+              <label className="block text-[9px] font-extrabold text-plum">
+                FULL NAME
+                <input
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  className="mt-1 w-full rounded-sm border border-plum/[0.15] bg-background p-2 text-[10px] font-normal outline-none"
+                />
+              </label>
+              <label className="block text-[9px] font-extrabold text-plum">
+                EMAIL
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="mt-1 w-full rounded-sm border border-plum/[0.15] bg-background p-2 text-[10px] font-normal outline-none"
+                />
+              </label>
+              <label className="block text-[9px] font-extrabold text-plum">
+                ROLE
+                <input
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="mt-1 w-full rounded-sm border border-plum/[0.15] bg-background p-2 text-[10px] font-normal outline-none"
+                />
+              </label>
+              {inviteError && <p className="text-[9px] text-mulberry">{inviteError}</p>}
+              <button
+                type="submit"
+                disabled={inviting}
+                className="mt-1 w-full rounded-pill bg-plum px-[11px] py-[10px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-60"
+              >
+                {inviting ? "Sending invite…" : "Send invite"}
+              </button>
+            </form>
           </aside>
         </section>
       )}
 
       {tab === "invitations" && (
-        <section className="rounded-md border border-plum/[0.11] bg-white p-4">
+        <section className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
           {members
             .filter((m) => m.status === "INVITED")
             .map((member) => (
@@ -274,10 +308,15 @@ export default function UsersPage() {
                 <div>
                   <b>{member.name}</b>
                   <span className="text-ink/55"> · {member.email}</span>
-                  <small className="mt-[2px] block text-ink/50">{member.role} · {member.locationNote}</small>
+                  <small className="mt-[2px] block text-ink/50">{member.role}</small>
                 </div>
-                <button type="button" className="rounded-pill bg-plum px-[11px] py-[9px] text-[10px] font-extrabold text-porcelain">
-                  Resend invite
+                <button
+                  type="button"
+                  onClick={() => handleTeamAction(member)}
+                  disabled={actioningId === member.id}
+                  className="rounded-pill bg-plum px-[11px] py-[9px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-60"
+                >
+                  {actioningId === member.id ? "Working…" : "Resend invite"}
                 </button>
               </div>
             ))}
@@ -288,7 +327,7 @@ export default function UsersPage() {
       )}
 
       {tab === "offboarding" && (
-        <section className="rounded-md border border-plum/[0.11] bg-white p-4">
+        <section className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
           {members
             .filter((m) => m.status === "OFFBOARDING")
             .map((member) => (
@@ -296,10 +335,15 @@ export default function UsersPage() {
                 <div>
                   <b>{member.name}</b>
                   <span className="text-ink/55"> · {member.role}</span>
-                  <small className="mt-[2px] block text-ink/50">{member.lastActive} · {member.locationNote}</small>
+                  <small className="mt-[2px] block text-ink/50">{member.lastActive}</small>
                 </div>
-                <button type="button" className="rounded-pill border border-plum/[0.16] bg-white px-[11px] py-[9px] text-[10px] font-extrabold text-plum">
-                  Review reassignment
+                <button
+                  type="button"
+                  onClick={() => handleTeamAction(member)}
+                  disabled={actioningId === member.id}
+                  className="rounded-pill border border-plum/[0.16] bg-white px-[11px] py-[9px] text-[10px] font-extrabold text-plum disabled:opacity-60"
+                >
+                  {actioningId === member.id ? "Working…" : "Reactivate access"}
                 </button>
               </div>
             ))}

@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WishDem.Admin.Api.Models.Requests;
+using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Responses;
@@ -21,7 +22,7 @@ public class PaymentOversightServiceTests
 
     public PaymentOversightServiceTests()
     {
-        _sut = new PaymentOversightService(_payments.Object, _wishes.Object, _customerUsers.Object, Mock.Of<ILogger<PaymentOversightService>>());
+        _sut = new PaymentOversightService(_payments.Object, _wishes.Object, _customerUsers.Object, Mock.Of<IAuditLogService>(), Mock.Of<ILogger<PaymentOversightService>>());
     }
 
     private static Payment NewPayment(Guid wishId, PaymentStatus status = PaymentStatus.Succeeded) => new()
@@ -104,7 +105,7 @@ public class PaymentOversightServiceTests
         _payments.Setup(r => r.UpdateAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _wishes.Setup(r => r.GetByIdAsync(wishId, It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
 
-        var response = await _sut.RefundAsync(payment.Id, new RefundPaymentRequest(1.49m, "Customer requested refund"));
+        var response = await _sut.RefundAsync(Guid.NewGuid(), payment.Id, new RefundPaymentRequest(1.49m, "Customer requested refund"));
 
         response.Code.Should().Be(200);
         payment.Status.Should().Be(PaymentStatus.Reversed);
@@ -117,7 +118,7 @@ public class PaymentOversightServiceTests
         var payment = NewPayment(Guid.NewGuid(), PaymentStatus.Failed);
         _payments.Setup(r => r.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
 
-        var response = await _sut.RefundAsync(payment.Id, new RefundPaymentRequest(1.49m, "reason"));
+        var response = await _sut.RefundAsync(Guid.NewGuid(), payment.Id, new RefundPaymentRequest(1.49m, "reason"));
 
         response.Code.Should().Be(409);
     }
@@ -127,7 +128,7 @@ public class PaymentOversightServiceTests
     {
         _payments.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Payment?)null);
 
-        var response = await _sut.RefundAsync(Guid.NewGuid(), new RefundPaymentRequest(1.49m, "reason"));
+        var response = await _sut.RefundAsync(Guid.NewGuid(), Guid.NewGuid(), new RefundPaymentRequest(1.49m, "reason"));
 
         response.Code.Should().Be(404);
     }

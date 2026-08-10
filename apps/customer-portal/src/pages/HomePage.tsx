@@ -33,7 +33,7 @@ export default function HomePage() {
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-[18px] text-[11px] font-bold text-porcelain/50">
               <span className="h-[5px] w-[5px] rounded-full bg-champagne" />
-              <span>A small Mobile Money fee seals every delivery</span>
+              <span>Completely free to use</span>
               <span>•</span>
               <span>Recipient needs no account</span>
             </div>
@@ -54,7 +54,7 @@ export default function HomePage() {
               <br />
               for you
             </div>
-            <div className="absolute bottom-[14px] left-0 rounded-md bg-porcelain px-[19px] py-4 text-[12px] text-ink shadow-card sm:bottom-[30px] sm:left-[-35px]">
+            <div className="absolute bottom-[14px] left-0 rounded-md bg-paper px-[19px] py-4 text-[12px] text-ink shadow-card sm:bottom-[30px] sm:left-[-35px]">
               <strong className="mb-[3px] block font-display text-[22px]">14 Oct</strong>
               Amina's birthday
             </div>

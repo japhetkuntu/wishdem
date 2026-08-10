@@ -28,14 +28,14 @@ const SECTION_TITLES: Record<FilterKey, string> = {
 const AVATAR_CLASSES: Record<CircleAvatarTone, string> = {
   accent: "bg-champagne text-plum",
   rose: "bg-rose text-plum",
-  moss: "bg-moss text-porcelain",
-  mulberry: "bg-mulberry text-porcelain",
+  moss: "bg-moss text-paper",
+  mulberry: "bg-mulberry text-[#F6F0E8]",
 };
 
 const STATE_CLASSES: Record<CircleStateTone, string> = {
   neutral: "bg-champagne text-plum",
   wait: "bg-rose text-plum",
-  sealed: "bg-moss text-porcelain",
+  sealed: "bg-moss text-paper",
 };
 
 function PersonRow({ person }: { person: CirclePerson }) {
@@ -107,7 +107,7 @@ export default function CirclePage() {
   }, [people, filter]);
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="circle" />
 
       <header className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
@@ -137,7 +137,7 @@ export default function CirclePage() {
                 onClick={() => setFilter(f.key)}
                 className={clsx(
                   "whitespace-nowrap rounded-pill border border-porcelain/[0.17] px-[10px] py-[7px] text-[9px] font-extrabold",
-                  filter === f.key ? "bg-porcelain text-plum" : "text-porcelain/70",
+                  filter === f.key ? "bg-paper text-plum" : "text-porcelain/70",
                 )}
               >
                 {f.label}
@@ -161,7 +161,7 @@ export default function CirclePage() {
           </div>
         </div>
 
-        <aside className="grid gap-[14px] rounded-md bg-porcelain p-[17px] text-ink shadow-card">
+        <aside className="grid gap-[14px] rounded-md bg-paper p-[17px] text-ink shadow-card">
           {invitations.length > 0 && (
             <div>
               <span className="text-[9px] font-extrabold tracking-[0.12em] text-mulberry">
@@ -178,7 +178,7 @@ export default function CirclePage() {
                         key={face}
                         className={clsx(
                           "-mr-[5px] grid h-[27px] w-[27px] place-items-center rounded-full border-2 border-porcelain text-[7px] font-extrabold",
-                          i === 0 && "bg-mulberry text-porcelain",
+                          i === 0 && "bg-mulberry text-[#F6F0E8]",
                           i === 1 && "bg-champagne text-plum",
                           i === 2 && "bg-rose text-plum",
                         )}

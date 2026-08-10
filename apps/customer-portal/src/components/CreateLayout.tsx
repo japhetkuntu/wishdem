@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { Stepper } from "./Stepper";
 import { useWizardStore } from "@/store/wizardStore";
+import { hasSession } from "@/lib/httpClient";
 
 export function CreateLayout({
   activeIndex,
@@ -25,7 +26,7 @@ export function CreateLayout({
       )}
     >
       <header className="flex flex-none items-center justify-between gap-4 border-b border-porcelain/[0.14] pb-4">
-        <Link to="/" className="text-[19px] font-extrabold tracking-[-1.5px]">
+        <Link to={hasSession() ? "/dashboard" : "/"} className="text-[19px] font-extrabold tracking-[-1.5px]">
           Wish<i className="mx-[2px] mb-2 inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
           Dem
         </Link>

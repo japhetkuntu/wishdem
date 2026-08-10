@@ -11,15 +11,15 @@ type FilterKey = "all" | "upcoming30" | "availableWeek" | "needsAttention" | "st
 const AVATAR_CLASSES: Record<EventTone | "periwinkle", string> = {
   accent: "bg-champagne text-plum",
   rose: "bg-rose text-plum",
-  moss: "bg-moss text-porcelain",
-  periwinkle: "bg-periwinkle text-porcelain",
+  moss: "bg-moss text-paper",
+  periwinkle: "bg-periwinkle text-plum",
 };
 
 // Person state tags use their own tone set (accent/good/alert), distinct
 // from calendar tags (accent/attention/good).
 const STATE_TAG_CLASSES: Record<string, string> = {
   accent: "bg-champagne text-plum",
-  good: "bg-moss text-porcelain",
+  good: "bg-moss text-paper",
   alert: "bg-rose text-plum",
 };
 
@@ -37,7 +37,10 @@ function PersonRow({
       onClick={onSelect}
       className={clsx(
         "grid cursor-pointer grid-cols-[1fr_auto] items-center gap-2 border-t border-porcelain/[0.09] px-[14px] py-[13px] first:border-0 sm:grid-cols-[1.35fr_1.15fr_.92fr_.7fr]",
-        selected && "bg-mulberry",
+        // Pinning the reactive ink-on-canvas variable here (not just setting bg) keeps every
+        // descendant's text-porcelain/* legible against this always-dark mulberry fill,
+        // regardless of which theme is active — same pattern as DashboardPage's mulberry card.
+        selected && "bg-mulberry [--wd-ink-on-canvas-rgb:246_240_232]",
       )}
     >
       <div className="flex items-center gap-[9px]">
@@ -115,7 +118,7 @@ export default function PeoplePage() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="people" />
 
       <header className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
@@ -150,7 +153,7 @@ export default function PeoplePage() {
             onClick={() => setFilter(chip.key)}
             className={clsx(
               "whitespace-nowrap rounded-pill border border-porcelain/[0.17] px-[10px] py-[7px] text-[9px] font-extrabold",
-              filter === chip.key ? "bg-porcelain text-plum" : "text-porcelain/70",
+              filter === chip.key ? "bg-paper text-plum" : "text-porcelain/70",
             )}
           >
             {chip.label}
@@ -183,7 +186,7 @@ export default function PeoplePage() {
         </div>
 
         {selected && (
-          <aside className="rounded-md bg-porcelain p-[17px] text-ink shadow-card">
+          <aside className="rounded-md bg-paper p-[17px] text-ink shadow-card">
             <div className="flex items-center gap-[10px]">
               <div
                 className={clsx(

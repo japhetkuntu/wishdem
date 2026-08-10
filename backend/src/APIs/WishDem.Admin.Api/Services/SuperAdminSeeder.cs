@@ -6,8 +6,11 @@ using WishDem.Postgres.Sdk.Repositories;
 
 namespace WishDem.Admin.Api.Services;
 
-/// <summary>Ensures exactly one admin account exists on startup, since this API has no
-/// public registration endpoint — the very first admin has to come from somewhere.</summary>
+/// <summary>Ensures the config-defined super admin account exists and is reachable with the
+/// configured password on every startup, since this API has no public registration endpoint —
+/// the very first admin has to come from somewhere, and it must stay recoverable from config
+/// alone rather than becoming a one-time seed that can drift out of sync (e.g. after a manual
+/// password reset in a dev database) with no way back in.</summary>
 public class SuperAdminSeeder(
     IServiceScopeFactory scopeFactory,
     IOptions<SuperAdminOptions> options,
@@ -22,7 +25,14 @@ public class SuperAdminSeeder(
         var superAdmin = options.Value;
         var normalizedEmail = superAdmin.Email.Trim().ToLowerInvariant();
 
-        if (await adminUsers.ExistsAsync(u => u.Email == normalizedEmail, ct)) return;
+        var existing = await adminUsers.FindAsync(u => u.Email == normalizedEmail, ct);
+        if (existing is not null)
+        {
+            existing.PasswordHash = passwordHasher.HashPassword(existing, superAdmin.Password);
+            await adminUsers.UpdateAsync(existing, ct);
+            logger.LogInformation("Reconciled config super admin account for {Email}", normalizedEmail);
+            return;
+        }
 
         var user = new AdminUser
         {

@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-6 pb-[45px]">
       <nav className="flex min-h-[66px] items-center border-b border-plum/[0.09]">
-        <span className="text-[20px] font-extrabold tracking-[-1.2px] text-plum">
+        <span className="text-[20px] font-extrabold tracking-[-1.2px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
           Dem
         </span>
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
           {STEPS.map((step) => (
             <span
               key={step.n}
-              className={clsx("flex items-center text-[8px] font-extrabold", step.n <= 2 ? "text-mulberry" : "text-ink/50")}
+              className={clsx("flex items-center text-[8px] font-extrabold", step.n <= 2 ? "text-mulberry" : "text-porcelain/50")}
             >
               <b
                 className={clsx(
@@ -115,15 +115,15 @@ export default function ResetPasswordPage() {
         <span className="text-[8px] font-extrabold tracking-[0.13em] text-mulberry">
           PASSWORD RECOVERY
         </span>
-        <h1 className="my-[10px] font-display text-[35px] leading-[1.1] text-plum">
+        <h1 className="my-[10px] font-display text-[35px] leading-[1.1]">
           Create a new password
         </h1>
-        <p className="mb-[18px] text-[10px] leading-[1.55] text-ink/60">
-          First confirm the code sent to <b className="text-plum">{maskedEmail}</b>, then choose a
+        <p className="mb-[18px] text-[10px] leading-[1.55] text-porcelain/60">
+          First confirm the code sent to <b className="text-champagne">{maskedEmail}</b>, then choose a
           new password.
         </p>
 
-        <form onSubmit={handleSubmit} className="rounded-[22px] border border-plum/[0.1] bg-white p-[22px] shadow-[0_8px_23px_rgba(13,6,14,0.07)]">
+        <form onSubmit={handleSubmit} className="rounded-[22px] border border-plum/[0.1] bg-white p-[22px] text-ink shadow-[0_8px_23px_rgba(13,6,14,0.07)]">
           <h2 className="font-display text-[22px] text-plum">Check your email</h2>
           <p className="mb-[13px] mt-1 text-[9px] leading-[1.5] text-ink/55">
             Enter the six-digit code from our most recent message. It is valid for 10 minutes.
@@ -228,7 +228,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={saving || !codeComplete || !matches || expiresIn === 0 || !email}
-            className="mt-[14px] w-full rounded-pill bg-plum px-3 py-[11px] text-[9px] font-extrabold text-porcelain disabled:opacity-50"
+            className="mt-[14px] w-full rounded-pill bg-plum px-3 py-[11px] text-[9px] font-extrabold text-[#F6F0E8] disabled:opacity-50"
           >
             {saving ? "Resetting…" : "Reset password"}
           </button>

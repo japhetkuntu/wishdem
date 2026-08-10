@@ -8,7 +8,11 @@ using WishDem.Postgres.Sdk.Repositories;
 
 namespace WishDem.Admin.Api.Services;
 
-public class WishOversightService(IRepository<Wish> wishes, IRepository<CustomerUser> customerUsers, ILogger<WishOversightService> logger) : IWishOversightService
+public class WishOversightService(
+    IRepository<Wish> wishes,
+    IRepository<CustomerUser> customerUsers,
+    IAuditLogService auditLog,
+    ILogger<WishOversightService> logger) : IWishOversightService
 {
     public async Task<IApiResponse<PagedResult<AdminWishResponse>>> GetAllAsync(int pageIndex, int pageSize, WishStatus? status, CancellationToken ct = default)
     {
@@ -61,7 +65,7 @@ public class WishOversightService(IRepository<Wish> wishes, IRepository<Customer
         }
     }
 
-    public async Task<IApiResponse<AdminWishResponse>> UpdateStatusAsync(Guid wishId, WishStatus status, CancellationToken ct = default)
+    public async Task<IApiResponse<AdminWishResponse>> UpdateStatusAsync(Guid adminUserId, Guid wishId, WishStatus status, CancellationToken ct = default)
     {
         try
         {
@@ -70,6 +74,7 @@ public class WishOversightService(IRepository<Wish> wishes, IRepository<Customer
             await wishes.UpdateAsync(wish, ct);
 
             var customer = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);
+            await auditLog.LogAsync(adminUserId, "wish.status.update", "Wish", wish.Id, $"changed wish {wish.Id} status to {status}", ct: ct);
             return ToResponse(wish, customer).ToOkApiResponse("Wish status updated successfully.");
         }
         catch (WishDemException ex)
@@ -83,12 +88,13 @@ public class WishOversightService(IRepository<Wish> wishes, IRepository<Customer
         }
     }
 
-    public async Task<IApiResponse<bool>> DeleteAsync(Guid wishId, CancellationToken ct = default)
+    public async Task<IApiResponse<bool>> DeleteAsync(Guid adminUserId, Guid wishId, CancellationToken ct = default)
     {
         try
         {
             var wish = await GetWishAsync(wishId, ct);
             await wishes.RemoveAsync(wish, ct);
+            await auditLog.LogAsync(adminUserId, "wish.cancel", "Wish", wish.Id, $"cancelled wish {wish.Id}", AuditTag.CriticalAccess, ct);
             return true.ToOkApiResponse("Wish deleted successfully.");
         }
         catch (WishDemException ex)
@@ -102,7 +108,7 @@ public class WishOversightService(IRepository<Wish> wishes, IRepository<Customer
         }
     }
 
-    public async Task<IApiResponse<AdminWishResponse>> RedeliverAsync(Guid wishId, CancellationToken ct = default)
+    public async Task<IApiResponse<AdminWishResponse>> RedeliverAsync(Guid adminUserId, Guid wishId, CancellationToken ct = default)
     {
         try
         {
@@ -115,6 +121,7 @@ public class WishOversightService(IRepository<Wish> wishes, IRepository<Customer
             await wishes.UpdateAsync(wish, ct);
 
             var customer = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);
+            await auditLog.LogAsync(adminUserId, "wish.redeliver", "Wish", wish.Id, $"retried delivery for wish {wish.Id}", ct: ct);
             return ToResponse(wish, customer).ToOkApiResponse("Wish queued for redelivery.");
         }
         catch (WishDemException ex)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WishDem.Admin.Api.Common;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
 using WishDem.Common.Sdk.Enums;
@@ -32,7 +33,8 @@ public class PaymentsController(IPaymentOversightService paymentOversightService
     [HttpPost("{id:guid}/refund")]
     public async Task<IActionResult> Refund(Guid id, [FromBody] RefundPaymentRequest request, CancellationToken ct)
     {
-        var response = await paymentOversightService.RefundAsync(id, request, ct);
+        var adminUserId = ClaimsReader.GetUserId(User);
+        var response = await paymentOversightService.RefundAsync(adminUserId, id, request, ct);
         return StatusCode(response.Code, response);
     }
 }

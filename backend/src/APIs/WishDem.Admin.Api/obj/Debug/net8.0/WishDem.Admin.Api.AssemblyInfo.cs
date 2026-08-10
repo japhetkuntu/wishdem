@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WishDem.Admin.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ccaeb84f3a10639a26c65f51a03cce57e072c13")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5852a834e6502e6d7f0385fd8d7272a139ce60d2")]
 [assembly: System.Reflection.AssemblyProductAttribute("WishDem.Admin.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WishDem.Admin.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

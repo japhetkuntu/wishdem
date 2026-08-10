@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getSelectedMoment, listCalendarDays, listEventsForDay } from "@/lib/api";
-import type { CalendarDay, CalendarEvent, SelectedMoment } from "@/types";
+import { listCalendarDays, listEventsForDay } from "@/lib/api";
+import type { CalendarDay, CalendarEvent } from "@/types";
 
 export function useCalendarDays() {
   const [days, setDays] = useState<CalendarDay[]>([]);
@@ -21,22 +21,26 @@ export function useCalendarEvents(dayId: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!dayId) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
+
+    // Guards against the auto-select-on-load race: the initial empty-string call and the
+    // real dayId call can both be in flight together, and without this the first request's
+    // (empty, stale) result could resolve after the real one and clobber it.
+    let cancelled = false;
     setLoading(true);
     listEventsForDay(dayId).then((data) => {
+      if (cancelled) return;
       setEvents(data);
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [dayId]);
 
   return { events, loading };
-}
-
-export function useSelectedMoment() {
-  const [moment, setMoment] = useState<SelectedMoment | null>(null);
-
-  useEffect(() => {
-    getSelectedMoment().then(setMoment);
-  }, []);
-
-  return { moment };
 }

@@ -39,7 +39,7 @@ export default function InvitationPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
         <AppNav active="groupWishes" />
         <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
       </main>
@@ -48,7 +48,7 @@ export default function InvitationPage() {
 
   if (!invitation) {
     return (
-      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
         <AppNav active="groupWishes" />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           We couldn't find that invitation.
@@ -60,7 +60,7 @@ export default function InvitationPage() {
   const recipientFirst = invitation.recipientName.split(" ")[0] || invitation.recipientName;
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="groupWishes" />
 
       <section className="grid gap-8 py-8 sm:grid-cols-[1.15fr_.85fr] sm:gap-14">

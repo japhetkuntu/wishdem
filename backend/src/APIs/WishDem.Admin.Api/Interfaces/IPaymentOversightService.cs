@@ -11,5 +11,5 @@ public interface IPaymentOversightService
 
     Task<IApiResponse<AdminPaymentResponse>> GetByIdAsync(Guid paymentId, CancellationToken ct = default);
 
-    Task<IApiResponse<AdminPaymentResponse>> RefundAsync(Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default);
+    Task<IApiResponse<AdminPaymentResponse>> RefundAsync(Guid adminUserId, Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default);
 }

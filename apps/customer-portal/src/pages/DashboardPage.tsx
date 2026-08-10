@@ -22,8 +22,8 @@ export default function DashboardPage() {
 
   if (showEmpty) {
     return (
-      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
-        <AppNav active="home" />
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+        <AppNav active="wishes" />
         <div className="grid min-h-[70vh] place-items-center py-8">
           <EmptyState
             badge={"for\nlater"}
@@ -59,8 +59,8 @@ export default function DashboardPage() {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
-      <AppNav active="home" />
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <AppNav active="wishes" />
 
       <section className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
 
           <section className="mt-5 grid gap-[14px] sm:grid-cols-2">
             {recentDelivery && (
-              <article className="rounded-lg bg-porcelain p-[17px] text-ink">
+              <article className="rounded-lg bg-paper p-[17px] text-ink">
                 <span className="mb-[5px] block text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
                   OPENED RECENTLY
                 </span>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
 
         <aside className="grid gap-[14px]">
           {next && (
-            <section className="rounded-lg bg-mulberry p-[18px]">
+            <section className="rounded-lg bg-mulberry p-[18px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
               <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
                 NEXT DELIVERY
               </span>
@@ -186,8 +186,7 @@ export default function DashboardPage() {
                 {recentDelivery.recipient.name}'s wish reached them.
               </b>
               <p className="mt-[5px] text-[11px] leading-[1.5] text-porcelain/72">
-                Delivered safely via {recentDelivery.channel ?? "private link"} · payment
-                receipt available
+                Delivered safely via {recentDelivery.channel ?? "private link"}
               </p>
             </section>
           )}

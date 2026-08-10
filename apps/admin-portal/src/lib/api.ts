@@ -50,7 +50,8 @@ interface AdminWishResponseDto {
   recipientName: string;
   recipientRelationship: string;
   recipientBirthday: string | null;
-  channel: string;
+  /** Null until the sender reaches the deliver step of the wizard — draft wishes have no channel yet. */
+  channel: string | null;
   status: BackendWishStatus;
   priceLabel: string;
   sealedAtUtc: string | null;
@@ -92,6 +93,7 @@ interface ModerationCaseResponseDto {
   contentType: string | null;
   severity: BackendSeverity;
   status: BackendModerationStatus;
+  assignedToName: string | null;
   reviewerName: string | null;
   decision: BackendDecision;
   decisionReason: string | null;
@@ -309,11 +311,13 @@ function mapWishDeliveryStatus(status: BackendWishStatus, deliveredAtUtc: string
 function mapWish(dto: AdminWishResponseDto): AdminWish {
   const deliveryStatus = mapWishDeliveryStatus(dto.status, dto.deliveredAtUtc);
   const statusBadge = dto.status.toUpperCase();
+  // Draft wishes haven't reached the deliver step yet, so the backend sends no channel.
+  const channelLabel = dto.channel ?? "Not chosen yet";
 
   return {
     id: dto.id,
-    createdLabel: `Created ${formatDateLabel(dto.createdAtUtc)} · ${dto.channel}`,
-    channel: dto.channel,
+    createdLabel: `Created ${formatDateLabel(dto.createdAtUtc)} · ${channelLabel}`,
+    channel: channelLabel,
     senderName: dto.fromName || dto.customerName,
     recipientName: dto.recipientName,
     scheduleLabel: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "—",
@@ -326,14 +330,14 @@ function mapWish(dto: AdminWishResponseDto): AdminWish {
     // lives on the payment record) — PAID is the only honest default here
     // since sealed/delivered/opened wishes imply payment succeeded.
     paymentStatus: "PAID" as PaymentStatus,
-    type: dto.channel,
+    type: channelLabel,
     investigation: {
       statusBadge,
       // No per-wish audit trail exists server-side — these facts are built
       // only from real fields already on the wish, not an invented narrative.
       facts: [
         { label: "Status", value: statusBadge },
-        { label: "Channel", value: dto.channel },
+        { label: "Channel", value: channelLabel },
         { label: "Recipient", value: `${dto.recipientName} (${dto.recipientRelationship})` },
         { label: "Sealed", value: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "Not sealed" },
       ],
@@ -360,6 +364,11 @@ export async function retryWishDelivery(wishId: string): Promise<AdminWish | nul
     if (err instanceof ApiError && err.code === 404) return null;
     throw err;
   }
+}
+
+/** Permanently removes a wish — there's no "Cancelled" wish status, so cancelling means deleting it. */
+export async function cancelWish(wishId: string): Promise<void> {
+  await apiRequest<void>(`/api/wishes/${wishId}`, { method: "DELETE" });
 }
 
 /* -------------------------------------------------------------------------
@@ -397,6 +406,7 @@ function mapPayment(dto: AdminPaymentResponseDto): MoMoTransaction {
     senderName: dto.senderName,
     provider: PROVIDER_LABEL_MAP[dto.provider],
     amount: formatCurrency(dto.amount),
+    rawAmount: dto.amount,
     statusNote: dto.failureReason ?? (dto.settledAtUtc ? `Settled ${formatDateLabel(dto.settledAtUtc)}` : "—"),
     status,
     reconciliationLabel,
@@ -407,6 +417,18 @@ function mapPayment(dto: AdminPaymentResponseDto): MoMoTransaction {
 export async function listMoMoTransactions(): Promise<MoMoTransaction[]> {
   const page = await apiRequest<PagedResult<AdminPaymentResponseDto>>("/api/payments?pageIndex=0&pageSize=100");
   return page.items.map(mapPayment);
+}
+
+/** Only a SUCCESSFUL payment can be refunded — the backend rejects any other status. */
+export async function refundPayment(
+  paymentId: string,
+  input: { amount: number; reason: string },
+): Promise<MoMoTransaction> {
+  const dto = await apiRequest<AdminPaymentResponseDto>(`/api/payments/${paymentId}/refund`, {
+    method: "POST",
+    body: JSON.stringify({ amount: input.amount, reason: input.reason }),
+  });
+  return mapPayment(dto);
 }
 
 /* -------------------------------------------------------------------------
@@ -444,7 +466,7 @@ function mapModerationCase(dto: ModerationCaseResponseDto): ModerationCase {
     description: dto.description ?? "",
     evidenceQuote: dto.evidenceQuote ?? "",
     contentType: dto.contentType ?? "Unknown",
-    reviewer: dto.reviewerName ?? "Unassigned",
+    reviewer: dto.reviewerName ?? dto.assignedToName ?? "Unassigned",
     // No sender-account-status join available on this DTO — wishId is the
     // only real linked identifier we have without an extra lookup.
     sender: dto.wishId,
@@ -485,7 +507,7 @@ function mapModerationSeverityToUrgency(severity: BackendSeverity): AttentionCas
 }
 
 function mapModerationCaseToAttentionCase(dto: ModerationCaseResponseDto): AttentionCase {
-  const owner = dto.reviewerName ?? "Unassigned";
+  const owner = dto.assignedToName ?? dto.reviewerName ?? "Unassigned";
   const urgency = mapModerationSeverityToUrgency(dto.severity);
   return {
     id: dto.id,
@@ -518,14 +540,16 @@ export async function listAttentionCases(): Promise<AttentionCase[]> {
   return cases.filter((c) => c.status === "underReview").map(mapModerationCaseToAttentionCase);
 }
 
-// No backend endpoint exists for case assignment/ownership (no owner field
-// beyond reviewerName, no assignment endpoint on /api/moderation) — this is
-// a no-op that returns the case unchanged locally rather than pretending an
-// assignment persisted server-side.
-export async function assignAttentionCase(id: string, _owner: string): Promise<AttentionCase | null> {
-  const cases = cachedModerationCases ?? (await fetchModerationCases());
-  const dto = cases.find((c) => c.id === id);
-  return dto ? mapModerationCaseToAttentionCase(dto) : null;
+/** Assigns the moderation case to the calling admin (self-assign — the backend
+ * derives "me" from the auth token, matching the decide endpoint's pattern). */
+export async function assignAttentionCase(id: string): Promise<AttentionCase | null> {
+  const dto = await apiRequest<ModerationCaseResponseDto>(`/api/moderation/${id}/assign`, {
+    method: "POST",
+  });
+  if (cachedModerationCases) {
+    cachedModerationCases = cachedModerationCases.map((c) => (c.id === id ? dto : c));
+  }
+  return mapModerationCaseToAttentionCase(dto);
 }
 
 /* -------------------------------------------------------------------------
@@ -642,15 +666,105 @@ export async function listCustomers(): Promise<AdminCustomer[]> {
 }
 
 /* -------------------------------------------------------------------------
- * Team & Audit — no backend equivalent exists (no team/invitation entity,
- * no audit log entity). Returning empty arrays by design, not by error
- * swallowing — there is nothing to fetch.
+ * Team members — backed by real AdminUser rows. There's no separate pending-
+ * invitation entity: an invited account is created immediately with a
+ * generated temporary password (emailed to them), and shows as "INVITED"
+ * until its first real sign-in (LastLoginAtUtc is still null).
  * ---------------------------------------------------------------------- */
 
+interface TeamMemberResponseDto {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+  lastLoginAtUtc: string | null;
+  createdAtUtc: string;
+}
+
+function mapTeamMember(dto: TeamMemberResponseDto): TeamMember {
+  const status: TeamMember["status"] = !dto.isActive ? "OFFBOARDING" : dto.lastLoginAtUtc ? "ACTIVE" : "INVITED";
+  const actionLabel = status === "ACTIVE" ? "Deactivate" : status === "INVITED" ? "Resend invite" : "Reactivate";
+
+  return {
+    id: dto.id,
+    name: dto.fullName,
+    email: dto.email,
+    role: dto.role,
+    status,
+    lastActive: dto.lastLoginAtUtc ? formatDateLabel(dto.lastLoginAtUtc) : "Never signed in",
+    actionLabel,
+  };
+}
+
 export async function listTeamMembers(): Promise<TeamMember[]> {
-  return [];
+  const dtos = await apiRequest<TeamMemberResponseDto[]>("/api/admin-users");
+  return dtos.map(mapTeamMember);
+}
+
+export async function inviteTeamMember(input: { email: string; fullName: string; role: string }): Promise<TeamMember> {
+  const dto = await apiRequest<TeamMemberResponseDto>("/api/admin-users", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return mapTeamMember(dto);
+}
+
+export async function resendTeamMemberInvite(id: string): Promise<TeamMember> {
+  const dto = await apiRequest<TeamMemberResponseDto>(`/api/admin-users/${id}/resend-invite`, { method: "POST" });
+  return mapTeamMember(dto);
+}
+
+export async function deactivateTeamMember(id: string): Promise<TeamMember> {
+  const dto = await apiRequest<TeamMemberResponseDto>(`/api/admin-users/${id}/deactivate`, { method: "POST" });
+  return mapTeamMember(dto);
+}
+
+export async function reactivateTeamMember(id: string): Promise<TeamMember> {
+  const dto = await apiRequest<TeamMemberResponseDto>(`/api/admin-users/${id}/reactivate`, { method: "POST" });
+  return mapTeamMember(dto);
+}
+
+/* -------------------------------------------------------------------------
+ * Audit log — backed by real AdminAuditEvent rows, written by the other
+ * admin services whenever they complete an accountable action.
+ * ---------------------------------------------------------------------- */
+
+interface AuditEventResponseDto {
+  id: string;
+  adminName: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  summary: string;
+  tag: "general" | "contentAccess" | "sensitiveAccess" | "criticalAccess" | "sensitiveExport" | "security";
+  createdAtUtc: string;
+}
+
+const AUDIT_TAG_MAP: Record<AuditEventResponseDto["tag"], AuditEvent["tag"]> = {
+  general: null,
+  contentAccess: "CONTENT_ACCESS",
+  sensitiveAccess: "SENSITIVE_ACCESS",
+  criticalAccess: "CRITICAL_ACCESS",
+  sensitiveExport: "SENSITIVE_EXPORT",
+  security: "SECURITY",
+};
+
+function mapAuditEvent(dto: AuditEventResponseDto): AuditEvent {
+  const created = new Date(dto.createdAtUtc);
+  return {
+    id: dto.id,
+    timeLabel: new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" }).format(created),
+    dayLabel: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" }).format(created),
+    actor: dto.adminName,
+    message: dto.summary,
+    tag: AUDIT_TAG_MAP[dto.tag],
+    resourceType: dto.resourceType,
+    resourceId: dto.resourceId,
+  };
 }
 
 export async function listAuditEvents(): Promise<AuditEvent[]> {
-  return [];
+  const page = await apiRequest<PagedResult<AuditEventResponseDto>>("/api/audit-log?pageIndex=0&pageSize=100");
+  return page.items.map(mapAuditEvent);
 }

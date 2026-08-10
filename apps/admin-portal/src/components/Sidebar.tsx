@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
+import { ThemeToggle, useTheme } from "@wishdem/design-system";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { listAttentionCases, listDeliveryStats } from "@/lib/api";
 
@@ -25,6 +26,10 @@ const BASE_LINKS: { key: SidebarKey; label: string; to: string }[] = [
 
 export function Sidebar({ active }: { active: SidebarKey }) {
   const { user } = useAdminAuth();
+  // Admin-portal has always been a light-surface tool by default — the toggle
+  // just makes that an explicit, switchable preference now instead of a
+  // hardcoded body override.
+  const { theme, toggle } = useTheme("light");
   // Real counts only — no badge is shown until its number is known, rather
   // than displaying a stale/fabricated placeholder.
   const [counts, setCounts] = useState<Partial<Record<SidebarKey, number>>>({});
@@ -61,14 +66,24 @@ export function Sidebar({ active }: { active: SidebarKey }) {
   const links = BASE_LINKS.map((link) => ({ ...link, count: counts[link.key] }));
 
   return (
-    <aside className="border-b border-porcelain/[0.1] bg-plum px-3 py-5 text-porcelain lg:min-h-screen lg:border-b-0 lg:border-r lg:py-5">
-      <Link to="/overview" className="mb-6 block px-2 text-[20px] font-extrabold tracking-[-1.5px] lg:mb-6">
-        Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
-        Dem
-        <small className="ml-2 align-middle text-[9px] font-extrabold tracking-[0.1em] text-champagne">
-          ADMIN
-        </small>
-      </Link>
+    // [--wd-ink-on-canvas:...] pins the reactive porcelain color to a fixed cream for this
+    // whole subtree — the sidebar is always a dark plum panel regardless of app theme, so
+    // every descendant text-porcelain/border-porcelain in here should stay fixed too.
+    <aside className="border-b border-porcelain/[0.1] bg-plum px-3 py-5 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232] lg:min-h-screen lg:border-b-0 lg:border-r lg:py-5">
+      <div className="mb-6 flex items-center justify-between px-2 lg:mb-6">
+        <Link to="/overview" className="text-[20px] font-extrabold tracking-[-1.5px]">
+          Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
+          Dem
+          <small className="ml-2 align-middle text-[9px] font-extrabold tracking-[0.1em] text-champagne">
+            ADMIN
+          </small>
+        </Link>
+        <ThemeToggle
+          theme={theme}
+          onToggle={toggle}
+          className="grid h-8 w-8 flex-none place-items-center rounded-full border border-porcelain/25 text-porcelain hover:border-champagne hover:text-champagne"
+        />
+      </div>
 
       <div className="mb-3 hidden px-2 text-[9px] font-extrabold tracking-[0.12em] text-champagne lg:block">
         OPERATIONS WORKSPACE

@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
             Enter the email you use for WishDem and we'll send a one-time code.
           </p>
 
-          <form onSubmit={handleSubmit} className="rounded-[22px] bg-porcelain p-6 text-ink shadow-deep">
+          <form onSubmit={handleSubmit} className="rounded-[22px] bg-paper p-6 text-ink shadow-deep">
             <div className="mb-4 rounded-[8px] bg-champagne/[0.26] p-[10px] text-[9px] leading-[1.5] text-plum">
               <b>A private step back:</b> if there's a WishDem account connected to this email,
               we'll send a six-digit code. We won't reveal account details here.
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={sending}
-              className="mt-[15px] w-full rounded-pill bg-plum px-3 py-[12px] text-[9px] font-extrabold text-porcelain disabled:opacity-60"
+              className="mt-[15px] w-full rounded-pill bg-plum px-3 py-[12px] text-[9px] font-extrabold text-[#F6F0E8] disabled:opacity-60"
             >
               {sending ? "Sending…" : "Send code"}
             </button>

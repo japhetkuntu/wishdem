@@ -31,6 +31,9 @@ public static class ApiResponseFactory
     public static IApiResponse<T> Conflict<T>(string message = "Conflict", string subCode = "0") =>
         new ApiResponse<T>(message, 409, default, subCode);
 
+    public static IApiResponse<T> TooManyRequests<T>(string message = "Too Many Requests", string subCode = "0") =>
+        new ApiResponse<T>(message, 429, default, subCode);
+
     public static IApiResponse<T> ValidationFail<T>(IEnumerable<ErrorResponse> errors, string message = "One or more fields are invalid.") =>
         new ApiResponse<T>(message, 422, default, "0", errors);
 

@@ -88,11 +88,8 @@
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/obj/Debug/net8.0/WishDem.Customer.Api.genruntimeconfig.cache
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/obj/Debug/net8.0/ref/WishDem.Customer.Api.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/WishDem.Customer.Api.staticwebassets.runtime.json
-/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/BouncyCastle.Cryptography.dll
-/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/MailKit.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/Microsoft.Extensions.Diagnostics.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/Microsoft.Extensions.Http.dll
-/Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/MimeKit.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/AWSSDK.Core.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/AWSSDK.S3.dll
 /Users/joe/Work/Others/WishDem/backend/src/APIs/WishDem.Customer.Api/bin/Debug/net8.0/Microsoft.Extensions.Configuration.Binder.dll

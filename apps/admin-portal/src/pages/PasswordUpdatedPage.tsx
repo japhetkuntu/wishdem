@@ -25,7 +25,7 @@ export default function PasswordUpdatedPage() {
             to help keep it that way.
           </p>
 
-          <div className="rounded-md bg-porcelain p-4 text-left text-ink shadow-deep">
+          <div className="rounded-md bg-paper p-4 text-left text-ink shadow-deep">
             <div className="text-[9px] leading-[1.5]">
               <b className="block text-[10px] text-plum">Other devices signed out</b>
               <span className="text-ink/60">

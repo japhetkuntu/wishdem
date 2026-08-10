@@ -22,8 +22,11 @@ public class WishDeliveryDispatchService(
 {
     public async Task<int> DispatchDueWishesAsync(CancellationToken ct = default)
     {
-        var candidates = await wishes.FindManyAsync(w => w.Status == WishStatus.Sealed && w.DeliveredAtUtc == null, ct);
         var now = DateTime.UtcNow;
+        var candidates = await wishes.FindManyAsync(
+            w => w.Status == WishStatus.Sealed && w.DeliveredAtUtc == null
+                && (w.NextDeliveryAttemptAtUtc == null || w.NextDeliveryAttemptAtUtc <= now),
+            ct);
         var dueWishes = candidates.Where(w => WishDeliveryTiming.IsDue(w, now)).ToList();
 
         foreach (var wish in dueWishes)

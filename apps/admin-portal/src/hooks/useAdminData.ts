@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   assignAttentionCase,
+  cancelWish,
+  deactivateTeamMember,
   decideModerationCase,
   getModerationCase,
   getOverview,
+  inviteTeamMember,
   listAttentionCases,
   listAuditEvents,
   listCustomers,
@@ -12,6 +15,9 @@ import {
   listMoMoTransactions,
   listTeamMembers,
   listWishes,
+  reactivateTeamMember,
+  refundPayment,
+  resendTeamMemberInvite,
   retryDeliveryAttempt,
   retryWishDelivery,
 } from "@/lib/api";
@@ -71,7 +77,12 @@ export function useAdminWishes() {
     return updated;
   }, []);
 
-  return { wishes, loading, retry };
+  const cancel = useCallback(async (wishId: string) => {
+    await cancelWish(wishId);
+    setWishes((prev) => prev.filter((w) => w.id !== wishId));
+  }, []);
+
+  return { wishes, loading, retry, cancel };
 }
 
 export function usePaymentsModeration() {
@@ -93,7 +104,13 @@ export function usePaymentsModeration() {
     return updated;
   }, []);
 
-  return { transactions, moderationCase, loading, decide };
+  const refund = useCallback(async (paymentId: string, input: { amount: number; reason: string }) => {
+    const updated = await refundPayment(paymentId, input);
+    setTransactions((prev) => prev.map((tx) => (tx.id === paymentId ? updated : tx)));
+    return updated;
+  }, []);
+
+  return { transactions, moderationCase, loading, decide, refund };
 }
 
 export function useDeliveryHealth() {
@@ -129,8 +146,8 @@ export function useAttentionQueue() {
     });
   }, []);
 
-  const assignToMe = useCallback(async (id: string, owner: string) => {
-    const updated = await assignAttentionCase(id, owner);
+  const assignToMe = useCallback(async (id: string) => {
+    const updated = await assignAttentionCase(id);
     if (updated) setCases((prev) => prev.map((c) => (c.id === id ? updated : c)));
     return updated;
   }, []);
@@ -155,15 +172,51 @@ export function useAdminCustomers() {
 export function useTeamMembers() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
+    setLoading(true);
     listTeamMembers().then((m) => {
       setMembers(m);
       setLoading(false);
     });
   }, []);
 
-  return { members, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const invite = useCallback(async (input: { email: string; fullName: string; role: string }) => {
+    setError(null);
+    try {
+      const member = await inviteTeamMember(input);
+      setMembers((prev) => [...prev, member]);
+      return member;
+    } catch {
+      setError("We couldn't send that invite just now. Please try again.");
+      return null;
+    }
+  }, []);
+
+  const resendInvite = useCallback(async (id: string) => {
+    const updated = await resendTeamMemberInvite(id);
+    setMembers((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    return updated;
+  }, []);
+
+  const deactivate = useCallback(async (id: string) => {
+    const updated = await deactivateTeamMember(id);
+    setMembers((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    return updated;
+  }, []);
+
+  const reactivate = useCallback(async (id: string) => {
+    const updated = await reactivateTeamMember(id);
+    setMembers((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    return updated;
+  }, []);
+
+  return { members, loading, error, invite, resendInvite, deactivate, reactivate };
 }
 
 export function useAuditLog() {

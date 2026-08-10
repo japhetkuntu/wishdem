@@ -22,6 +22,56 @@ namespace WishDem.Postgres.Sdk.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("WishDem.Postgres.Sdk.Entities.AdminAuditEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("AdminUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ResourceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminUserId");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.ToTable("admin_audit_events", "identity");
+                });
+
             modelBuilder.Entity("WishDem.Postgres.Sdk.Entities.AdminUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -359,6 +409,8 @@ namespace WishDem.Postgres.Sdk.Migrations
 
                     b.HasIndex("InvitationId");
 
+                    b.HasIndex("IsSealed");
+
                     b.ToTable("group_wish_memories", "core");
                 });
 
@@ -366,6 +418,9 @@ namespace WishDem.Postgres.Sdk.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssignedAdminUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ContentType")
@@ -422,6 +477,8 @@ namespace WishDem.Postgres.Sdk.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssignedAdminUserId");
 
                     b.HasIndex("ReviewerAdminUserId");
 
@@ -527,6 +584,9 @@ namespace WishDem.Postgres.Sdk.Migrations
                     b.Property<DateTime?>("DeliveredAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DeliveryAttemptCount")
+                        .HasColumnType("integer");
+
                     b.Property<TimeOnly>("DeliveryTime")
                         .HasColumnType("time without time zone");
 
@@ -542,6 +602,9 @@ namespace WishDem.Postgres.Sdk.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTime?>("NextDeliveryAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("OpenedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -592,9 +655,28 @@ namespace WishDem.Postgres.Sdk.Migrations
 
                     b.HasIndex("CustomerUserId");
 
+                    b.HasIndex("DeliveredAtUtc");
+
+                    b.HasIndex("NextDeliveryAttemptAtUtc");
+
+                    b.HasIndex("OpenedAtUtc");
+
+                    b.HasIndex("SealedAtUtc");
+
                     b.HasIndex("Status");
 
                     b.ToTable("wishes", "core");
+                });
+
+            modelBuilder.Entity("WishDem.Postgres.Sdk.Entities.AdminAuditEvent", b =>
+                {
+                    b.HasOne("WishDem.Postgres.Sdk.Entities.AdminUser", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AdminUser");
                 });
 
             modelBuilder.Entity("WishDem.Postgres.Sdk.Entities.CirclePerson", b =>
@@ -651,6 +733,11 @@ namespace WishDem.Postgres.Sdk.Migrations
 
             modelBuilder.Entity("WishDem.Postgres.Sdk.Entities.ModerationCase", b =>
                 {
+                    b.HasOne("WishDem.Postgres.Sdk.Entities.AdminUser", "AssignedAdminUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedAdminUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("WishDem.Postgres.Sdk.Entities.AdminUser", "ReviewerAdminUser")
                         .WithMany()
                         .HasForeignKey("ReviewerAdminUserId")
@@ -661,6 +748,8 @@ namespace WishDem.Postgres.Sdk.Migrations
                         .HasForeignKey("WishId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedAdminUser");
 
                     b.Navigation("ReviewerAdminUser");
 

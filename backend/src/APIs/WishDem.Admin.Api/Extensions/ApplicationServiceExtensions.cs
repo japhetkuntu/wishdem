@@ -24,6 +24,8 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IDeliveryHealthService, DeliveryHealthService>();
         services.AddScoped<ICustomerProfileService, CustomerProfileService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddSingleton<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
 
         services.AddValidatorsFromAssemblyContaining<Program>();

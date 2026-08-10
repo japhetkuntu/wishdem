@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { ShareLinks } from "@/components/ShareLinks";
+import { ShareImageActions } from "@/components/ShareImageActions";
 import { useWizardStore } from "@/store/wizardStore";
 import { daysUntil, formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
@@ -50,7 +51,7 @@ export default function CreateScheduledPage() {
           View on dashboard
         </Button>
         <div className="mt-5 text-[11px] font-extrabold text-champagne">
-          GH₵1.49 paid · {channelLabel} ready
+          {channelLabel} ready
         </div>
 
         {wishId && (
@@ -71,6 +72,24 @@ export default function CreateScheduledPage() {
             />
           </div>
         )}
+
+        <div className="mt-5 max-w-[460px] rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04] p-5">
+          <p className="mb-3 text-[11px] font-extrabold tracking-[0.1em] text-champagne">
+            TELL THE WORLD (WITHOUT SPOILING IT)
+          </p>
+          <p className="mb-4 text-[12px] leading-[1.6] text-porcelain/70">
+            A shareable card announcing the wish — no private message included.
+          </p>
+          <ShareImageActions
+            variant="teaser"
+            recipientName={recipient.name}
+            fromName="You"
+            dateLabel={formatWeekdayDate(recipient.birthdayISO)}
+            imageSrc={vesselImage.src}
+            filename={`wishdem-${recipient.name.toLowerCase().replace(/\s+/g, "-")}`}
+            tone="dark"
+          />
+        </div>
       </section>
 
       <div className="relative order-first mx-auto w-full max-w-[410px] justify-self-center sm:order-none">
@@ -79,7 +98,7 @@ export default function CreateScheduledPage() {
           alt={vesselImage.alt}
           className="aspect-square w-full rounded-full border border-champagne/55 object-cover shadow-deep"
         />
-        <div className="absolute bottom-[26px] right-[-10px] rounded-md bg-porcelain px-[17px] py-[14px] text-right font-display text-[25px] text-plum shadow-deep">
+        <div className="absolute bottom-[26px] right-[-10px] rounded-md bg-paper px-[17px] py-[14px] text-right font-display text-[25px] text-plum shadow-deep">
           {days}
           <small className="mt-1 block font-sans text-[9px] font-extrabold tracking-[0.12em] text-mulberry">
             DAYS HELD

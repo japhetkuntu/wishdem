@@ -18,11 +18,12 @@ const PAYMENT_BADGE: Record<AdminWish["paymentStatus"], string> = {
 };
 
 export default function WishesPage() {
-  const { wishes, loading, retry } = useAdminWishes();
+  const { wishes, loading, retry, cancel } = useAdminWishes();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const filtered = useMemo(() => {
     let list = wishes;
@@ -54,9 +55,21 @@ export default function WishesPage() {
     }
   }
 
+  async function handleCancel() {
+    if (!selected) return;
+    if (!window.confirm(`Cancel ${selected.id}? This permanently removes the wish and cannot be undone.`)) return;
+    setCancelling(true);
+    try {
+      await cancel(selected.id);
+      setSelectedId(null);
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   return (
     <AdminLayout active="wishes">
-      <div className="mb-1 text-[11px] text-ink/55">Operations / Wishes</div>
+      <div className="mb-1 text-[11px] text-porcelain/60">Operations / Wishes</div>
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -67,11 +80,11 @@ export default function WishesPage() {
       <section className="mb-[15px] flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-[34px]">Wishes oversight</h1>
-          <p className="mt-1 text-[11px] text-ink/55">
+          <p className="mt-1 text-[11px] text-porcelain/60">
             {wishes.length} total wishes · all dates shown in recipient timezone
           </p>
         </div>
-        <button type="button" className="rounded-pill bg-plum px-[13px] py-[11px] text-[11px] font-extrabold text-porcelain">
+        <button type="button" className="rounded-pill bg-plum px-[13px] py-[11px] text-[11px] font-extrabold text-[#F6F0E8]">
           Export filtered list
         </button>
       </section>
@@ -102,8 +115,8 @@ export default function WishesPage() {
       </div>
 
       <section className="grid gap-[16px] lg:grid-cols-[minmax(0,1fr)_352px]">
-        <div className="overflow-hidden rounded-md border border-plum/[0.11] bg-white">
-          <div className="hidden grid-cols-[1.15fr_1fr_.95fr_.8fr_.65fr_.7fr] gap-[10px] bg-porcelain px-[13px] py-[11px] text-[9px] font-extrabold tracking-[0.07em] text-ink/55 lg:grid">
+        <div className="overflow-hidden rounded-md border border-plum/[0.11] bg-white text-ink">
+          <div className="hidden grid-cols-[1.15fr_1fr_.95fr_.8fr_.65fr_.7fr] gap-[10px] bg-paper px-[13px] py-[11px] text-[9px] font-extrabold tracking-[0.07em] text-ink/55 lg:grid">
             <span>WISH</span>
             <span>PEOPLE</span>
             <span>SCHEDULE</span>
@@ -156,7 +169,7 @@ export default function WishesPage() {
         </div>
 
         {selected && (
-          <aside className="rounded-md border border-plum/[0.11] bg-white p-4">
+          <aside className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
             <span className="text-[9px] font-extrabold tracking-[0.1em] text-mulberry">WISH INVESTIGATION</span>
             <div className="mt-[10px] flex items-start justify-between gap-2">
               <div>
@@ -172,7 +185,7 @@ export default function WishesPage() {
 
             <div className="mt-[13px] grid grid-cols-2 gap-[7px]">
               {selected.investigation.facts.map((fact) => (
-                <div key={fact.label} className="rounded-sm bg-porcelain p-[9px] text-[10px]">
+                <div key={fact.label} className="rounded-sm bg-paper p-[9px] text-[10px]">
                   {fact.label}
                   <b className="mt-[3px] block text-[11px]">{fact.value}</b>
                 </div>
@@ -192,15 +205,17 @@ export default function WishesPage() {
                 type="button"
                 disabled={retrying || selected.deliveryStatus !== "FAILED"}
                 onClick={handleRetry}
-                className="rounded-pill bg-plum px-[11px] py-[10px] text-[10px] font-extrabold text-porcelain disabled:opacity-40"
+                className="rounded-pill bg-plum px-[11px] py-[10px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-40"
               >
                 {retrying ? "Retrying…" : "Retry delivery"}
               </button>
-              <button type="button" className="rounded-pill border border-plum/[0.18] bg-white px-[11px] py-[10px] text-[10px] font-extrabold text-plum">
-                Edit schedule
-              </button>
-              <button type="button" className="rounded-pill bg-rose px-[11px] py-[10px] text-[10px] font-extrabold text-plum">
-                Cancel wish
+              <button
+                type="button"
+                disabled={cancelling}
+                onClick={handleCancel}
+                className="rounded-pill bg-rose px-[11px] py-[10px] text-[10px] font-extrabold text-plum disabled:opacity-50"
+              >
+                {cancelling ? "Cancelling…" : "Cancel wish"}
               </button>
             </div>
 

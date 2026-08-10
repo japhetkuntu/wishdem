@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WishDem Admin — Operations workspace</title>
+    <script>
+      // Runs before paint so there's no flash of the wrong theme. Mirrors
+      // useTheme()'s own logic — admin-portal defaults to light until the
+      // user explicitly picks dark, which then persists via localStorage.
+      (function () {
+        try {
+          var stored = localStorage.getItem("wishdem-theme");
+          document.documentElement.setAttribute("data-theme", stored === "dark" ? "dark" : "light");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

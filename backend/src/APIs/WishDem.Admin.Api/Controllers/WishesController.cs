@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WishDem.Admin.Api.Common;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
 using WishDem.Common.Sdk.Enums;
@@ -32,21 +33,24 @@ public class WishesController(IWishOversightService wishOversightService) : Cont
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateWishStatusRequest request, CancellationToken ct)
     {
-        var response = await wishOversightService.UpdateStatusAsync(id, request.Status, ct);
+        var adminUserId = ClaimsReader.GetUserId(User);
+        var response = await wishOversightService.UpdateStatusAsync(adminUserId, id, request.Status, ct);
         return StatusCode(response.Code, response);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var response = await wishOversightService.DeleteAsync(id, ct);
+        var adminUserId = ClaimsReader.GetUserId(User);
+        var response = await wishOversightService.DeleteAsync(adminUserId, id, ct);
         return StatusCode(response.Code, response);
     }
 
     [HttpPost("{id:guid}/redeliver")]
     public async Task<IActionResult> Redeliver(Guid id, CancellationToken ct)
     {
-        var response = await wishOversightService.RedeliverAsync(id, ct);
+        var adminUserId = ClaimsReader.GetUserId(User);
+        var response = await wishOversightService.RedeliverAsync(adminUserId, id, ct);
         return StatusCode(response.Code, response);
     }
 }

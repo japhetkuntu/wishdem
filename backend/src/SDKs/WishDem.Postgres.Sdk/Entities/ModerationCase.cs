@@ -16,6 +16,11 @@ public class ModerationCase : BaseEntity
     public ModerationSeverity Severity { get; set; } = ModerationSeverity.Medium;
     public ModerationStatus Status { get; set; } = ModerationStatus.UnderReview;
 
+    /// <summary>Who currently owns working this case, set via the assign action —
+    /// distinct from ReviewerAdminUserId, which is only stamped once a decision is made.</summary>
+    public Guid? AssignedAdminUserId { get; set; }
+    public AdminUser? AssignedAdminUser { get; set; }
+
     public Guid? ReviewerAdminUserId { get; set; }
     public AdminUser? ReviewerAdminUser { get; set; }
     public ModerationDecision? Decision { get; set; }

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import clsx from "clsx";
 import { useContributionContext, useMemoryDraft } from "@/hooks/useContribution";
-import { ImagePanel, VideoPanel, VoicePanel } from "@/components/AttachmentPicker";
+import { ImagePanel } from "@/components/AttachmentPicker";
 import type { Attachment, MemoryFormat } from "@/types";
 
 const PROMPTS = ["I'll never forget when…", "You are at your best when…", "One thing you gave me…"];
@@ -44,12 +43,6 @@ export default function GuestMemoryComposePage() {
     setBody((prev) => (prev ? `${prev}\n\n${prompt} ` : `${prompt} `));
   }
 
-  function switchMediaMode(next: "voice" | "video") {
-    if (next === format) return;
-    setFormat(next);
-    setAttachment(null);
-  }
-
   async function handlePreview() {
     if (!id) return;
     await save({
@@ -65,8 +58,7 @@ export default function GuestMemoryComposePage() {
   }
 
   const recipientFirst = context?.recipientName.split(" ")[0] ?? "them";
-  const isMedia = format === "voice" || format === "video";
-  const canSubmit = isMedia || format === "photo" ? !!attachment && contributorLabel.trim() : body.trim() && contributorLabel.trim();
+  const canSubmit = format === "photo" ? !!attachment && contributorLabel.trim() : body.trim() && contributorLabel.trim();
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-4 pb-9 sm:px-8">
@@ -99,14 +91,6 @@ export default function GuestMemoryComposePage() {
               One image, a little context, and the part only you remember.
             </p>
           </>
-        ) : isMedia ? (
-          <>
-            <h1 className="my-[6px] font-display text-[38px] leading-[1.05]">Let {recipientFirst} hear your voice.</h1>
-            <p className="text-[11px] text-porcelain/68">
-              Record a warm message from wherever you are. It will play as one private card in{" "}
-              {context?.title ?? "the keepsake"}.
-            </p>
-          </>
         ) : (
           <>
             <h1 className="my-[6px] font-display text-[38px] leading-[1.05]">A small true thing is enough.</h1>
@@ -124,7 +108,7 @@ export default function GuestMemoryComposePage() {
             e.preventDefault();
             handlePreview();
           }}
-          className="rounded-[14px] bg-porcelain p-[22px] text-ink shadow-card"
+          className="rounded-[14px] bg-paper p-[22px] text-ink shadow-card"
         >
           {format === "notes" && (
             <>
@@ -232,57 +216,6 @@ export default function GuestMemoryComposePage() {
             </>
           )}
 
-          {isMedia && (
-            <>
-              <div className="flex gap-[7px]">
-                <button
-                  type="button"
-                  onClick={() => switchMediaMode("voice")}
-                  className={clsx(
-                    "rounded-pill border px-[10px] py-[7px] text-[9px] font-extrabold",
-                    format === "voice" ? "border-mulberry bg-mulberry text-porcelain" : "border-plum/15 text-ink/70",
-                  )}
-                >
-                  Voice note · up to 30 sec
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMediaMode("video")}
-                  className={clsx(
-                    "rounded-pill border px-[10px] py-[7px] text-[9px] font-extrabold",
-                    format === "video" ? "border-mulberry bg-mulberry text-porcelain" : "border-plum/15 text-ink/70",
-                  )}
-                >
-                  Short video · up to 30 sec
-                </button>
-              </div>
-              <div className="mt-3">
-                {format === "voice" ? (
-                  <VoicePanel value={attachment} onChange={setAttachment} />
-                ) : (
-                  <VideoPanel value={attachment} onChange={setAttachment} />
-                )}
-              </div>
-              <label className="mt-[13px] block text-[10px] font-extrabold">
-                A small caption <em className="font-medium text-ink/50">(optional)</em>
-              </label>
-              <input
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="e.g. For the person who always answers the phone."
-                className="mt-[6px] w-full rounded-[8px] border border-plum/[0.12] bg-[#F9F9FB] px-3 py-[11px] text-[11px] font-medium text-ink outline-none"
-              />
-              <label className="mt-[13px] block text-[10px] font-extrabold">Signed by</label>
-              <input
-                required
-                value={contributorLabel}
-                onChange={(e) => setContributorLabel(e.target.value)}
-                placeholder="e.g. David · Dad"
-                className="mt-[6px] w-full rounded-[8px] border border-plum/[0.12] bg-[#F9F9FB] px-3 py-[11px] text-[11px] font-medium text-ink outline-none"
-              />
-            </>
-          )}
-
           <div className="mt-[17px] flex flex-col items-start gap-3 border-t border-plum/10 pt-[15px] sm:flex-row sm:items-center sm:justify-between">
             <small className="text-[9px] leading-[1.5] text-ink/58">
               Your private draft is saved in this invitation.
@@ -292,7 +225,7 @@ export default function GuestMemoryComposePage() {
             <button
               type="submit"
               disabled={!canSubmit}
-              className="rounded-pill bg-plum px-[15px] py-[11px] text-[10px] font-extrabold text-porcelain disabled:opacity-45"
+              className="rounded-pill bg-plum px-[15px] py-[11px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-45"
             >
               Preview memory
             </button>
@@ -308,7 +241,7 @@ export default function GuestMemoryComposePage() {
                 Small details make a keepsake feel alive: a place, a habit, a laugh, the thing{" "}
                 {recipientFirst} made easier.
               </p>
-              <div className="mt-3 rounded-[10px] bg-mulberry p-3 text-[10px] leading-[1.55] text-porcelain/78">
+              <div className="mt-3 rounded-[10px] bg-mulberry p-3 text-[10px] leading-[1.55] text-[#F6F0E8]/78">
                 <b className="mb-1 block text-[9px] text-champagne">AN EXAMPLE</b>
                 "You turned my first week on the team into something I could belong to. I still
                 remember you saving me a seat at lunch."
@@ -334,19 +267,13 @@ export default function GuestMemoryComposePage() {
             </>
           )}
           <div className="border-t border-porcelain/[0.13] py-3 text-[9px] leading-[1.5] text-porcelain/64">
-            <b className="block text-[10px] text-porcelain">
-              Only {recipientFirst} {isMedia ? "hears" : "sees"} it
-            </b>
-            Your {isMedia ? "audio or video" : "words"} stay{isMedia ? "s" : ""} sealed until{" "}
-            {context?.deliveredLabel ?? "delivery"}.
+            <b className="block text-[10px] text-porcelain">Only {recipientFirst} sees it</b>
+            Your words stay sealed until {context?.deliveredLabel ?? "delivery"}.
           </div>
           <div className="border-t border-porcelain/[0.13] py-3 text-[9px] leading-[1.5] text-porcelain/64">
-            <b className="block text-[10px] text-porcelain">
-              {format === "photo" ? "Your words remain yours" : "Need a second try?"}
-            </b>
-            {format === "photo"
-              ? `${context?.inviterName ?? "The organizer"} may arrange cards or request a revision, but cannot silently rewrite your memory.`
-              : "Listen first, then re-record as many times as you need. Nothing is shared until you seal it."}
+            <b className="block text-[10px] text-porcelain">Your words remain yours</b>
+            {context?.inviterName ?? "The organizer"} may arrange cards or request a revision, but
+            cannot silently rewrite your memory.
           </div>
           <span className="mt-2 block text-[9px] font-extrabold text-champagne">
             Email me a secure return link

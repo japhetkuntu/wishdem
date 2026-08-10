@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createGroupWish,
+  deleteGroupWish,
   getGroupWish,
   getGroupWishInvitationContext,
+  inviteGuestToGroupWish,
   listGroupWishes,
   listGroupWishInvitations,
+  listGroupWishOrganizerInvitations,
   respondToInvitationToken,
+  sealGroupWish,
   type CreateGroupWishInput,
 } from "@/lib/api";
-import type { GroupWish, GroupWishFormat, GroupWishInvitation, GroupWishInvitationStatus } from "@/types";
+import type {
+  GroupWish,
+  GroupWishFormat,
+  GroupWishInvitation,
+  GroupWishInvitationStatus,
+  OrganizerGroupWishInvitation,
+} from "@/types";
 
 export function useGroupWishes() {
   const [groupWishes, setGroupWishes] = useState<GroupWish[]>([]);
@@ -41,21 +51,52 @@ export function useGroupWishes() {
 
 export function useGroupWish(id: string | undefined) {
   const [groupWish, setGroupWish] = useState<GroupWish | null>(null);
+  const [invitations, setInvitations] = useState<OrganizerGroupWishInvitation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!id) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    getGroupWish(id).then((wish) => {
-      setGroupWish(wish);
-      setLoading(false);
-    });
+    Promise.all([getGroupWish(id), listGroupWishOrganizerInvitations(id)]).then(
+      ([wish, invited]) => {
+        setGroupWish(wish);
+        setInvitations(invited);
+        setLoading(false);
+      },
+    );
   }, [id]);
 
-  return { groupWish, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const invite = useCallback(
+    async (input: { guestName: string; guestEmail?: string }) => {
+      if (!id) return;
+      const invitation = await inviteGuestToGroupWish(id, input);
+      setInvitations((prev) => [invitation, ...prev]);
+      setGroupWish((prev) => (prev ? { ...prev, invitedCount: prev.invitedCount + 1 } : prev));
+      return invitation;
+    },
+    [id],
+  );
+
+  const seal = useCallback(async () => {
+    if (!id) return;
+    const sealed = await sealGroupWish(id);
+    setGroupWish(sealed);
+    return sealed;
+  }, [id]);
+
+  const remove = useCallback(async () => {
+    if (!id) return;
+    await deleteGroupWish(id);
+  }, [id]);
+
+  return { groupWish, invitations, loading, invite, seal, remove, refresh };
 }
 
 /**

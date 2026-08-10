@@ -40,15 +40,21 @@ export function ThemeCard({
             src={image.src}
             alt=""
             aria-hidden
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+          {/* Scrim sits behind the title/description, which are top-anchored — darkens
+              top-to-bottom so the text has real contrast regardless of how bright the
+              underlying photo is. */}
+          <div className="absolute inset-0 bg-gradient-to-b from-ink/75 via-ink/25 to-transparent" />
         </>
       )}
       <b
         className={clsx(
           "relative block font-display text-[22px] sm:text-[26px]",
-          image && "text-porcelain",
+          // Always light, fixed — this text sits on a photo, not the app canvas, so it must
+          // not flip with light/dark theme the way reactive text-porcelain would.
+          image && "text-[#F6F0E8]",
         )}
       >
         {theme.name}
@@ -56,7 +62,7 @@ export function ThemeCard({
       <p
         className={clsx(
           "relative mt-1 max-w-[80%] text-[12px]",
-          image ? "text-porcelain/85" : "opacity-75",
+          image ? "text-[#F6F0E8]/85" : "opacity-75",
         )}
       >
         {theme.description.split("·")[0]}
@@ -64,7 +70,7 @@ export function ThemeCard({
       {!image && (
         <i
           aria-hidden
-          className="absolute -right-4 bottom-4 h-[60px] w-[100px] rotate-[-8deg] rounded-md bg-porcelain sm:bottom-[17px]"
+          className="absolute -right-4 bottom-4 h-[60px] w-[100px] rotate-[-8deg] rounded-md bg-paper sm:bottom-[17px]"
         />
       )}
     </button>
@@ -80,7 +86,7 @@ export function ThemePreviewPanel({
 }) {
   if (!theme) {
     return (
-      <aside className="rounded-lg bg-porcelain p-5 text-ink shadow-card sm:p-6">
+      <aside className="rounded-lg bg-paper p-5 text-ink shadow-card sm:p-6">
         <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
           CHOOSE A LOOK
         </span>
@@ -96,12 +102,13 @@ export function ThemePreviewPanel({
   const previewImage = THEME_PREVIEW_IMAGES[theme.id];
 
   return (
-    <aside className="rounded-lg bg-porcelain p-5 text-ink shadow-card sm:p-6">
+    <aside className="rounded-lg bg-paper p-5 text-ink shadow-card sm:p-6">
       {previewImage && (
         <div className="relative mb-5 overflow-hidden rounded-md">
           <img
             src={previewImage.src}
             alt={previewImage.alt}
+            loading="lazy"
             className="h-[200px] w-full object-cover sm:h-[270px]"
           />
           <span className="absolute bottom-[18px] left-[18px] rounded-pill bg-champagne px-3 py-2 text-[11px] font-extrabold text-plum">

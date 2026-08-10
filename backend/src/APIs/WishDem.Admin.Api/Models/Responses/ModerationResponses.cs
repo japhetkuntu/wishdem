@@ -11,6 +11,7 @@ public record ModerationCaseResponse(
     string? ContentType,
     ModerationSeverity Severity,
     ModerationStatus Status,
+    string? AssignedToName,
     string? ReviewerName,
     ModerationDecision? Decision,
     string? DecisionReason,

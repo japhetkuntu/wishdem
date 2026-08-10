@@ -18,6 +18,7 @@ public class GroupWishMemoryConfiguration : IEntityTypeConfiguration<GroupWishMe
         builder.Property(x => x.Format).HasConversion<string>().HasMaxLength(32);
 
         builder.HasIndex(x => x.GroupWishId);
+        builder.HasIndex(x => x.IsSealed);
 
         builder.HasOne(x => x.Invitation)
             .WithMany()

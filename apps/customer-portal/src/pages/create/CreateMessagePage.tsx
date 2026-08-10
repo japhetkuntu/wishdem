@@ -63,7 +63,7 @@ export default function CreateMessagePage() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder={`Dear ${recipient?.name ?? "friend"},\nI hope this year gives you...`}
             rows={7}
-            className="min-h-[210px] w-full resize-y rounded-lg bg-porcelain p-[27px] font-display text-[18px] leading-[1.55] text-ink outline-none placeholder:text-ink/40 sm:text-[20px]"
+            className="min-h-[210px] w-full resize-y rounded-lg bg-paper p-[27px] font-display text-[18px] leading-[1.55] text-ink outline-none placeholder:text-ink/40 sm:text-[20px]"
           />
 
           <p className="mt-4 text-[13px]">
@@ -77,7 +77,7 @@ export default function CreateMessagePage() {
 
         <aside>
           {user ? (
-            <div className="rounded-lg bg-mulberry p-6">
+            <div className="rounded-lg bg-mulberry p-6 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
               <span className="text-[11px] font-extrabold tracking-[0.13em] text-champagne">
                 SIGNED IN
               </span>

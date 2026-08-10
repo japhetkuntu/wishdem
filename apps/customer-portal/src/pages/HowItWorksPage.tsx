@@ -17,7 +17,7 @@ const STEPS = [
   {
     num: "03",
     title: "Choose the moment and seal it",
-    body: "Select their birthday, local delivery time, channel, and a simple transparent fee.",
+    body: "Select their birthday, local delivery time, and channel — completely free.",
   },
   {
     num: "04",
@@ -112,7 +112,10 @@ export default function HowItWorksPage() {
                 (t) => (
                   <span
                     key={t}
-                    className="rounded-pill bg-champagne/[0.1] px-[9px] py-[6px] text-[9px] font-extrabold tracking-[0.05em] text-champagne"
+                    // A fixed dark chip (not a translucent champagne tint) — the tint
+                    // relied on the page canvas itself being dark for contrast, which
+                    // breaks in light mode. A solid bg-plum reads correctly either way.
+                    className="rounded-pill bg-plum px-[9px] py-[6px] text-[9px] font-extrabold tracking-[0.05em] text-champagne"
                   >
                     {t}
                   </span>
@@ -121,7 +124,7 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          <aside className="rounded-lg bg-porcelain p-4 text-ink shadow-card">
+          <aside className="rounded-lg bg-paper p-4 text-ink shadow-card">
             <div className="flex items-start justify-between gap-3 border-b border-plum/[0.09] pb-[13px]">
               <div>
                 <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
@@ -220,7 +223,7 @@ export default function HowItWorksPage() {
 
           <div className="mt-7 grid grid-cols-1 gap-[10px] sm:grid-cols-3">
             {REASSURANCES.map((card) => (
-              <article key={card.title} className="rounded-md bg-mulberry p-[14px]">
+              <article key={card.title} className="rounded-md bg-mulberry p-[14px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
                 <b className="mb-1 block font-display text-[19px] text-champagne">
                   {card.title}
                 </b>
@@ -255,7 +258,7 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        <section className="mb-9 flex flex-col items-start gap-5 rounded-lg bg-porcelain p-6 text-ink sm:flex-row sm:items-center sm:justify-between">
+        <section className="mb-9 flex flex-col items-start gap-5 rounded-lg bg-paper p-6 text-ink sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-display text-[26px] sm:text-[30px]">
               A small act of care, ready for its day.

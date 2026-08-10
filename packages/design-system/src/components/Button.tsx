@@ -20,10 +20,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   // (porcelain text) would be invisible.
   "outline-inverse":
     "bg-transparent text-plum border border-plum/30 hover:border-mulberry hover:text-mulberry",
-  // Solid plum-on-porcelain — the primary action style for forms sitting
-  // inside a porcelain card (e.g. auth flows), where champagne is reserved
-  // for the marketing/CTA layer.
-  dark: "bg-plum text-porcelain hover:brightness-125",
+  // Solid plum-on-paper — the primary action style for forms sitting inside
+  // a paper card (e.g. auth flows), where champagne is reserved for the
+  // marketing/CTA layer. Text is a fixed cream (not the reactive `porcelain`
+  // token) since this sits on the always-dark `plum` fill regardless of
+  // which app theme is active.
+  dark: "bg-plum text-[#F6F0E8] hover:brightness-125",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

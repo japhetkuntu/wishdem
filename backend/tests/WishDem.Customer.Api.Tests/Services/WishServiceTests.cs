@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Responses;
 using WishDem.Customer.Api.Models.Requests;
@@ -20,6 +21,7 @@ public class WishServiceTests
 {
     private readonly Mock<IRepository<Wish>> _wishes = new();
     private readonly Mock<IStorageService> _storageService = new();
+    private readonly Mock<ICacheService> _cache = new();
     private readonly WishService _sut;
 
     public WishServiceTests()
@@ -27,7 +29,13 @@ public class WishServiceTests
         _storageService.Setup(s => s.BuildPublicUrl(It.IsAny<string>()))
             .Returns((string key) => $"http://localhost:9000/wishdem/{key}");
 
-        _sut = new WishService(_wishes.Object, _storageService.Object, Mock.Of<ILogger<WishService>>());
+        // Cache-miss by default so the daily-limit checks fall through to the Postgres count
+        // each test already mocks via _wishes.FindManyAsync — tests that care about the cache
+        // itself override this explicitly.
+        _cache.Setup(c => c.GetAsync<int?>(It.IsAny<string>())).ReturnsAsync((int?)null);
+        _cache.Setup(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<TimeSpan?>())).ReturnsAsync(1);
+
+        _sut = new WishService(_wishes.Object, _storageService.Object, _cache.Object, Mock.Of<ILogger<WishService>>());
     }
 
     private static SaveWishRequest ValidRequest() => new(
@@ -106,6 +114,8 @@ public class WishServiceTests
     public async Task CreateAsync_ReturnsCreatedWithDraftStatus()
     {
         var customerUserId = Guid.NewGuid();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _wishes.Setup(r => r.AddAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var response = await _sut.CreateAsync(customerUserId, ValidRequest());
@@ -114,6 +124,109 @@ public class WishServiceTests
         response.Data!.Status.Should().Be(WishStatus.Draft);
         response.Data.RecipientName.Should().Be("Kojo");
         response.Data.RecipientPhoneNumber.Should().Be("0244123456");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenUnderDailyLimit_Succeeds()
+    {
+        var customerUserId = Guid.NewGuid();
+        var alreadyCreatedToday = Enumerable.Range(0, 2)
+            .Select(_ => new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" })
+            .ToList();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(alreadyCreatedToday);
+        _wishes.Setup(r => r.AddAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var response = await _sut.CreateAsync(customerUserId, ValidRequest());
+
+        response.Code.Should().Be(201);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenAtDailyLimit_ReturnsTooManyRequests()
+    {
+        var customerUserId = Guid.NewGuid();
+        var alreadyCreatedToday = Enumerable.Range(0, 3)
+            .Select(_ => new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" })
+            .ToList();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(alreadyCreatedToday);
+
+        var response = await _sut.CreateAsync(customerUserId, ValidRequest());
+
+        response.Code.Should().Be(429);
+        _wishes.Verify(r => r.AddAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetDailyLimitAsync_ReturnsUsedMaxAndRemaining()
+    {
+        var customerUserId = Guid.NewGuid();
+        var alreadyCreatedToday = Enumerable.Range(0, 2)
+            .Select(_ => new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" })
+            .ToList();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(alreadyCreatedToday);
+
+        var response = await _sut.GetDailyLimitAsync(customerUserId);
+
+        response.Code.Should().Be(200);
+        response.Data!.Used.Should().Be(2);
+        response.Data.Max.Should().Be(3);
+        response.Data.Remaining.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetDailyLimitAsync_WhenRepositoryThrows_ReturnsInternalError()
+    {
+        var customerUserId = Guid.NewGuid();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("db down"));
+
+        var response = await _sut.GetDailyLimitAsync(customerUserId);
+
+        response.Code.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetDailyLimitAsync_WhenCacheHasCount_NeverQueriesPostgres()
+    {
+        var customerUserId = Guid.NewGuid();
+        _cache.Setup(c => c.GetAsync<int?>(It.IsAny<string>())).ReturnsAsync(2);
+
+        var response = await _sut.GetDailyLimitAsync(customerUserId);
+
+        response.Code.Should().Be(200);
+        response.Data!.Used.Should().Be(2);
+        _wishes.Verify(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetDailyLimitAsync_WhenCacheMisses_SeedsCacheFromPostgresCount()
+    {
+        var customerUserId = Guid.NewGuid();
+        var alreadyCreatedToday = Enumerable.Range(0, 2)
+            .Select(_ => new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" })
+            .ToList();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(alreadyCreatedToday);
+
+        await _sut.GetDailyLimitAsync(customerUserId);
+
+        _cache.Verify(c => c.SetAsync(It.IsAny<string>(), 2, It.IsAny<TimeSpan?>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_OnSuccess_IncrementsTheCachedDailyCount()
+    {
+        var customerUserId = Guid.NewGuid();
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _wishes.Setup(r => r.AddAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.CreateAsync(customerUserId, ValidRequest());
+
+        _cache.Verify(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<TimeSpan?>()), Times.Once);
     }
 
     [Fact]

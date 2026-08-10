@@ -30,11 +30,11 @@ public class MessagingServiceExtensionsTests
     }
 
     [Fact]
-    public void AddMessagingSdk_WithSmtpHostConfigured_RegistersSmtpEmailSender()
+    public void AddMessagingSdk_WithMailtrapApiTokenConfigured_RegistersMailtrapEmailSender()
     {
-        var provider = BuildProvider(new Dictionary<string, string?> { ["Smtp:Host"] = "smtp.example.com" });
+        var provider = BuildProvider(new Dictionary<string, string?> { ["Mailtrap:ApiToken"] = "some-token" });
 
-        provider.GetRequiredService<IEmailSender>().Should().BeOfType<SmtpEmailSender>();
+        provider.GetRequiredService<IEmailSender>().Should().BeOfType<MailtrapEmailSender>();
     }
 
     [Fact]

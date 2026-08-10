@@ -1,18 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
-import { Button } from "@wishdem/design-system";
-import { useMediaRecorder } from "@/hooks/useMediaRecorder";
-import { formatDuration } from "@/lib/format";
+import { useRef, useState } from "react";
 import { uploadAttachment } from "@/lib/api";
-import { GIF_LIBRARY, findGifTile } from "@/mocks/gifLibrary";
-import type { Attachment, AttachmentKind } from "@/types";
-
-const TABS: { kind: AttachmentKind; label: string }[] = [
-  { kind: "gif", label: "GIF" },
-  { kind: "image", label: "Image" },
-  { kind: "video", label: "Video" },
-  { kind: "voice", label: "Voice note" },
-];
+import type { Attachment } from "@/types";
 
 export interface PickerProps {
   value: Attachment | null;
@@ -26,94 +14,18 @@ export interface PickerProps {
 
 type PanelProps = PickerProps;
 
+/** Photos only for now — voice/video recording may return later. */
 export function AttachmentPicker({ value, onChange, wishId }: PickerProps) {
-  const [activeKind, setActiveKind] = useState<AttachmentKind>(value?.kind ?? "gif");
-
-  useEffect(() => {
-    if (value) setActiveKind(value.kind);
-  }, [value?.kind]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-        {TABS.map((tab) => {
-          const active = activeKind === tab.kind;
-          const filled = value?.kind === tab.kind;
-          return (
-            <button
-              key={tab.kind}
-              type="button"
-              onClick={() => setActiveKind(tab.kind)}
-              className={clsx(
-                "relative min-h-[52px] rounded-md border text-[13px] font-extrabold transition-colors",
-                active
-                  ? "border-champagne bg-mulberry"
-                  : "border-porcelain/35 bg-transparent",
-              )}
-            >
-              {tab.label}
-              {filled && (
-                <span className="absolute right-2 top-2 h-[6px] w-[6px] rounded-full bg-champagne" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-3 rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04] p-4">
-        {activeKind === "gif" && <GifPanel value={value} onChange={onChange} wishId={wishId} />}
-        {activeKind === "image" && <ImagePanel value={value} onChange={onChange} wishId={wishId} />}
-        {activeKind === "video" && <VideoPanel value={value} onChange={onChange} wishId={wishId} />}
-        {activeKind === "voice" && <VoicePanel value={value} onChange={onChange} wishId={wishId} />}
-      </div>
+    <div className="rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04] p-4">
+      <ImagePanel value={value} onChange={onChange} wishId={wishId} />
     </div>
   );
 }
 
-function GifPanel({ value, onChange }: PanelProps) {
-  const selected = value?.kind === "gif" ? findGifTile(value.url) : undefined;
-
-  return (
-    <div>
-      <div className="grid grid-cols-3 gap-[10px] sm:grid-cols-6">
-        {GIF_LIBRARY.map((tile) => {
-          const active = selected?.id === tile.id;
-          return (
-            <button
-              key={tile.id}
-              type="button"
-              onClick={() =>
-                onChange(
-                  active ? null : { kind: "gif", url: tile.id, label: tile.label },
-                )
-              }
-              aria-pressed={active}
-              className={clsx(
-                "flex aspect-square flex-col items-center justify-center gap-1 rounded-md border bg-gradient-to-br text-[10px] font-bold leading-tight",
-                tile.gradient,
-                active ? "border-champagne" : "border-transparent",
-              )}
-            >
-              <span className="text-[22px]">{tile.emoji}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-3 text-[12px] leading-[1.5] text-porcelain/65">
-        {selected ? (
-          <>
-            <b className="font-extrabold text-champagne">{selected.label}</b> selected.{" "}
-            <button type="button" onClick={() => onChange(null)} className="font-extrabold underline">
-              Remove
-            </button>
-          </>
-        ) : (
-          "A small animated sticker to sit alongside your letter."
-        )}
-      </p>
-    </div>
-  );
-}
+// The <input accept="image/*"> hint is a UI convenience only — a user can still pick
+// "All Files" and choose anything, so we re-check type and cap size before upload.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function ImagePanel({ value, onChange, wishId }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -124,11 +36,22 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
+    setUploadError(null);
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("That file isn't a photo. Please choose an image.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setUploadError("That photo is too large — please choose one under 10MB.");
+      return;
+    }
+
     if (!wishId) {
       onChange({ kind: "image", url: URL.createObjectURL(file) });
       return;
     }
-    setUploadError(null);
     setUploading(true);
     try {
       const attachment = await uploadAttachment(wishId, file, file.name);
@@ -147,7 +70,7 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-plum/80 text-porcelain"
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-plum/80 text-[#F6F0E8]"
         >
           ✕
         </button>
@@ -175,217 +98,6 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
         {uploading ? "Uploading…" : "Choose a photo to keep with your letter"}
       </button>
       {uploadError && <p className="mt-2 text-[12px] text-rose">{uploadError}</p>}
-    </div>
-  );
-}
-
-export function VideoPanel({ value, onChange, wishId }: PanelProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const recorder = useMediaRecorder({ video: true, maxSeconds: 30 });
-
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.srcObject = recorder.stream;
-  }, [recorder.stream]);
-
-  useEffect(() => {
-    if (recorder.status === "stopped" && recorder.blob) {
-      if (!wishId) {
-        onChange({ kind: "video", url: recorder.blobUrl!, durationSeconds: recorder.elapsed });
-        return;
-      }
-      setUploadError(null);
-      setUploading(true);
-      uploadAttachment(wishId, recorder.blob, "recording.webm")
-        .then((attachment) => onChange({ ...attachment, durationSeconds: recorder.elapsed }))
-        .catch(() => setUploadError("We couldn't upload that clip. Please try again."))
-        .finally(() => setUploading(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.status, recorder.blob]);
-
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadError(null);
-
-    const probeUrl = URL.createObjectURL(file);
-    const probe = document.createElement("video");
-    probe.preload = "metadata";
-    probe.src = probeUrl;
-    probe.onloadedmetadata = async () => {
-      const duration = Math.round(probe.duration);
-      if (probe.duration > 30) {
-        setUploadError("Please choose a clip under 30 seconds.");
-        URL.revokeObjectURL(probeUrl);
-        return;
-      }
-      if (!wishId) {
-        onChange({ kind: "video", url: probeUrl, durationSeconds: duration });
-        return;
-      }
-      URL.revokeObjectURL(probeUrl);
-      setUploading(true);
-      try {
-        const attachment = await uploadAttachment(wishId, file, file.name);
-        onChange({ ...attachment, durationSeconds: duration });
-      } catch {
-        setUploadError("We couldn't upload that clip. Please try again.");
-      } finally {
-        setUploading(false);
-      }
-    };
-  }
-
-  const hasVideo = value?.kind === "video" && value.url;
-
-  if (recorder.status === "recording") {
-    return (
-      <div className="text-center">
-        <video ref={videoRef} autoPlay muted playsInline className="mx-auto h-[180px] w-full rounded-md object-cover" />
-        <div className="mt-3 flex items-center justify-center gap-2 text-[13px] font-bold text-rose">
-          <span className="h-[8px] w-[8px] animate-pulse rounded-full bg-rose" />
-          Recording · {formatDuration(recorder.elapsed)} / 0:30
-        </div>
-        <Button type="button" variant="outline" onClick={recorder.stop} className="mt-3">
-          Stop recording
-        </Button>
-      </div>
-    );
-  }
-
-  if (uploading) {
-    return (
-      <div className="flex min-h-[140px] flex-col items-center justify-center gap-2 text-[13px] font-bold text-porcelain/75">
-        <span className="text-[22px]">⏳</span>
-        Uploading…
-      </div>
-    );
-  }
-
-  if (hasVideo) {
-    return (
-      <div>
-        <video src={value!.url} controls className="h-[180px] w-full rounded-md object-cover" />
-        <div className="mt-3 flex items-center justify-between text-[12px]">
-          <span className="text-porcelain/65">
-            {value!.durationSeconds ? `${formatDuration(value!.durationSeconds)} clip` : "Video attached"}
-          </span>
-          <div className="flex gap-3">
-            <button type="button" onClick={recorder.reset} className="font-extrabold text-champagne">
-              Re-record
-            </button>
-            <button type="button" onClick={() => onChange(null)} className="font-extrabold underline">
-              Remove
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-3 text-center">
-      <p className="text-[12px] text-porcelain/65">Up to 30 seconds — record now or upload a clip.</p>
-      <div className="flex flex-wrap justify-center gap-3">
-        <Button type="button" onClick={recorder.start}>
-          Record a video
-        </Button>
-        <Button type="button" variant="outline" onClick={() => inputRef.current?.click()}>
-          Upload instead
-        </Button>
-      </div>
-      <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
-      {(recorder.error || uploadError) && (
-        <p className="text-[12px] text-rose">{recorder.error ?? uploadError}</p>
-      )}
-    </div>
-  );
-}
-
-export function VoicePanel({ value, onChange, wishId }: PanelProps) {
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const recorder = useMediaRecorder({ video: false, maxSeconds: 30 });
-
-  useEffect(() => {
-    if (recorder.status === "stopped" && recorder.blob) {
-      if (!wishId) {
-        onChange({ kind: "voice", url: recorder.blobUrl!, durationSeconds: recorder.elapsed });
-        return;
-      }
-      setUploadError(null);
-      setUploading(true);
-      uploadAttachment(wishId, recorder.blob, "voice-note.webm")
-        .then((attachment) => onChange({ ...attachment, durationSeconds: recorder.elapsed }))
-        .catch(() => setUploadError("We couldn't upload that voice note. Please try again."))
-        .finally(() => setUploading(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.status, recorder.blob]);
-
-  const hasVoice = value?.kind === "voice" && value.url;
-
-  if (recorder.status === "recording") {
-    return (
-      <div className="flex flex-col items-center gap-3 py-4 text-center">
-        <div className="flex items-end gap-1">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <span
-              key={i}
-              className="w-[3px] animate-pulse rounded-full bg-champagne"
-              style={{ height: `${12 + ((i * 7) % 24)}px`, animationDelay: `${i * 90}ms` }}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-2 text-[13px] font-bold text-rose">
-          <span className="h-[8px] w-[8px] animate-pulse rounded-full bg-rose" />
-          Recording · {formatDuration(recorder.elapsed)} / 0:30
-        </div>
-        <Button type="button" variant="outline" onClick={recorder.stop}>
-          Stop recording
-        </Button>
-      </div>
-    );
-  }
-
-  if (uploading) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-4 text-center text-[13px] font-bold text-porcelain/75">
-        <span className="text-[22px]">⏳</span>
-        Uploading…
-      </div>
-    );
-  }
-
-  if (hasVoice) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-2 text-center">
-        <audio src={value!.url} controls className="w-full" />
-        <div className="flex items-center gap-4 text-[12px]">
-          <span className="text-porcelain/65">
-            {value!.durationSeconds ? `${formatDuration(value!.durationSeconds)} note` : "Voice note attached"}
-          </span>
-          <button type="button" onClick={recorder.reset} className="font-extrabold text-champagne">
-            Re-record
-          </button>
-          <button type="button" onClick={() => onChange(null)} className="font-extrabold underline">
-            Remove
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-3 py-4 text-center">
-      <p className="text-[12px] text-porcelain/65">Up to 30 seconds — speak straight from the heart.</p>
-      <Button type="button" onClick={recorder.start}>
-        🎙️ Record voice note
-      </Button>
-      {(recorder.error || uploadError) && <p className="text-[12px] text-rose">{recorder.error ?? uploadError}</p>}
     </div>
   );
 }

@@ -1,4 +1,6 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using WishDem.Admin.Api.Extensions;
 using WishDem.Cache.Sdk.Extensions;
@@ -15,10 +17,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
 const string CorsPolicyName = "WishDemDefault";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? throw new InvalidOperationException("Missing configuration 'Cors:AllowedOrigins'.");
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicyName, policy => policy
-    .AllowAnyOrigin()
+    .WithOrigins(allowedOrigins)
     .AllowAnyHeader()
     .AllowAnyMethod()));
+
+if (builder.Environment.IsProduction())
+{
+    if (builder.Configuration["Jwt:SigningKey"]?.StartsWith("dev-only-signing-key", StringComparison.Ordinal) != false)
+        throw new InvalidOperationException("Refusing to start in Production with the default dev JWT signing key. Override 'Jwt:SigningKey'.");
+    if (builder.Configuration["SuperAdmin:Password"] == "ChangeMe123!")
+        throw new InvalidOperationException("Refusing to start in Production with the default bootstrap SuperAdmin password. Override 'SuperAdmin:Password'.");
+}
 
 builder.Services.AddPostgresSdk(builder.Configuration);
 builder.Services.AddCacheSdk(builder.Configuration);
@@ -27,6 +39,22 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 
 builder.Services.AddHealthChecks();
+
+// Throttles brute-force attempts against login/password-reset — partitioned per client
+// IP so one abusive caller can't exhaust the bucket for everyone else.
+const string AuthRateLimiterPolicy = "auth";
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(AuthRateLimiterPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
+});
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -89,6 +117,7 @@ app.UseCors(CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

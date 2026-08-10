@@ -83,6 +83,7 @@ export interface MoMoTransaction {
   senderName: string;
   provider: string;
   amount: string;
+  rawAmount: number;
   statusNote: string;
   status: MoMoStatus;
   reconciliationLabel: string;
@@ -169,11 +170,8 @@ export interface TeamMember {
   name: string;
   email: string;
   role: string;
-  team: string;
   status: TeamStatus;
-  mfa: "ENABLED" | "PENDING";
   lastActive: string;
-  locationNote: string;
   actionLabel: string;
 }
 
@@ -189,19 +187,9 @@ export interface AuditEvent {
   id: string;
   timeLabel: string;
   dayLabel: string;
-  locationNote: string;
-  deviceNote: string;
   actor: string;
   message: string;
-  detailNote: string;
   tag: AuditTag;
-  outcome: string;
-  outcomeNote: string;
-  detail: {
-    label: string;
-    title: string;
-    description: string;
-    facts: { label: string; value: string }[];
-    reasonNote: string;
-  };
+  resourceType: string;
+  resourceId: string | null;
 }

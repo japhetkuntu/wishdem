@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WishDem.Admin.Api.Common;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
@@ -11,6 +12,7 @@ namespace WishDem.Admin.Api.Controllers;
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
         var response = await authService.LoginAsync(request.Email, request.Password, ct);
@@ -41,6 +43,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
         var response = await authService.ForgotPasswordAsync(request.Email, ct);
@@ -48,6 +51,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
     {
         var response = await authService.ResetPasswordAsync(request.Email, request.Code, request.NewPassword, ct);

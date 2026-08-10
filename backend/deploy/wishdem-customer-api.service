@@ -1,0 +1,29 @@
+[Unit]
+Description=WishDem Customer API
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=wishdem
+Group=wishdem
+WorkingDirectory=/var/www/wishdem/customer-api
+ExecStart=/usr/bin/dotnet /var/www/wishdem/customer-api/WishDem.Customer.Api.dll
+Restart=on-failure
+RestartSec=5
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+# Loopback-only — Nginx is the only thing that talks to this port, never the internet.
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+EnvironmentFile=/etc/wishdem/customer-api.env
+
+# Sandboxing: this service can't write anywhere except its own logs directory,
+# can't gain new privileges, and gets a private /tmp.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/www/wishdem/customer-api/logs
+
+[Install]
+WantedBy=multi-user.target

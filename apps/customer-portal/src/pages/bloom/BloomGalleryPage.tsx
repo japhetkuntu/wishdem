@@ -66,7 +66,7 @@ function GalleryCard({
       id={`bloom-${wish.id}`}
       className={clsx(
         "relative min-h-[176px] rounded-[14px] p-[14px] shadow-[0_8px_20px_rgba(13,6,14,0.14)]",
-        isMedia ? "bg-mulberry text-porcelain" : "bg-porcelain text-ink",
+        isMedia ? "bg-mulberry text-[#F6F0E8]" : "bg-paper text-ink",
       )}
     >
       <span className={clsx("text-[8px] font-extrabold tracking-[0.1em]", isMedia ? "text-champagne" : "text-mulberry")}>
@@ -200,7 +200,7 @@ export default function BloomGalleryPage() {
         </p>
       </header>
 
-      <section className="flex flex-wrap items-center gap-[7px] rounded-[14px] bg-porcelain p-3 text-ink">
+      <section className="flex flex-wrap items-center gap-[7px] rounded-[14px] bg-paper p-3 text-ink">
         {(
           [
             { key: "all", label: "All wishes" },
@@ -218,7 +218,7 @@ export default function BloomGalleryPage() {
             onClick={() => setFilter(f.key)}
             className={clsx(
               "whitespace-nowrap rounded-pill border border-plum/[0.13] px-[9px] py-[7px] text-[9px] font-extrabold",
-              filter === f.key ? "bg-mulberry text-porcelain" : "text-ink/75",
+              filter === f.key ? "bg-mulberry text-[#F6F0E8]" : "text-ink/75",
             )}
           >
             {f.label}

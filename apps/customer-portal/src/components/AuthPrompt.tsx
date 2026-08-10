@@ -21,7 +21,11 @@ export function AuthPrompt({
   }
 
   return (
-    <div className="rounded-lg bg-mulberry p-6">
+    // text-porcelain here (not just the --wd-ink-on-canvas pin) matters: the h2 below has
+    // no color class of its own and inherits — it needs this element's own computed color
+    // to already be the fixed cream, not just the variable available for descendants that
+    // reference it explicitly.
+    <div className="rounded-lg bg-mulberry p-6 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
       <span className="text-[11px] font-extrabold tracking-[0.13em] text-champagne">
         SAVE YOUR LETTER
       </span>

@@ -13,6 +13,7 @@ public class ModerationService(
     IRepository<ModerationCase> cases,
     IRepository<Wish> wishes,
     IRepository<AdminUser> adminUsers,
+    IAuditLogService auditLog,
     ILogger<ModerationService> logger) : IModerationService
 {
     public async Task<IApiResponse<PagedResult<ModerationCaseResponse>>> GetAllAsync(int pageIndex, int pageSize, ModerationStatus? status, CancellationToken ct = default)
@@ -26,13 +27,23 @@ public class ModerationService(
                 orderBy: q => q.OrderByDescending(c => c.CreatedAtUtc),
                 ct: ct);
 
-            var reviewerIds = page.Items.Where(c => c.ReviewerAdminUserId.HasValue).Select(c => c.ReviewerAdminUserId!.Value).Distinct().ToList();
-            var reviewers = await adminUsers.FindManyAsync(a => reviewerIds.Contains(a.Id), ct);
-            var reviewersById = reviewers.ToDictionary(a => a.Id);
+            var adminIds = page.Items
+                .SelectMany(c => new[] { c.ReviewerAdminUserId, c.AssignedAdminUserId })
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
+            var admins = await adminUsers.FindManyAsync(a => adminIds.Contains(a.Id), ct);
+            var adminsById = admins.ToDictionary(a => a.Id);
 
             var result = new PagedResult<ModerationCaseResponse>
             {
-                Items = page.Items.Select(c => ToResponse(c, c.ReviewerAdminUserId.HasValue ? reviewersById.GetValueOrDefault(c.ReviewerAdminUserId.Value) : null)).ToList(),
+                Items = page.Items
+                    .Select(c => ToResponse(
+                        c,
+                        c.ReviewerAdminUserId.HasValue ? adminsById.GetValueOrDefault(c.ReviewerAdminUserId.Value) : null,
+                        c.AssignedAdminUserId.HasValue ? adminsById.GetValueOrDefault(c.AssignedAdminUserId.Value) : null))
+                    .ToList(),
                 PageIndex = page.PageIndex,
                 PageSize = page.PageSize,
                 TotalCount = page.TotalCount,
@@ -55,7 +66,10 @@ public class ModerationService(
             var reviewer = moderationCase.ReviewerAdminUserId.HasValue
                 ? await adminUsers.GetByIdAsync(moderationCase.ReviewerAdminUserId.Value, ct)
                 : null;
-            return ToResponse(moderationCase, reviewer).ToOkApiResponse("Moderation case retrieved successfully.");
+            var assignee = moderationCase.AssignedAdminUserId.HasValue
+                ? await adminUsers.GetByIdAsync(moderationCase.AssignedAdminUserId.Value, ct)
+                : null;
+            return ToResponse(moderationCase, reviewer, assignee).ToOkApiResponse("Moderation case retrieved successfully.");
         }
         catch (WishDemException ex)
         {
@@ -87,7 +101,7 @@ public class ModerationService(
             };
 
             await cases.AddAsync(moderationCase, ct);
-            return ToResponse(moderationCase, null).ToCreatedApiResponse("Moderation case created successfully.");
+            return ToResponse(moderationCase, null, null).ToCreatedApiResponse("Moderation case created successfully.");
         }
         catch (WishDemException ex)
         {
@@ -121,8 +135,19 @@ public class ModerationService(
                 if (wish is not null) await wishes.RemoveAsync(wish, ct);
             }
 
+            var assignee = moderationCase.AssignedAdminUserId.HasValue
+                ? await adminUsers.GetByIdAsync(moderationCase.AssignedAdminUserId.Value, ct)
+                : null;
             var reviewer = await adminUsers.GetByIdAsync(reviewerAdminUserId, ct);
-            return ToResponse(moderationCase, reviewer).ToOkApiResponse("Moderation case decided successfully.");
+            await auditLog.LogAsync(
+                reviewerAdminUserId,
+                "moderation.decide",
+                "ModerationCase",
+                moderationCase.Id,
+                $"{(request.Decision == ModerationDecision.Removed ? "removed content for" : "approved")} case {moderationCase.Id}: {request.Reason}",
+                AuditTag.ContentAccess,
+                ct);
+            return ToResponse(moderationCase, reviewer, assignee).ToOkApiResponse("Moderation case decided successfully.");
         }
         catch (WishDemException ex)
         {
@@ -135,10 +160,39 @@ public class ModerationService(
         }
     }
 
+    public async Task<IApiResponse<ModerationCaseResponse>> AssignAsync(Guid adminUserId, Guid caseId, CancellationToken ct = default)
+    {
+        try
+        {
+            var moderationCase = await GetCaseAsync(caseId, ct);
+            if (moderationCase.Status != ModerationStatus.UnderReview)
+                return ApiResponseFactory.Conflict<ModerationCaseResponse>("This case has already been resolved.");
+
+            moderationCase.AssignedAdminUserId = adminUserId;
+            await cases.UpdateAsync(moderationCase, ct);
+
+            var assignee = await adminUsers.GetByIdAsync(adminUserId, ct);
+            var reviewer = moderationCase.ReviewerAdminUserId.HasValue
+                ? await adminUsers.GetByIdAsync(moderationCase.ReviewerAdminUserId.Value, ct)
+                : null;
+            await auditLog.LogAsync(adminUserId, "moderation.assign", "ModerationCase", moderationCase.Id, $"assigned case {moderationCase.Id} to themselves", ct: ct);
+            return ToResponse(moderationCase, reviewer, assignee).ToOkApiResponse("Moderation case assigned successfully.");
+        }
+        catch (WishDemException ex)
+        {
+            return ApiResponseFactory.FromException<ModerationCaseResponse>(ex);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[AssignAsync] Failed to assign moderation case {CaseId}", caseId);
+            return ApiResponseFactory.InternalError<ModerationCaseResponse>("Failed to assign moderation case.");
+        }
+    }
+
     private async Task<ModerationCase> GetCaseAsync(Guid caseId, CancellationToken ct) =>
         await cases.GetByIdAsync(caseId, ct) ?? throw new NotFoundException("That moderation case could not be found.");
 
-    private static ModerationCaseResponse ToResponse(ModerationCase c, AdminUser? reviewer) => new(
+    private static ModerationCaseResponse ToResponse(ModerationCase c, AdminUser? reviewer, AdminUser? assignee) => new(
         c.Id,
         c.WishId,
         c.Title,
@@ -147,6 +201,7 @@ public class ModerationService(
         c.ContentType,
         c.Severity,
         c.Status,
+        assignee?.FullName,
         reviewer?.FullName,
         c.Decision,
         c.DecisionReason,

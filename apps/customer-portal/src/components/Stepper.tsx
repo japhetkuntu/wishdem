@@ -26,7 +26,7 @@ export function Stepper({ activeIndex }: { activeIndex: number }) {
             className={clsx(
               "flex min-w-0 items-center gap-2 rounded-md border px-[11px] py-[10px] text-[11px] font-bold",
               isActive
-                ? "border-champagne bg-mulberry text-porcelain"
+                ? "border-champagne bg-mulberry text-[#F6F0E8]"
                 : "border-porcelain/15 text-porcelain/60",
             )}
           >

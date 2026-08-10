@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WishDem.Customer.Api.Interfaces;
 using WishDem.Customer.Api.Models.Requests;
 
@@ -10,6 +11,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 {
     /// <summary>Step 1 of passwordless sign-in: sends (or, in dev, echoes back) a six-digit code.</summary>
     [HttpPost("otp/request")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> RequestOtp([FromBody] RequestOtpRequest request, CancellationToken ct)
     {
         var response = await authService.RequestOtpAsync(request.Email, ct);
@@ -19,6 +21,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// <summary>Step 2: verifying the code signs the customer in, creating their account
     /// on first use.</summary>
     [HttpPost("otp/verify")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken ct)
     {
         var response = await authService.VerifyOtpAsync(request.Email, request.Code, request.Name, ct);
@@ -26,6 +29,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("google")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> SignInWithGoogle([FromBody] GoogleSignInRequest request, CancellationToken ct)
     {
         var response = await authService.SignInWithGoogleAsync(request.IdToken, ct);

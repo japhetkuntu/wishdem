@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Responses;
@@ -19,7 +20,7 @@ public class WishOversightServiceTests
 
     public WishOversightServiceTests()
     {
-        _sut = new WishOversightService(_wishes.Object, _customerUsers.Object, Mock.Of<ILogger<WishOversightService>>());
+        _sut = new WishOversightService(_wishes.Object, _customerUsers.Object, Mock.Of<IAuditLogService>(), Mock.Of<ILogger<WishOversightService>>());
     }
 
     private static Wish NewWish(Guid customerUserId) => new()
@@ -102,7 +103,7 @@ public class WishOversightServiceTests
         _customerUsers.Setup(r => r.GetByIdAsync(customerUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((CustomerUser?)null);
 
-        var response = await _sut.UpdateStatusAsync(wish.Id, WishStatus.Sealed);
+        var response = await _sut.UpdateStatusAsync(Guid.NewGuid(), wish.Id, WishStatus.Sealed);
 
         response.Code.Should().Be(200);
         response.Data!.Status.Should().Be(WishStatus.Sealed);
@@ -113,7 +114,7 @@ public class WishOversightServiceTests
     {
         _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
 
-        var response = await _sut.UpdateStatusAsync(Guid.NewGuid(), WishStatus.Sealed);
+        var response = await _sut.UpdateStatusAsync(Guid.NewGuid(), Guid.NewGuid(), WishStatus.Sealed);
 
         response.Code.Should().Be(404);
     }
@@ -125,7 +126,7 @@ public class WishOversightServiceTests
         _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
         _wishes.Setup(r => r.RemoveAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var response = await _sut.DeleteAsync(wish.Id);
+        var response = await _sut.DeleteAsync(Guid.NewGuid(), wish.Id);
 
         response.Code.Should().Be(200);
         response.Data.Should().BeTrue();
@@ -137,7 +138,7 @@ public class WishOversightServiceTests
     {
         _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
 
-        var response = await _sut.DeleteAsync(Guid.NewGuid());
+        var response = await _sut.DeleteAsync(Guid.NewGuid(), Guid.NewGuid());
 
         response.Code.Should().Be(404);
     }
@@ -152,7 +153,7 @@ public class WishOversightServiceTests
         _wishes.Setup(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _customerUsers.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((CustomerUser?)null);
 
-        var response = await _sut.RedeliverAsync(wish.Id);
+        var response = await _sut.RedeliverAsync(Guid.NewGuid(), wish.Id);
 
         response.Code.Should().Be(200);
         wish.DeliveredAtUtc.Should().BeNull();
@@ -164,7 +165,7 @@ public class WishOversightServiceTests
     {
         _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);
 
-        var response = await _sut.RedeliverAsync(Guid.NewGuid());
+        var response = await _sut.RedeliverAsync(Guid.NewGuid(), Guid.NewGuid());
 
         response.Code.Should().Be(404);
     }

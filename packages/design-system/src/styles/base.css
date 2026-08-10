@@ -5,6 +5,28 @@
 @tailwind utilities;
 
 @layer base {
+  /* The two theme-reactive roles — see tokens.ts `themes` for the source values.
+     Everything else (paper, ink, plum, champagne, mulberry, rose, moss,
+     periwinkle) is a fixed brand constant defined directly in the Tailwind
+     preset and does not change between modes. Dark is the default so a page
+     rendered before the bootstrap script runs (or with JS disabled) still
+     matches today's look.
+
+     Values are space-separated R G B channels, not hex — Tailwind's opacity
+     modifiers (text-porcelain/70) only work on a CSS-variable color when the
+     variable holds decomposed channels for `rgb(var(--x) / <alpha>)`; a bare
+     var(--hex) breaks every /NN usage silently (Tailwind just doesn't
+     generate the class). See tailwind-preset.js's withOpacity() helper. */
+  :root {
+    --wd-canvas-rgb: 27 17 29; /* #1B111D */
+    --wd-ink-on-canvas-rgb: 246 240 232; /* #F6F0E8 */
+  }
+
+  :root[data-theme="light"] {
+    --wd-canvas-rgb: 249 249 251; /* #F9F9FB */
+    --wd-ink-on-canvas-rgb: 36 29 36; /* #241D24 */
+  }
+
   body {
     @apply bg-midnight text-porcelain font-sans antialiased;
   }

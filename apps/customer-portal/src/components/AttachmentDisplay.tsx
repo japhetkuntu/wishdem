@@ -16,6 +16,7 @@ export function AttachmentDisplay({
       <img
         src={attachment.url}
         alt={`A memory from ${fromName}`}
+        loading="lazy"
         className="mt-6 h-[220px] w-full rounded-md object-cover"
       />
     ) : null;
@@ -37,7 +38,7 @@ export function AttachmentDisplay({
     return attachment.url ? (
       <video src={attachment.url} controls className="mt-6 h-[220px] w-full rounded-md object-cover" />
     ) : (
-      <div className="mt-6 flex items-center justify-between rounded-md bg-plum px-4 py-4 text-[13px] text-porcelain">
+      <div className="mt-6 flex items-center justify-between rounded-md bg-plum px-4 py-4 text-[13px] text-[#F6F0E8]">
         <b className="text-champagne">▶ Play {fromName}'s video</b>
         <small>{formatDuration(attachment.durationSeconds ?? 28)}</small>
       </div>
@@ -48,7 +49,7 @@ export function AttachmentDisplay({
     return attachment.url ? (
       <audio src={attachment.url} controls className="mt-6 w-full" />
     ) : (
-      <div className="mt-6 flex items-center justify-between rounded-md bg-plum px-4 py-4 text-[13px] text-porcelain">
+      <div className="mt-6 flex items-center justify-between rounded-md bg-plum px-4 py-4 text-[13px] text-[#F6F0E8]">
         <b className="text-champagne">▶ Play {fromName}'s voice note</b>
         <small>{formatDuration(attachment.durationSeconds ?? 28)}</small>
       </div>

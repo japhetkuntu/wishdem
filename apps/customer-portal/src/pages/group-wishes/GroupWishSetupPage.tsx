@@ -70,13 +70,13 @@ export default function GroupWishSetupPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="groupWishes" />
 
       <section className="grid gap-8 py-8 sm:grid-cols-[1.15fr_.85fr] sm:gap-14 sm:py-10">
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg bg-porcelain p-6 text-ink shadow-card"
+          className="rounded-lg bg-paper p-6 text-ink shadow-card"
         >
           <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
             GROUP WISH · STEP 1 OF 2
@@ -155,7 +155,7 @@ export default function GroupWishSetupPage() {
                 onClick={() => toggleFormat(option.key)}
                 className={clsx(
                   "rounded-pill border border-plum/[0.15] px-[10px] py-2 text-[9px] font-extrabold",
-                  formats.includes(option.key) ? "border-mulberry bg-mulberry text-porcelain" : "text-ink/70",
+                  formats.includes(option.key) ? "border-mulberry bg-mulberry text-[#F6F0E8]" : "text-ink/70",
                 )}
               >
                 {option.label}
@@ -174,7 +174,7 @@ export default function GroupWishSetupPage() {
             <span
               className={clsx(
                 "mt-[2px] grid h-[16px] w-[16px] flex-none place-items-center rounded-full border-2",
-                namesVisible ? "border-mulberry bg-mulberry text-porcelain" : "border-plum/25",
+                namesVisible ? "border-mulberry bg-mulberry text-[#F6F0E8]" : "border-plum/25",
               )}
             >
               {namesVisible && "✓"}
@@ -199,7 +199,7 @@ export default function GroupWishSetupPage() {
         </form>
 
         <aside className="grid content-start gap-[14px]">
-          <div className="rounded-lg bg-mulberry p-[18px]">
+          <div className="rounded-lg bg-mulberry p-[18px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
             <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
               A GROUP WISH
             </span>

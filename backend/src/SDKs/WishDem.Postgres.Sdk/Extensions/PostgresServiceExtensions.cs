@@ -27,6 +27,7 @@ public static class PostgresServiceExtensions
         services.AddScoped<IRepository<GroupWish>, EfRepository<GroupWish>>();
         services.AddScoped<IRepository<GroupWishInvitation>, EfRepository<GroupWishInvitation>>();
         services.AddScoped<IRepository<GroupWishMemory>, EfRepository<GroupWishMemory>>();
+        services.AddScoped<IRepository<AdminAuditEvent>, EfRepository<AdminAuditEvent>>();
 
         return services;
     }

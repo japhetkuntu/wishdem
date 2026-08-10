@@ -4,6 +4,7 @@ import { Button } from "@wishdem/design-system";
 import { SealButton } from "@/components/SealButton";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 import { ShareLinks } from "@/components/ShareLinks";
+import { ShareImageActions } from "@/components/ShareImageActions";
 import { usePublicWish } from "@/hooks/useWishes";
 import { markOpened } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
@@ -82,7 +83,7 @@ export default function RecipientWishPage() {
       </header>
 
       <section className="grid items-start gap-6 sm:grid-cols-[minmax(0,1.2fr)_minmax(270px,.65fr)] sm:gap-8">
-        <article className="rounded-lg bg-porcelain p-6 text-ink shadow-deep sm:p-12">
+        <article className="rounded-lg bg-paper p-6 text-ink shadow-deep sm:p-12">
           <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
             {formatWeekdayDate(wish.recipient.birthdayISO).toUpperCase()}
           </span>
@@ -113,6 +114,18 @@ export default function RecipientWishPage() {
               shareText={`Someone remembered — sending this kindness forward. 💛`}
               tone="light"
             />
+            <div className="mt-4 border-t border-ink/10 pt-4">
+              <ShareImageActions
+                variant="opened"
+                recipientName={wish.recipient.name}
+                fromName={wish.fromName}
+                dateLabel={formatWeekdayDate(wish.recipient.birthdayISO)}
+                quote={wish.message}
+                imageSrc={vesselImage.src}
+                filename={`wishdem-${wish.recipient.name.toLowerCase().replace(/\s+/g, "-")}`}
+                tone="light"
+              />
+            </div>
           </div>
         </article>
 
@@ -122,7 +135,7 @@ export default function RecipientWishPage() {
             <br />
             with love
           </div>
-          <section className="col-span-2 rounded-lg bg-mulberry p-6">
+          <section className="col-span-2 rounded-lg bg-mulberry p-6 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
             <span className="text-[9px] font-extrabold tracking-[0.12em] text-champagne">
               A GOOD FEELING IS WORTH SENDING FORWARD
             </span>

@@ -87,23 +87,27 @@ public class WishDeliveryProcessorTests
     }
 
     [Fact]
-    public async Task DeliverAsync_ForSmsChannelWithoutPhoneNumber_SkipsAndLeavesUndelivered()
+    public async Task DeliverAsync_ForSmsChannelWithoutPhoneNumber_SkipsAndLeavesUndeliveredButRecordsAttempt()
     {
         var wish = NewDueSealedWish(DeliveryChannel.Sms, phoneNumber: null);
         SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var delivered = await _sut.DeliverAsync(wish.Id);
 
         delivered.Should().BeFalse();
         wish.DeliveredAtUtc.Should().BeNull();
-        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
+        wish.DeliveryAttemptCount.Should().Be(1);
+        wish.NextDeliveryAttemptAtUtc.Should().NotBeNull();
+        _wishes.Verify(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DeliverAsync_WhenSmsSendThrowsMessagingException_LeavesWishUndelivered()
+    public async Task DeliverAsync_WhenSmsSendThrowsMessagingException_LeavesWishUndeliveredAndSchedulesBackoff()
     {
         var wish = NewDueSealedWish(DeliveryChannel.Sms, "0244000000");
         SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _smsSender.Setup(s => s.SendAsync("0244000000", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new MessagingException("Insufficient balance"));
 
@@ -111,7 +115,24 @@ public class WishDeliveryProcessorTests
 
         delivered.Should().BeFalse();
         wish.DeliveredAtUtc.Should().BeNull();
-        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
+        wish.DeliveryAttemptCount.Should().Be(1);
+        wish.NextDeliveryAttemptAtUtc.Should().NotBeNull();
+        _wishes.Verify(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeliverAsync_AfterMaxAttempts_GivesUpAndStopsSchedulingRetries()
+    {
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, phoneNumber: null);
+        wish.DeliveryAttemptCount = 7; // one below the cap
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var delivered = await _sut.DeliverAsync(wish.Id);
+
+        delivered.Should().BeFalse();
+        wish.DeliveryAttemptCount.Should().Be(8);
+        wish.NextDeliveryAttemptAtUtc.Should().Be(DateTime.MaxValue);
     }
 
     [Fact]

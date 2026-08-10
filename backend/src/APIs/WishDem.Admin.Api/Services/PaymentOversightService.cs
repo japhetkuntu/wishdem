@@ -13,6 +13,7 @@ public class PaymentOversightService(
     IRepository<Payment> payments,
     IRepository<Wish> wishes,
     IRepository<CustomerUser> customerUsers,
+    IAuditLogService auditLog,
     ILogger<PaymentOversightService> logger) : IPaymentOversightService
 {
     public async Task<IApiResponse<PagedResult<AdminPaymentResponse>>> GetAllAsync(int pageIndex, int pageSize, PaymentStatus? status, CancellationToken ct = default)
@@ -71,7 +72,7 @@ public class PaymentOversightService(
         }
     }
 
-    public async Task<IApiResponse<AdminPaymentResponse>> RefundAsync(Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default)
+    public async Task<IApiResponse<AdminPaymentResponse>> RefundAsync(Guid adminUserId, Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default)
     {
         try
         {
@@ -87,6 +88,14 @@ public class PaymentOversightService(
 
             var wish = await wishes.GetByIdAsync(payment.WishId, ct);
             var response = ToResponse(payment, wish, await BuildSingleCustomerLookupAsync(wish, ct));
+            await auditLog.LogAsync(
+                adminUserId,
+                "payment.refund",
+                "Payment",
+                payment.Id,
+                $"issued a refund for payment {payment.Id}: {request.Reason}",
+                AuditTag.SensitiveAccess,
+                ct);
             return response.ToOkApiResponse("Payment refunded successfully.");
         }
         catch (WishDemException ex)

@@ -16,6 +16,17 @@ public class RedisCacheService(IConnectionMultiplexer connectionMultiplexer) : I
         return value.HasValue ? JsonSerializer.Deserialize<T>(value!) : default;
     }
 
+    public async Task<long> IncrementAsync(string key, TimeSpan? expiration = null)
+    {
+        var newValue = await Database.StringIncrementAsync(key);
+        // Only the caller who created the key (INCR on a missing key starts at 0, so the
+        // first increment lands on 1) sets the expiry — later callers just bump the value.
+        if (newValue == 1 && expiration is not null)
+            await Database.KeyExpireAsync(key, expiration);
+
+        return newValue;
+    }
+
     public Task RemoveAsync(string key) => Database.KeyDeleteAsync(key);
 
     public Task<bool> ExistsAsync(string key) => Database.KeyExistsAsync(key);

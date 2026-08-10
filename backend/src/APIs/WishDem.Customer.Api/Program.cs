@@ -1,4 +1,7 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WishDem.Actors.Sdk.Extensions;
 using WishDem.Cache.Sdk.Extensions;
@@ -17,10 +20,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
 const string CorsPolicyName = "WishDemDefault";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? throw new InvalidOperationException("Missing configuration 'Cors:AllowedOrigins'.");
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicyName, policy => policy
-    .AllowAnyOrigin()
+    .WithOrigins(allowedOrigins)
     .AllowAnyHeader()
     .AllowAnyMethod()));
+
+if (builder.Environment.IsProduction())
+{
+    if (builder.Configuration["Jwt:SigningKey"]?.StartsWith("dev-only-signing-key", StringComparison.Ordinal) != false)
+        throw new InvalidOperationException("Refusing to start in Production with the default dev JWT signing key. Override 'Jwt:SigningKey'.");
+}
 
 builder.Services.AddPostgresSdk(builder.Configuration);
 builder.Services.AddCacheSdk(builder.Configuration);
@@ -31,6 +42,22 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 
 builder.Services.AddHealthChecks();
+
+// Throttles OTP request/verify brute-forcing — partitioned per client IP so one abusive
+// caller can't exhaust the bucket for everyone else.
+const string AuthRateLimiterPolicy = "auth";
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(AuthRateLimiterPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
+});
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -85,6 +112,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+if (app.Environment.IsProduction())
+{
+    // Local/dev applies migrations by hand (`dotnet ef database update`) against the
+    // docker-compose Postgres, but a fresh droplet has no SDK/dotnet-ef installed —
+    // applying them here instead means a first deploy only needs `docker compose up`.
+    // Only Customer.Api does this (not Admin.Api, which shares the same database) so
+    // two containers starting together can't race to apply the same migration.
+    using var migrationScope = app.Services.CreateScope();
+    var dbContext = migrationScope.ServiceProvider.GetRequiredService<WishDem.Postgres.Sdk.Persistence.WishDemDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseWishDemExceptionHandling();
 
 app.UseHttpsRedirection();
@@ -93,6 +132,7 @@ app.UseCors(CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

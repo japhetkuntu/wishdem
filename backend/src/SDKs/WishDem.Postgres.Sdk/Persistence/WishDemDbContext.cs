@@ -18,6 +18,7 @@ public class WishDemDbContext(DbContextOptions<WishDemDbContext> options) : DbCo
     public DbSet<GroupWish> GroupWishes => Set<GroupWish>();
     public DbSet<GroupWishInvitation> GroupWishInvitations => Set<GroupWishInvitation>();
     public DbSet<GroupWishMemory> GroupWishMemories => Set<GroupWishMemory>();
+    public DbSet<AdminAuditEvent> AdminAuditEvents => Set<AdminAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

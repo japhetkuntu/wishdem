@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
 import { CreateLayout } from "@/components/CreateLayout";
 import { useWizardStore } from "@/store/wizardStore";
-import { saveDeliverStep } from "@/lib/api";
+import { saveDeliverStep, sealWish } from "@/lib/api";
 import type { DeliveryChannel } from "@/types";
 
 const ROUTES: {
@@ -59,8 +59,9 @@ export default function CreateDeliverPage() {
       await saveDeliverStep(wishId, selected, recipient ?? undefined, trimmedPhone);
       setChannel(selected);
       if (recipient && trimmedPhone) setRecipient({ ...recipient, phoneNumber: trimmedPhone });
+      await sealWish(wishId);
       markSaved();
-      navigate("/create/seal");
+      navigate("/create/scheduled");
     } catch {
       setError("We couldn't save that just now. Please try again.");
     } finally {
@@ -90,7 +91,7 @@ export default function CreateDeliverPage() {
               className={clsx(
                 "min-h-[130px] rounded-md border p-[17px] text-left transition-colors sm:min-h-[155px]",
                 active
-                  ? "border-champagne bg-mulberry"
+                  ? "border-champagne bg-mulberry text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]"
                   : "border-porcelain/25 bg-transparent",
               )}
             >
@@ -128,7 +129,7 @@ export default function CreateDeliverPage() {
         disabled={!canContinue || saving}
         className="mt-7"
       >
-        {saving ? "Saving…" : "Continue to seal →"}
+        {saving ? "Sealing…" : "Seal this wish →"}
       </Button>
       {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
     </CreateLayout>

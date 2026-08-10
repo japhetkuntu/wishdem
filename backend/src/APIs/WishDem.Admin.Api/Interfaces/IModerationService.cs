@@ -14,4 +14,6 @@ public interface IModerationService
     Task<IApiResponse<ModerationCaseResponse>> CreateAsync(CreateModerationCaseRequest request, CancellationToken ct = default);
 
     Task<IApiResponse<ModerationCaseResponse>> DecideAsync(Guid reviewerAdminUserId, Guid caseId, DecideModerationCaseRequest request, CancellationToken ct = default);
+
+    Task<IApiResponse<ModerationCaseResponse>> AssignAsync(Guid adminUserId, Guid caseId, CancellationToken ct = default);
 }

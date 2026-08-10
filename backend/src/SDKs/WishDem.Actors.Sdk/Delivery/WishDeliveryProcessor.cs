@@ -18,6 +18,10 @@ public class WishDeliveryProcessor(
     IOptions<DeliverySettings> options,
     ILogger<WishDeliveryProcessor> logger) : IWishDeliveryProcessor
 {
+    // After this many failed attempts we stop retrying entirely — a permanently bad
+    // number or provider outage shouldn't hammer the SMS provider forever.
+    private const int MaxDeliveryAttempts = 8;
+
     private readonly DeliverySettings _settings = options.Value;
 
     public async Task<bool> DeliverAsync(Guid wishId, CancellationToken ct = default)
@@ -26,22 +30,45 @@ public class WishDeliveryProcessor(
         if (wish is null || wish.DeliveredAtUtc != null)
             return true; // gone or already handled by another pass — nothing left to do.
 
+        bool delivered;
         try
         {
-            if (!await TryDeliverAsync(wish, ct))
-                return false;
-
-            wish.DeliveredAtUtc = DateTime.UtcNow;
-            await wishes.UpdateAsync(wish, ct);
-            return true;
+            delivered = await TryDeliverAsync(wish, ct);
         }
         catch (Exception e)
         {
-            // Left undelivered so the next poll retries it — a bad send shouldn't be
-            // treated as a crash (that would just restart this worker for no benefit).
+            // A bad send shouldn't be treated as a crash (that would just restart this
+            // worker for no benefit) — fall through to the same backoff bookkeeping below.
             logger.LogError(e, "[DeliverAsync] Failed to deliver wish {WishId}", wishId);
-            return false;
+            delivered = false;
         }
+
+        if (delivered)
+        {
+            wish.DeliveredAtUtc = DateTime.UtcNow;
+            wish.NextDeliveryAttemptAtUtc = null;
+            await wishes.UpdateAsync(wish, ct);
+            return true;
+        }
+
+        wish.DeliveryAttemptCount++;
+        if (wish.DeliveryAttemptCount >= MaxDeliveryAttempts)
+        {
+            // Give up — leave it undelivered but stop scheduling further attempts so it
+            // doesn't retry every poll cycle forever. Surfaces loudly so an admin notices.
+            wish.NextDeliveryAttemptAtUtc = DateTime.MaxValue;
+            logger.LogCritical(
+                "[DeliverAsync] Wish {WishId} failed delivery {Attempts} times — giving up, needs manual attention.",
+                wishId, wish.DeliveryAttemptCount);
+        }
+        else
+        {
+            var backoff = TimeSpan.FromMinutes(Math.Min(Math.Pow(2, wish.DeliveryAttemptCount), 60));
+            wish.NextDeliveryAttemptAtUtc = DateTime.UtcNow.Add(backoff);
+        }
+
+        await wishes.UpdateAsync(wish, ct);
+        return false;
     }
 
     private async Task<bool> TryDeliverAsync(Wish wish, CancellationToken ct)

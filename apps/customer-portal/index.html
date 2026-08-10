@@ -4,6 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WishDem — Future kindness, beautifully kept</title>
+    <meta
+      name="description"
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="WishDem" />
+    <meta property="og:title" content="WishDem — Future kindness, beautifully kept" />
+    <meta
+      property="og:description"
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+    />
+    <meta property="og:image" content="/themes/home-hero.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WishDem — Future kindness, beautifully kept" />
+    <meta
+      name="twitter:description"
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+    />
+    <meta name="twitter:image" content="/themes/home-hero.webp" />
+    <script>
+      // Runs before paint so there's no flash of the wrong theme. Mirrors
+      // useTheme()'s own logic — customer-portal defaults to dark until the
+      // user explicitly picks light, which then persists via localStorage.
+      (function () {
+        try {
+          var stored = localStorage.getItem("wishdem-theme");
+          document.documentElement.setAttribute("data-theme", stored === "light" ? "light" : "dark");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

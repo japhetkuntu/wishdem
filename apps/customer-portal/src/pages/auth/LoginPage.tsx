@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { requestOtp } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useWizardStore } from "@/store/wizardStore";
+import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const pendingDraftName = useWizardStore((s) => (s.draftId ? s.recipient?.name : null));
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,7 +33,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     await continueWithGoogle();
     setGoogleLoading(false);
-    navigate("/dashboard");
+    await resumeAfterAuth(navigate);
   }
 
   return (
@@ -74,13 +77,20 @@ export default function LoginPage() {
         </small>
       </section>
 
-      <section className="w-full rounded-lg bg-porcelain p-6 text-ink shadow-card sm:p-8">
+      <section className="w-full rounded-lg bg-paper p-6 text-ink shadow-card sm:p-8">
         <span className="text-[9px] font-extrabold tracking-[0.11em] text-mulberry">
           SIGN IN OR CREATE AN ACCOUNT
         </span>
         <h2 className="my-2 font-display text-[34px] tracking-[-0.7px]">
           Continue to WishDem
         </h2>
+
+        {pendingDraftName && (
+          <p className="mb-4 rounded-md bg-champagne/[0.22] px-3 py-[10px] text-[11px] font-bold leading-[1.5] text-plum">
+            You're one step from sending {pendingDraftName}'s wish — sign in or create an
+            account to keep going right where you left off.
+          </p>
+        )}
 
         <Button
           type="button"

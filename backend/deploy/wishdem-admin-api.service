@@ -1,0 +1,32 @@
+[Unit]
+Description=WishDem Admin API
+# Ordered after wishdem-customer-api since that's the one that applies EF migrations
+# on boot — admin-api shouldn't query the database before it's done. This is a weaker
+# guarantee than a container healthcheck (systemd waits for the unit to start, not for
+# the app inside it to be ready) — deploy.sh adds a real /health poll between restarting
+# the two services to cover that gap.
+After=network.target postgresql.service redis-server.service wishdem-customer-api.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=wishdem
+Group=wishdem
+WorkingDirectory=/var/www/wishdem/admin-api
+ExecStart=/usr/bin/dotnet /var/www/wishdem/admin-api/WishDem.Admin.Api.dll
+Restart=on-failure
+RestartSec=5
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+# Loopback-only — Nginx is the only thing that talks to this port, never the internet.
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5001
+EnvironmentFile=/etc/wishdem/admin-api.env
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/www/wishdem/admin-api/logs
+
+[Install]
+WantedBy=multi-user.target

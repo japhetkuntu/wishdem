@@ -164,8 +164,5 @@
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/obj/Debug/net8.0/WishDem.Admin.Api.Tests.pdb
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/obj/Debug/net8.0/WishDem.Admin.Api.Tests.genruntimeconfig.cache
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/obj/Debug/net8.0/ref/WishDem.Admin.Api.Tests.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/bin/Debug/net8.0/BouncyCastle.Cryptography.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/bin/Debug/net8.0/MailKit.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.Diagnostics.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.Http.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Admin.Api.Tests/bin/Debug/net8.0/MimeKit.dll

@@ -7,6 +7,7 @@ import { useWishes } from "@/hooks/useWishes";
 import { requestOtp, verifyOtp } from "@/lib/api";
 import { daysUntil } from "@/lib/date";
 import { formatCountdown } from "@/lib/format";
+import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
 
 interface VerifyLocationState {
   email: string;
@@ -64,7 +65,7 @@ export default function VerifyPage() {
     setVerifying(true);
     await verifyOtp(state.email, code.join(""), state.isNewCustomer ? name : undefined);
     setVerifying(false);
-    navigate("/dashboard");
+    await resumeAfterAuth(navigate);
   }
 
   async function handleResend() {
@@ -101,7 +102,7 @@ export default function VerifyPage() {
             </div>
           </section>
         ) : (
-          <section className="hidden rounded-lg border border-porcelain/[0.16] bg-mulberry p-[23px] sm:block">
+          <section className="hidden rounded-lg border border-porcelain/[0.16] bg-mulberry p-[23px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232] sm:block">
             <div className="mb-[23px] grid h-[52px] w-[52px] place-items-center rounded-full bg-champagne text-center font-display text-[10px] leading-[1.1] text-plum">
               kept
               <br />
@@ -139,7 +140,7 @@ export default function VerifyPage() {
           </section>
         )}
 
-        <section className="w-full rounded-lg bg-porcelain p-6 text-ink shadow-card sm:p-7">
+        <section className="w-full rounded-lg bg-paper p-6 text-ink shadow-card sm:p-7">
           {state.isNewCustomer ? (
             <span className="text-[9px] font-extrabold tracking-[0.13em] text-mulberry">
               02 · MAKE IT YOURS

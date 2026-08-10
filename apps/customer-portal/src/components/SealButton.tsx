@@ -62,7 +62,7 @@ export function SealButton({
         type="button"
         onClick={handleClick}
         disabled={phase !== "idle"}
-        className="relative -mt-7 rounded-pill border border-champagne bg-plum px-6 py-4 text-[13px] font-extrabold text-porcelain transition-opacity disabled:opacity-60"
+        className="relative -mt-7 rounded-pill border border-champagne bg-plum px-6 py-4 text-[13px] font-extrabold text-[#F6F0E8] transition-opacity disabled:opacity-60"
       >
         {phase === "idle" ? "Break the seal" : "Opening…"}
       </button>

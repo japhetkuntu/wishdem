@@ -16,11 +16,10 @@ import type {
   GroupWishFormat,
   GroupWishInvitation,
   GroupWishMemory,
+  OrganizerGroupWishInvitation,
   MemoryFormat,
   Person,
-  PaymentResult,
   Recipient,
-  SelectedMoment,
   Theme,
   ThemeId,
   User,
@@ -64,14 +63,14 @@ const THEMES: Theme[] = [
     name: "Velvet Night",
     description:
       "A deep-plum envelope, warm porcelain paper, and one quiet champagne seal. Intimate, considered, and made to open slowly.",
-    swatch: "bg-mulberry",
+    swatch: "bg-mulberry text-paper",
   },
   {
     id: "garden-letter",
     name: "Garden Letter",
     description:
       "Moss paper and a pressed edge — an unhurried, earthy note that feels handwritten in a garden.",
-    swatch: "bg-moss",
+    swatch: "bg-moss text-paper",
   },
   {
     id: "sunday-morning",
@@ -85,7 +84,7 @@ const THEMES: Theme[] = [
     name: "Afterglow",
     description:
       "Ink lacquer and a porcelain note inside — moody on the outside, warm the moment it opens.",
-    swatch: "bg-ink",
+    swatch: "bg-ink text-paper",
   },
 ];
 
@@ -217,6 +216,25 @@ export async function listWishes(): Promise<Wish[]> {
   return res.items.map(wishFromResponse);
 }
 
+export interface DailyWishLimit {
+  used: number;
+  max: number;
+  remaining: number;
+}
+
+interface DailyWishLimitResponse {
+  used: number;
+  max: number;
+  remaining: number;
+  resetsAtUtc: string;
+}
+
+/** New wishes only — editing/sealing an existing draft doesn't count against this. */
+export async function getDailyWishLimit(): Promise<DailyWishLimit> {
+  const res = await apiRequest<DailyWishLimitResponse>("/api/wishes/daily-limit");
+  return { used: res.used, max: res.max, remaining: res.remaining };
+}
+
 export async function getWish(id: string): Promise<Wish | null> {
   try {
     const res = await apiRequest<WishResponse>(`/api/wishes/${id}`);
@@ -274,6 +292,51 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
   const res = await apiRequest<WishResponse>("/api/wishes", {
     method: "POST",
     body: JSON.stringify(saveWishBodyFromWish(draft)),
+  });
+  return wishFromResponse(res);
+}
+
+/**
+ * Lets a signed-out visitor start the create wizard without hitting a 401 on
+ * the first save: the recipient details go into the cache under a fresh id
+ * (or an existing one, if they're revising before signing in) instead of
+ * Postgres. Nothing becomes a real wish, and nothing counts against the
+ * daily cap, until claimGuestDraft runs right after login/registration.
+ */
+export async function saveGuestWhoDraft(draftId: string | null, recipient: Recipient, fromName = "You"): Promise<string> {
+  const body = saveWishBodyFromWish({
+    id: "",
+    recipient,
+    message: "",
+    attachment: null,
+    themeId: null,
+    channel: null,
+    status: "draft",
+    fromName,
+    priceLabel: "",
+    createdAt: new Date().toISOString(),
+  });
+
+  const res = draftId
+    ? await apiRequest<{ draftId: string }>(`/api/wishes/drafts/${draftId}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+        skipAuth: true,
+      })
+    : await apiRequest<{ draftId: string }>("/api/wishes/drafts", {
+        method: "POST",
+        body: JSON.stringify(body),
+        skipAuth: true,
+      });
+  return res.draftId;
+}
+
+/** Exchanges a stashed guest draft for a real wish belonging to the now-signed-in
+ * customer — called immediately after login/registration completes so the wizard
+ * can pick up exactly where the visitor left off. */
+export async function claimGuestDraft(draftId: string): Promise<Wish> {
+  const res = await apiRequest<WishResponse>(`/api/wishes/drafts/${draftId}/claim`, {
+    method: "POST",
   });
   return wishFromResponse(res);
 }
@@ -350,58 +413,13 @@ export async function saveDeliverStep(
   });
 }
 
-interface PaymentResponse {
-  id: string;
-  wishId: string;
-  phoneNumber: string;
-  provider: "mtn" | "telecel" | "airtelTigo";
-  amount: number;
-  status: string;
-  failureReason: string | null;
-  settledAtUtc: string | null;
-  createdAtUtc: string;
-}
-
-/**
- * Initiates a MoMo charge then immediately calls the /simulate endpoint,
- * which stands in for a real MoMo webhook in this environment. Uses the same
- * "phone number ending in 0 declines" heuristic the previous mock used so
- * the existing payment-failed UI flow stays testable.
- */
-export async function chargeMobileMoney(
-  wishId: string,
-  phoneNumber: string,
-  recipient?: Recipient,
-): Promise<PaymentResult> {
-  await ensureWish(wishId, recipient);
-
-  const payment = await apiRequest<PaymentResponse>(`/api/wishes/${wishId}/payments`, {
+/** Wishes are free — this just seals the wish so it's locked in for delivery. */
+export async function sealWish(wishId: string): Promise<Wish> {
+  const res = await apiRequest<WishResponse>(`/api/wishes/${wishId}/seal`, {
     method: "POST",
-    body: JSON.stringify({ phoneNumber, provider: "mtn" }),
+    body: JSON.stringify({ promoCode: null }),
   });
-
-  const declines = phoneNumber.trim().endsWith("0");
-
-  const settled = await apiRequest<PaymentResponse>(
-    `/api/wishes/${wishId}/payments/${payment.id}/simulate`,
-    {
-      method: "POST",
-      body: JSON.stringify(
-        declines
-          ? { succeed: false, failureReason: "The mobile money charge was declined." }
-          : { succeed: true },
-      ),
-    },
-  );
-
-  if (declines || settled.status !== "succeeded") {
-    return {
-      success: false,
-      failureReason: settled.failureReason ?? "The mobile money charge was declined.",
-    };
-  }
-
-  return { success: true, reference: settled.id };
+  return wishFromResponse(res);
 }
 
 export async function markOpened(id: string): Promise<Wish> {
@@ -598,8 +616,8 @@ function eventToneForKind(kind: CalendarEventResponse["kind"]): CalendarEvent["d
 
 function tagForKind(kind: CalendarEventResponse["kind"]): { label: string; tone: CalendarEvent["tagTone"] } {
   if (kind === "birthday") return { label: "Birthday", tone: "accent" };
-  if (kind === "groupWishDeadline") return { label: "Collect by", tone: "attention" };
-  return { label: "Delivery", tone: "good" };
+  if (kind === "groupWishDeadline") return { label: "Group wish closes", tone: "attention" };
+  return { label: "Wish delivery", tone: "good" };
 }
 
 export async function listCalendarDays(): Promise<CalendarDay[]> {
@@ -622,7 +640,8 @@ export async function listCalendarDays(): Promise<CalendarDay[]> {
         dayEvents.length === 1
           ? dayEvents[0].title
           : `${dayEvents.length} moments — ${dayEvents[0].title}`;
-      return { id: date, weekdayLabel, summary };
+      const tones = [...new Set(dayEvents.map((e) => eventToneForKind(e.kind)))];
+      return { id: date, weekdayLabel, summary, tones, count: dayEvents.length };
     });
 }
 
@@ -765,6 +784,66 @@ export async function createGroupWish(input: CreateGroupWishInput): Promise<Grou
     }),
   });
   return groupWishFromResponse(res);
+}
+
+interface GroupWishInvitationApiResponse {
+  id: string;
+  inviteToken: string;
+  guestName: string;
+  guestEmail: string | null;
+  status: "invited" | "joined" | "declined" | "notNow";
+  respondedAtUtc: string | null;
+  createdAtUtc: string;
+}
+
+function organizerInvitationFromResponse(res: GroupWishInvitationApiResponse): OrganizerGroupWishInvitation {
+  return {
+    id: res.id,
+    inviteToken: res.inviteToken,
+    guestName: res.guestName,
+    guestEmail: res.guestEmail ?? undefined,
+    status: res.status === "notNow" ? "not-now" : res.status,
+    respondedAt: res.respondedAtUtc ?? undefined,
+    createdAt: res.createdAtUtc,
+  };
+}
+
+/** Invites a guest to contribute to one of the current user's own group wishes. */
+export async function inviteGuestToGroupWish(
+  groupWishId: string,
+  input: { guestName: string; guestEmail?: string },
+): Promise<OrganizerGroupWishInvitation> {
+  const res = await apiRequest<GroupWishInvitationApiResponse>(
+    `/api/group-wishes/${groupWishId}/invitations`,
+    {
+      method: "POST",
+      body: JSON.stringify({ guestName: input.guestName, guestEmail: input.guestEmail || undefined }),
+    },
+  );
+  return organizerInvitationFromResponse(res);
+}
+
+/** Lists the guest invitations the organizer has sent for one of their own group wishes. */
+export async function listGroupWishOrganizerInvitations(
+  groupWishId: string,
+): Promise<OrganizerGroupWishInvitation[]> {
+  const res = await apiRequest<GroupWishInvitationApiResponse[]>(
+    `/api/group-wishes/${groupWishId}/invitations`,
+  );
+  return res.map(organizerInvitationFromResponse);
+}
+
+/** Seals a group wish, closing it to new memories ahead of delivery. */
+export async function sealGroupWish(groupWishId: string): Promise<GroupWish> {
+  const res = await apiRequest<GroupWishResponse>(`/api/group-wishes/${groupWishId}/seal`, {
+    method: "POST",
+  });
+  return groupWishFromResponse(res);
+}
+
+/** Deletes a group wish the current user organizes. */
+export async function deleteGroupWish(groupWishId: string): Promise<void> {
+  await apiRequest<void>(`/api/group-wishes/${groupWishId}`, { method: "DELETE" });
 }
 
 /**
@@ -1010,20 +1089,6 @@ export async function getBirthdayBloom(id: string): Promise<BirthdayBloom | null
   }
 }
 
-/**
- * No backend endpoint exists to persist "opened"/"favorited" state on an
- * individual bloom card — the Birthday Bloom endpoint is a read-only public
- * view. These stay purely client-side/optimistic until such an endpoint
- * exists.
- */
-export async function markBloomWishOpened(_bloomId: string, wishId: string): Promise<BloomWish> {
-  throw new Error(`markBloomWishOpened has no backend endpoint yet (wish ${wishId}).`);
-}
-
-export async function toggleBloomWishFavorite(_bloomId: string, wishId: string): Promise<BloomWish> {
-  throw new Error(`toggleBloomWishFavorite has no backend endpoint yet (wish ${wishId}).`);
-}
-
 /* -------------------------------------------------------------------------- */
 /* Circle                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -1116,58 +1181,8 @@ export async function addCirclePerson(input: AddCirclePersonInput): Promise<Circ
 }
 
 /* -------------------------------------------------------------------------- */
-/* Calendar-adjacent "moment" and "people" derived views                      */
+/* People-adjacent derived views                                              */
 /* -------------------------------------------------------------------------- */
-
-const EMPTY_MOMENT: SelectedMoment = {
-  title: "No moment selected yet",
-  subtitle: "Start a group wish to see it highlighted here.",
-  days: 0,
-  clips: 0,
-  clipsRemaining: 0,
-  contributionLabel: "",
-  contributionNote: "",
-  contributionProgress: 0,
-  suggestedTimeNote: "",
-  deliveryConfidenceNote: "",
-};
-
-/**
- * There's no backend endpoint for this specific rich "moment detail" shape.
- * Best-effort: derive it from the user's most time-pressing GroupWish (the
- * one with the nearest collectByDate), rather than fabricating content.
- */
-export async function getSelectedMoment(): Promise<SelectedMoment> {
-  const wishes = await listGroupWishes();
-  if (wishes.length === 0) return EMPTY_MOMENT;
-
-  const withDays = wishes.map((w) => {
-    const days = collectByDaysRemaining(w.collectByLabel);
-    return { wish: w, days };
-  });
-  const soonest = withDays.reduce((a, b) => (b.days < a.days ? b : a));
-
-  return {
-    title: soonest.wish.title,
-    subtitle: `For ${soonest.wish.recipientName}`,
-    days: soonest.days,
-    clips: soonest.wish.memoriesCount,
-    clipsRemaining: Math.max(0, soonest.wish.invitedCount - soonest.wish.joinedCount),
-    contributionLabel: `${soonest.wish.joinedCount} of ${soonest.wish.invitedCount} joined`,
-    contributionNote: "",
-    contributionProgress:
-      soonest.wish.invitedCount > 0
-        ? Math.min(100, Math.round((soonest.wish.joinedCount / soonest.wish.invitedCount) * 100))
-        : 0,
-    suggestedTimeNote: "",
-    deliveryConfidenceNote: "",
-  };
-}
-
-/** Best-effort days-remaining parse from a display label — falls back to a large number if unparsable. */
-function collectByDaysRemaining(_label: string): number {
-  return 0;
-}
 
 /**
  * There's no backend concept this rich for a "Person" (nextMomentTitle,

@@ -20,6 +20,16 @@ public class WishesController(IWishService wishService) : ControllerBase
         return StatusCode(response.Code, response);
     }
 
+    /// <summary>Lets the create wizard show "2 of 3 used today" before the sender starts
+    /// filling out the form, rather than only discovering the cap on submit.</summary>
+    [HttpGet("daily-limit")]
+    public async Task<IActionResult> GetDailyLimit(CancellationToken ct)
+    {
+        var userId = ClaimsReader.GetUserId(User);
+        var response = await wishService.GetDailyLimitAsync(userId, ct);
+        return StatusCode(response.Code, response);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
@@ -57,6 +67,50 @@ public class WishesController(IWishService wishService) : ControllerBase
     {
         var userId = ClaimsReader.GetUserId(User);
         var response = await wishService.DeleteAsync(userId, id, ct);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>Public: lets a visitor who hasn't signed in yet start the create wizard
+    /// instead of hitting a 401 on the very first step. The recipient/message/theme/delivery
+    /// fields are cached under a fresh id rather than written to Postgres — nothing becomes a
+    /// real wish (and nothing counts against the daily cap) until ClaimDraft runs right after
+    /// they log in or register.</summary>
+    [AllowAnonymous]
+    [HttpPost("drafts")]
+    public async Task<IActionResult> CreateDraft([FromBody] SaveWishRequest request, CancellationToken ct)
+    {
+        var response = await wishService.CreateDraftAsync(request, ct);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>Public: overwrites a previously stashed draft as the visitor moves through
+    /// later wizard steps while still signed out.</summary>
+    [AllowAnonymous]
+    [HttpPut("drafts/{draftId:guid}")]
+    public async Task<IActionResult> UpdateDraft(Guid draftId, [FromBody] SaveWishRequest request, CancellationToken ct)
+    {
+        var response = await wishService.UpdateDraftAsync(draftId, request, ct);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>Public: re-hydrates a stashed draft, e.g. after a page reload while the
+    /// visitor is still on the login/verify screen.</summary>
+    [AllowAnonymous]
+    [HttpGet("drafts/{draftId:guid}")]
+    public async Task<IActionResult> GetDraft(Guid draftId, CancellationToken ct)
+    {
+        var response = await wishService.GetDraftAsync(draftId, ct);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>Requires auth (inherits the controller's [Authorize]): exchanges a stashed
+    /// guest draft for a real wish belonging to the now-signed-in customer — this is what the
+    /// frontend calls immediately after login/registration completes to pick the flow back up.</summary>
+    [HttpPost("drafts/{draftId:guid}/claim")]
+    public async Task<IActionResult> ClaimDraft(Guid draftId, CancellationToken ct)
+    {
+        var userId = ClaimsReader.GetUserId(User);
+        var response = await wishService.ClaimDraftAsync(userId, draftId, ct);
         return StatusCode(response.Code, response);
     }
 

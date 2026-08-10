@@ -12,8 +12,9 @@ const MOMO_BADGE: Record<MoMoTransaction["status"], string> = {
 };
 
 export default function PaymentsModerationPage() {
-  const { transactions, moderationCase, loading, decide } = usePaymentsModeration();
+  const { transactions, moderationCase, loading, decide, refund } = usePaymentsModeration();
   const [deciding, setDeciding] = useState(false);
+  const [refundingId, setRefundingId] = useState<string | null>(null);
 
   async function handleDecision(decision: "approved" | "removed") {
     setDeciding(true);
@@ -21,6 +22,17 @@ export default function PaymentsModerationPage() {
       await decide(decision);
     } finally {
       setDeciding(false);
+    }
+  }
+
+  async function handleRefund(tx: MoMoTransaction) {
+    const reason = window.prompt(`Reason for refunding ${tx.amount} to ${tx.senderName}?`);
+    if (!reason || !reason.trim()) return;
+    setRefundingId(tx.id);
+    try {
+      await refund(tx.id, { amount: tx.rawAmount, reason: reason.trim() });
+    } finally {
+      setRefundingId(null);
     }
   }
 
@@ -45,13 +57,13 @@ export default function PaymentsModerationPage() {
 
       <section className="my-5">
         <h1 className="font-display text-[34px]">Payments &amp; moderation</h1>
-        <p className="mt-1 text-[12px] text-ink/55">
+        <p className="mt-1 text-[12px] text-porcelain/60">
           Reconcile payment risk and decide content reports with a reasoned, auditable action.
         </p>
       </section>
 
       <section className="grid gap-[16px] lg:grid-cols-[1.1fr_.9fr]">
-        <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white">
+        <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white text-ink">
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-plum/[0.09] p-4">
             <h2 className="font-display text-[20px]">Mobile Money transactions</h2>
             <div className="flex flex-wrap gap-[6px]">
@@ -87,7 +99,18 @@ export default function PaymentsModerationPage() {
                   </div>
                   <div>
                     <b className="block">{tx.reconciliationLabel}</b>
-                    <span className="mt-[2px] block text-[10px] font-extrabold text-mulberry">{tx.actionLabel} →</span>
+                    {tx.status === "SUCCESSFUL" ? (
+                      <button
+                        type="button"
+                        disabled={refundingId === tx.id}
+                        onClick={() => handleRefund(tx)}
+                        className="mt-[2px] block text-[10px] font-extrabold text-mulberry disabled:opacity-50"
+                      >
+                        {refundingId === tx.id ? "Refunding…" : "Refund →"}
+                      </button>
+                    ) : (
+                      <span className="mt-[2px] block text-[10px] font-extrabold text-mulberry">{tx.actionLabel} →</span>
+                    )}
                   </div>
                 </div>
               ))
@@ -99,7 +122,7 @@ export default function PaymentsModerationPage() {
           </div>
         </article>
 
-        <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white">
+        <article className="overflow-hidden rounded-md border border-plum/[0.11] bg-white text-ink">
           <header className="flex items-center justify-between gap-2 border-b border-plum/[0.09] p-4">
             <h2 className="font-display text-[20px]">Moderation case {moderationCase?.id}</h2>
             <span className="rounded-pill bg-rose/30 px-[6px] py-1 text-[8px] font-extrabold text-mulberry">
@@ -123,7 +146,7 @@ export default function PaymentsModerationPage() {
                 <span className="whitespace-nowrap text-[10px] text-ink/50">{moderationCase.flaggedAgo}</span>
               </div>
               <p className="mt-2 text-[11px] leading-[1.55] text-ink/70">{moderationCase.description}</p>
-              <div className="my-3 rounded-sm border-l-[3px] border-rose bg-porcelain p-3 font-display text-[14px] leading-[1.45]">
+              <div className="my-3 rounded-sm border-l-[3px] border-rose bg-paper p-3 font-display text-[14px] leading-[1.45]">
                 "{moderationCase.evidenceQuote}"
               </div>
               <div className="grid grid-cols-2 gap-[8px]">
@@ -152,7 +175,7 @@ export default function PaymentsModerationPage() {
                       type="button"
                       disabled={deciding}
                       onClick={() => handleDecision("approved")}
-                      className="rounded-pill bg-plum px-[12px] py-[10px] text-[10px] font-extrabold text-porcelain disabled:opacity-50"
+                      className="rounded-pill bg-plum px-[12px] py-[10px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-50"
                     >
                       Approve content
                     </button>
@@ -182,7 +205,7 @@ export default function PaymentsModerationPage() {
         </article>
       </section>
 
-      <article className="mt-4 rounded-md border border-plum/[0.11] bg-white p-4">
+      <article className="mt-4 rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
         <h2 className="font-display text-[20px]">Recent consequential actions</h2>
         <div className="mt-2 text-[10px] leading-[1.6]">
           <p className="border-t border-plum/[0.08] py-2">

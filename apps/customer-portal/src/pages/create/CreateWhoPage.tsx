@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { CreateLayout } from "@/components/CreateLayout";
 import { useWizardStore } from "@/store/wizardStore";
-import { getWish, saveWhoStep } from "@/lib/api";
+import { getDailyWishLimit, getWish, saveGuestWhoDraft, saveWhoStep, type DailyWishLimit } from "@/lib/api";
+import { ApiError, hasSession } from "@/lib/httpClient";
 import { daysUntil } from "@/lib/date";
 import type { Relationship } from "@/types";
 
@@ -35,7 +36,7 @@ export default function CreateWhoPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const queryWishId = params.get("wishId");
-  const { recipient, wishId, setWishId, setRecipient, hydrateFromWish } =
+  const { recipient, wishId, draftId, setWishId, setDraftId, setRecipient, hydrateFromWish } =
     useWizardStore();
 
   const [name, setName] = useState(recipient?.name ?? "");
@@ -46,6 +47,11 @@ export default function CreateWhoPage() {
   const [deliveryTime, setDeliveryTime] = useState(recipient?.deliveryTime ?? "09:00");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Only a brand-new wish counts against the daily cap — continuing an existing draft
+  // (has a wishId already) never creates a second row, so the limit doesn't apply to it.
+  const isNewWish = !wishId && !queryWishId;
+  const [dailyLimit, setDailyLimit] = useState<DailyWishLimit | null>(null);
 
   useEffect(() => {
     if (queryWishId && queryWishId !== wishId) {
@@ -61,11 +67,18 @@ export default function CreateWhoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryWishId]);
 
+  useEffect(() => {
+    if (!isNewWish) return;
+    getDailyWishLimit().then(setDailyLimit).catch(() => setDailyLimit(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNewWish]);
+
   const days = birthdayISO ? daysUntil(birthdayISO) : null;
+  const atDailyLimit = isNewWish && dailyLimit !== null && dailyLimit.remaining <= 0;
 
   async function handleContinue(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !birthdayISO) return;
+    if (!name.trim() || !birthdayISO || atDailyLimit) return;
     setSaving(true);
     setError(null);
     const rec = {
@@ -76,12 +89,27 @@ export default function CreateWhoPage() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
     try {
-      const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec });
-      setWishId(wish.id);
-      setRecipient(rec);
-      navigate("/create/message");
-    } catch {
-      setError("We couldn't save that just now. Please try again.");
+      if (hasSession()) {
+        const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec });
+        setWishId(wish.id);
+        setRecipient(rec);
+        navigate("/create/message");
+      } else {
+        // Not signed in yet: stash the recipient in the cache under a draft id instead of
+        // 401ing, then send them to sign in/register. resumeAfterAuth picks this draft back
+        // up right after and continues straight on to /create/message.
+        const newDraftId = await saveGuestWhoDraft(draftId, rec);
+        setDraftId(newDraftId);
+        setRecipient(rec);
+        navigate("/login");
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 429) {
+        setError(err.message);
+        setDailyLimit((prev) => (prev ? { ...prev, used: prev.max, remaining: 0 } : prev));
+      } else {
+        setError("We couldn't save that just now. Please try again.");
+      }
     } finally {
       setSaving(false);
     }
@@ -99,10 +127,24 @@ export default function CreateWhoPage() {
             <br />
             from future you?
           </h1>
-          <p className="mb-5 max-w-[560px] text-[13px] leading-[1.6] text-porcelain/70">
+          <p className="mb-3 max-w-[560px] text-[13px] leading-[1.6] text-porcelain/70">
             Add the person and the moment. You can shape the message next, then
             choose exactly how their birthday wish will arrive.
           </p>
+
+          {isNewWish && dailyLimit && (
+            <p
+              className={
+                atDailyLimit
+                  ? "mb-5 max-w-[560px] rounded-md border border-rose/40 bg-rose/10 px-3 py-2 text-[12px] leading-[1.5] text-rose"
+                  : "mb-5 text-[11px] font-bold text-porcelain/55"
+              }
+            >
+              {atDailyLimit
+                ? "You've used all 3 of today's wishes. Come back tomorrow to write another."
+                : `${dailyLimit.used} of ${dailyLimit.max} wishes used today`}
+            </p>
+          )}
 
           <form onSubmit={handleContinue}>
             <div className="overflow-hidden rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04]">
@@ -131,7 +173,7 @@ export default function CreateWhoPage() {
                     className={inputClass}
                   >
                     {RELATIONSHIPS.map((r) => (
-                      <option key={r} value={r} className="bg-plum text-porcelain">
+                      <option key={r} value={r} className="bg-plum text-[#F6F0E8]">
                         {r}
                       </option>
                     ))}
@@ -159,11 +201,19 @@ export default function CreateWhoPage() {
             </div>
 
             <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <Button type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Continue to your message →"}
+              <Button type="submit" disabled={saving || atDailyLimit}>
+                {saving
+                  ? "Saving…"
+                  : atDailyLimit
+                    ? "Daily limit reached"
+                    : hasSession()
+                      ? "Continue to your message →"
+                      : "Continue →"}
               </Button>
               <span className="text-[11px] leading-[1.45] text-porcelain/60">
-                Nothing is sent yet. Your draft stays in your hands.
+                {hasSession()
+                  ? "Nothing is sent yet. Your draft stays in your hands."
+                  : "Nothing is sent yet. We'll ask you to sign in next to keep this wish safe."}
               </span>
             </div>
             {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
@@ -171,7 +221,7 @@ export default function CreateWhoPage() {
         </div>
 
         <aside className="grid gap-[14px]">
-          <div className="rounded-lg bg-porcelain p-[18px] text-ink">
+          <div className="rounded-lg bg-paper p-[18px] text-ink">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
@@ -201,7 +251,7 @@ export default function CreateWhoPage() {
             </p>
           </div>
 
-          <div className="rounded-lg bg-mulberry p-[18px]">
+          <div className="rounded-lg bg-mulberry p-[18px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
             <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
               A GENTLE START
             </span>

@@ -8,9 +8,11 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const toneClasses: Record<CardTone, string> = {
-  paper: "bg-porcelain text-ink shadow-card",
+  paper: "bg-paper text-ink shadow-card",
   panel: "bg-porcelain/[0.045] border border-porcelain/[0.14]",
-  plum: "bg-plum text-porcelain border border-champagne/30",
+  // Fixed cream text (not the reactive `porcelain` token) since this sits on
+  // the always-dark `plum` fill regardless of which app theme is active.
+  plum: "bg-plum text-[#F6F0E8] border border-champagne/30",
 };
 
 export function Card({ tone = "panel", className, ...props }: CardProps) {

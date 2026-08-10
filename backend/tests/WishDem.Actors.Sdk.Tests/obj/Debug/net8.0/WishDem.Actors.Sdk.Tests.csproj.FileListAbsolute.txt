@@ -8,10 +8,8 @@
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/WishDem.Actors.Sdk.Tests.pdb
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Akka.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Akka.DependencyInjection.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/BouncyCastle.Cryptography.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Castle.Core.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/FluentAssertions.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/MailKit.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
@@ -41,7 +39,6 @@
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Microsoft.VisualStudio.TestPlatform.Common.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/testhost.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/MimeKit.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Moq.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Newtonsoft.Json.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/Npgsql.dll
@@ -50,7 +47,6 @@
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Diagnostics.EventLog.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Drawing.Common.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Security.Cryptography.Pkcs.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Security.Permissions.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/System.Windows.Extensions.dll
@@ -128,7 +124,6 @@
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Diagnostics.EventLog.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
-/Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
 /Users/joe/Work/Others/WishDem/backend/tests/WishDem.Actors.Sdk.Tests/bin/Debug/net8.0/WishDem.Actors.Sdk.dll

@@ -4,7 +4,7 @@ import type { BadgeTone } from "@wishdem/design-system";
 import type { Wish } from "@/types";
 import { daysUntil, formatWishDate } from "@/lib/date";
 
-const AVATAR_COLORS = ["bg-rose text-plum", "bg-moss text-porcelain", "bg-champagne text-plum", "bg-periwinkle text-plum"];
+const AVATAR_COLORS = ["bg-rose text-plum", "bg-moss text-paper", "bg-champagne text-plum", "bg-periwinkle text-plum"];
 
 function avatarClass(seed: string) {
   const idx = seed.charCodeAt(0) % AVATAR_COLORS.length;

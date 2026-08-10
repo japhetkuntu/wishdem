@@ -5,8 +5,6 @@ import { useContributionContext } from "@/hooks/useContribution";
 const CHOICES: { format: MemoryFormat; mark: string; label: string; note: string }[] = [
   { format: "notes", mark: "Aa", label: "A written memory", note: "A story, note, or a few honest lines." },
   { format: "photo", mark: "▢", label: "A photo with a story", note: "One image and why it still matters." },
-  { format: "voice", mark: "∿", label: "A voice note", note: "A warm spoken message, up to 90 seconds." },
-  { format: "video", mark: "▻", label: "A short video toast", note: "A small hello, memory, or wish." },
 ];
 
 export default function GuestMemoryEntryPage() {
@@ -77,7 +75,7 @@ export default function GuestMemoryEntryPage() {
           </div>
         </aside>
 
-        <article className="rounded-[22px] bg-porcelain p-[27px] text-ink shadow-card">
+        <article className="rounded-[22px] bg-paper p-[27px] text-ink shadow-card">
           <span className="text-[9px] font-extrabold tracking-[0.12em] text-mulberry">
             {context.inviterName.toUpperCase()} INVITED YOU
           </span>
@@ -106,7 +104,7 @@ export default function GuestMemoryEntryPage() {
                 <p className="mt-[5px] text-[9px] leading-[1.45] text-ink/63">{choice.note}</p>
               </button>
             ))}
-            <div className="min-h-[100px] rounded-[10px] bg-mulberry p-3 text-porcelain">
+            <div className="min-h-[100px] rounded-[10px] bg-mulberry p-3 text-[#F6F0E8]">
               <span className="mb-[6px] block font-display text-[22px] text-champagne">?</span>
               <strong className="block text-[11px]">Help me remember</strong>
               <p className="mt-[5px] text-[9px] leading-[1.45] text-porcelain/72">
@@ -124,7 +122,7 @@ export default function GuestMemoryEntryPage() {
             <button
               type="button"
               onClick={() => navigate(`/contribute/${id}/compose?type=notes`)}
-              className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-porcelain"
+              className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-[#F6F0E8]"
             >
               Add your memory
             </button>

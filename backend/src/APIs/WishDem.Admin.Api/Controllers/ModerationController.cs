@@ -44,4 +44,12 @@ public class ModerationController(IModerationService moderationService) : Contro
         var response = await moderationService.DecideAsync(reviewerId, id, request, ct);
         return StatusCode(response.Code, response);
     }
+
+    [HttpPost("{id:guid}/assign")]
+    public async Task<IActionResult> Assign(Guid id, CancellationToken ct)
+    {
+        var adminUserId = ClaimsReader.GetUserId(User);
+        var response = await moderationService.AssignAsync(adminUserId, id, ct);
+        return StatusCode(response.Code, response);
+    }
 }

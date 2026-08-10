@@ -1,36 +1,75 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { AppNav } from "@/components/AppNav";
 import { useGroupWish } from "@/hooks/useGroupWishes";
 
-const METHODS = [
-  { label: "Choose contacts", note: "Pick people from your Circle." },
-  { label: "Share by message", note: "Send the invite link over text or chat." },
-  { label: "Send an email", note: "Email the invite to anyone, anywhere." },
-  { label: "Show QR code", note: "Let people scan in to join instantly." },
-];
+const STATUS_LABEL: Record<string, string> = {
+  invited: "Invited",
+  joined: "Joined",
+  declined: "Declined",
+  "not-now": "Not now",
+};
+
+const STATUS_CLASS: Record<string, string> = {
+  invited: "bg-champagne/[0.16] text-champagne",
+  joined: "bg-moss/20 text-moss",
+  declined: "bg-rose/20 text-rose",
+  "not-now": "bg-porcelain/[0.1] text-porcelain/70",
+};
 
 export default function GroupWishLobbyPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { groupWish, loading } = useGroupWish(id);
-  const [copied, setCopied] = useState(false);
+  const { groupWish, invitations, loading, invite, seal } = useGroupWish(id);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [sealing, setSealing] = useState(false);
 
-  async function handleCopyLink() {
-    const url = `${window.location.origin}/contribute/${id}`;
+  async function handleCopyLink(token: string) {
+    const url = `${window.location.origin}/contribute/${token}`;
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedToken(token);
+      setTimeout(() => setCopiedToken((t) => (t === token ? null : t)), 2000);
     } catch {
-      setCopied(false);
+      setCopiedToken(null);
+    }
+  }
+
+  async function handleInvite(e: FormEvent) {
+    e.preventDefault();
+    if (!guestName.trim()) return;
+    setInviting(true);
+    setInviteError(null);
+    try {
+      await invite({ guestName: guestName.trim(), guestEmail: guestEmail.trim() || undefined });
+      setGuestName("");
+      setGuestEmail("");
+    } catch {
+      setInviteError("We couldn't send that invite just now. Please try again.");
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function handleFinish() {
+    setSealing(true);
+    try {
+      await seal();
+      navigate("/group-wishes");
+    } catch {
+      setInviteError("We couldn't finish inviting just now. Please try again.");
+      setSealing(false);
     }
   }
 
   if (loading) {
     return (
-      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
         <AppNav active="groupWishes" />
         <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
       </main>
@@ -39,7 +78,7 @@ export default function GroupWishLobbyPage() {
 
   if (!groupWish) {
     return (
-      <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+      <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
         <AppNav active="groupWishes" />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           We couldn't find that group wish.
@@ -49,7 +88,7 @@ export default function GroupWishLobbyPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="groupWishes" />
 
       <header className="flex flex-wrap items-center gap-[10px] py-6">
@@ -64,41 +103,83 @@ export default function GroupWishLobbyPage() {
 
       <section className="grid gap-[13px] sm:grid-cols-[minmax(0,1fr)_300px]">
         <div className="grid gap-[13px]">
-          <div className="rounded-lg bg-mulberry p-6">
+          <div className="rounded-lg bg-mulberry p-6 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
             <h1 className="mb-1 font-display text-[30px] leading-[1.1]">Invite people</h1>
             <p className="mb-4 max-w-[440px] text-[12px] leading-[1.6] text-porcelain/75">
-              Share this link with anyone who should add a memory to {groupWish.title}.
+              Add a guest below to give them a private link to add a memory to {groupWish.title}.
             </p>
-            <Button variant="outline-inverse" size="sm" onClick={handleCopyLink}>
-              {copied ? "Link copied ✓" : "Copy invite link"}
-            </Button>
+            <form onSubmit={handleInvite} className="grid gap-[8px] sm:grid-cols-[1fr_1fr_auto]">
+              <input
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="Guest's name"
+                required
+                className="rounded-md border border-porcelain/[0.2] bg-porcelain/[0.06] px-3 py-[10px] text-[12px] outline-none placeholder:text-porcelain/45"
+              />
+              <input
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                placeholder="Email (optional)"
+                type="email"
+                className="rounded-md border border-porcelain/[0.2] bg-porcelain/[0.06] px-3 py-[10px] text-[12px] outline-none placeholder:text-porcelain/45"
+              />
+              <Button type="submit" variant="outline-inverse" size="sm" disabled={inviting || !guestName.trim()}>
+                {inviting ? "Inviting…" : "Invite"}
+              </Button>
+            </form>
+            {inviteError && <p className="mt-2 text-[11px] text-rose">{inviteError}</p>}
           </div>
 
           <div className="rounded-md border border-porcelain/[0.1] bg-porcelain/[0.03] p-5">
-            <h2 className="mb-3 font-display text-[19px]">Bring people in</h2>
-            <div className="grid gap-[10px] sm:grid-cols-2">
-              {METHODS.map((method) => (
-                <button
-                  key={method.label}
-                  type="button"
-                  className="rounded-md border border-porcelain/[0.14] p-4 text-left hover:bg-porcelain/[0.05]"
-                >
-                  <b className="block text-[12px]">{method.label}</b>
-                  <span className="text-[10px] text-porcelain/60">{method.note}</span>
-                </button>
-              ))}
-            </div>
+            <h2 className="mb-3 font-display text-[19px]">People invited</h2>
+            {invitations.length === 0 ? (
+              <p className="text-[12px] text-porcelain/55">
+                No one invited yet. Add a guest above to get their private link.
+              </p>
+            ) : (
+              <div className="grid gap-[8px]">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="grid grid-cols-[1fr_auto_auto] items-center gap-[10px] rounded-md border border-porcelain/[0.1] p-3"
+                  >
+                    <div>
+                      <b className="block text-[12px]">{invitation.guestName}</b>
+                      {invitation.guestEmail && (
+                        <span className="text-[10px] text-porcelain/55">{invitation.guestEmail}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`w-max rounded-pill px-[8px] py-1 text-[9px] font-extrabold ${STATUS_CLASS[invitation.status]}`}
+                    >
+                      {STATUS_LABEL[invitation.status]}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(invitation.inviteToken)}
+                      className="rounded-pill border border-porcelain/[0.2] px-[10px] py-[8px] text-[9px] font-extrabold hover:bg-porcelain/[0.06]"
+                    >
+                      {copiedToken === invitation.inviteToken ? "Copied ✓" : "Copy link"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-md border border-porcelain/[0.1] p-8 text-center">
-            <p className="mb-3 text-[12px] text-porcelain/60">No one invited yet.</p>
-            <Button variant="dark" size="sm" onClick={() => navigate("/group-wishes")}>
-              Finish inviting
+            <p className="mb-3 text-[12px] text-porcelain/60">
+              {invitations.length === 0
+                ? "You can finish inviting later — this group wish stays open until you seal it."
+                : `${invitations.length} ${invitations.length === 1 ? "person" : "people"} invited so far.`}
+            </p>
+            <Button variant="dark" size="sm" onClick={handleFinish} disabled={sealing}>
+              {sealing ? "Sealing…" : "Finish inviting & seal"}
             </Button>
           </div>
         </div>
 
-        <aside className="grid content-start gap-[14px] rounded-md bg-porcelain p-[17px] text-ink shadow-card">
+        <aside className="grid content-start gap-[14px] rounded-md bg-paper p-[17px] text-ink shadow-card">
           <div>
             <span className="mb-2 block text-[9px] font-extrabold tracking-[0.12em] text-mulberry">
               COLLECTION STATUS

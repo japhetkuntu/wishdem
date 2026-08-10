@@ -39,4 +39,10 @@ public class Wish : BaseEntity
     public DateTime? SealedAtUtc { get; set; }
     public DateTime? DeliveredAtUtc { get; set; }
     public DateTime? OpenedAtUtc { get; set; }
+
+    /// <summary>Failed-send bookkeeping so a permanently-broken destination (bad number,
+    /// provider outage) doesn't get retried every poll cycle forever. Backs off
+    /// exponentially and gives up after WishDeliveryProcessor's max-attempts cap.</summary>
+    public int DeliveryAttemptCount { get; set; }
+    public DateTime? NextDeliveryAttemptAtUtc { get; set; }
 }

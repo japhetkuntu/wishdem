@@ -21,11 +21,20 @@ public class GroupWishService(
         try
         {
             var mine = await groupWishes.FindManyAsync(g => g.OrganizerCustomerUserId == organizerId, ct);
-            var results = new List<GroupWishResponse>();
-            foreach (var groupWish in mine.OrderByDescending(g => g.CreatedAtUtc))
-                results.Add(await ToResponseAsync(groupWish, ct));
+            var groupWishIds = mine.Select(g => g.Id).ToList();
 
-            IReadOnlyList<GroupWishResponse> result = results;
+            // Batch-load invitations/memories for every group wish in one round trip each,
+            // instead of two queries per group wish (N+1) as the loop below used to do.
+            var allInvitations = await invitations.FindManyAsync(i => groupWishIds.Contains(i.GroupWishId), ct);
+            var allMemories = await memories.FindManyAsync(m => groupWishIds.Contains(m.GroupWishId), ct);
+            var invitationsByGroupWish = allInvitations.GroupBy(i => i.GroupWishId).ToDictionary(g => g.Key, g => g.ToList());
+            var memoriesCountByGroupWish = allMemories.GroupBy(m => m.GroupWishId).ToDictionary(g => g.Key, g => g.Count());
+
+            IReadOnlyList<GroupWishResponse> result = mine
+                .OrderByDescending(g => g.CreatedAtUtc)
+                .Select(g => ToResponse(g, invitationsByGroupWish.GetValueOrDefault(g.Id, []), memoriesCountByGroupWish.GetValueOrDefault(g.Id)))
+                .ToList();
+
             return result.ToOkApiResponse("Group wishes retrieved successfully.");
         }
         catch (Exception e)
@@ -216,27 +225,28 @@ public class GroupWishService(
     {
         var groupWishInvitations = await invitations.FindManyAsync(i => i.GroupWishId == g.Id, ct);
         var memoriesCount = await memories.FindManyAsync(m => m.GroupWishId == g.Id, ct);
-
-        return new GroupWishResponse(
-            g.Id,
-            g.Title,
-            g.RecipientName,
-            g.Occasion,
-            g.DeliveryDate,
-            g.CollectByDate,
-            g.Context,
-            g.OrganizerNote,
-            FormatsCodec.Decode(g.Formats),
-            g.NamesVisible,
-            g.Status,
-            g.SealedAtUtc,
-            g.DeliveredAtUtc,
-            g.CreatedAtUtc,
-            InvitedCount: groupWishInvitations.Count,
-            JoinedCount: groupWishInvitations.Count(i => i.Status == GroupWishInvitationStatus.Joined),
-            DeclinedCount: groupWishInvitations.Count(i => i.Status == GroupWishInvitationStatus.Declined),
-            MemoriesCount: memoriesCount.Count);
+        return ToResponse(g, groupWishInvitations, memoriesCount.Count);
     }
+
+    private static GroupWishResponse ToResponse(GroupWish g, IReadOnlyList<GroupWishInvitation> groupWishInvitations, int memoriesCount) => new(
+        g.Id,
+        g.Title,
+        g.RecipientName,
+        g.Occasion,
+        g.DeliveryDate,
+        g.CollectByDate,
+        g.Context,
+        g.OrganizerNote,
+        FormatsCodec.Decode(g.Formats),
+        g.NamesVisible,
+        g.Status,
+        g.SealedAtUtc,
+        g.DeliveredAtUtc,
+        g.CreatedAtUtc,
+        InvitedCount: groupWishInvitations.Count,
+        JoinedCount: groupWishInvitations.Count(i => i.Status == GroupWishInvitationStatus.Joined),
+        DeclinedCount: groupWishInvitations.Count(i => i.Status == GroupWishInvitationStatus.Declined),
+        MemoriesCount: memoriesCount);
 
     private static GroupWishInvitationResponse ToInvitationResponse(GroupWishInvitation i) => new(
         i.Id, i.InviteToken, i.GuestName, i.GuestEmail, i.Status, i.RespondedAtUtc, i.CreatedAtUtc);

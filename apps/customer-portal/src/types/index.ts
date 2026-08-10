@@ -74,16 +74,14 @@ export interface User {
   region?: string;
 }
 
-export interface PaymentResult {
-  success: boolean;
-  reference?: string;
-  failureReason?: string;
-}
-
 export interface CalendarDay {
   id: string;
   weekdayLabel: string;
   summary: string;
+  /** Distinct dot colors for whatever's happening that day — lets the month grid show
+   * up to a few colored dots under the date without a second network round-trip. */
+  tones: EventTone[];
+  count: number;
 }
 
 export type EventTone = "accent" | "rose" | "moss";
@@ -99,19 +97,6 @@ export interface CalendarEvent {
   tagLabel: string;
   tagTone: TagTone;
   group: "needs-care" | "this-week";
-}
-
-export interface SelectedMoment {
-  title: string;
-  subtitle: string;
-  days: number;
-  clips: number;
-  clipsRemaining: number;
-  contributionLabel: string;
-  contributionNote: string;
-  contributionProgress: number;
-  suggestedTimeNote: string;
-  deliveryConfidenceNote: string;
 }
 
 export type PersonFilterTag = "upcoming30" | "availableWeek" | "needsAttention";
@@ -209,6 +194,17 @@ export interface GroupWish {
 }
 
 export type GroupWishInvitationStatus = "invited" | "joined" | "declined" | "not-now";
+
+/** A guest invitation the organizer sent out for one of their own group wishes. */
+export interface OrganizerGroupWishInvitation {
+  id: string;
+  inviteToken: string;
+  guestName: string;
+  guestEmail?: string;
+  status: GroupWishInvitationStatus;
+  respondedAt?: string;
+  createdAt: string;
+}
 export type GroupWishUrgencyTone = "urgent" | "new" | null;
 export type GroupWishAvatarTone = "mulberry" | "moss" | "rose";
 

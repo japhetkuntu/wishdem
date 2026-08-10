@@ -68,7 +68,7 @@ export default function GuestMemoryPreviewPage() {
             it feels like you.
           </p>
 
-          <article className="relative max-w-[580px] rounded-[22px] bg-porcelain p-6 text-ink shadow-card">
+          <article className="relative max-w-[580px] rounded-[22px] bg-paper p-6 text-ink shadow-card">
             {context && (
               <span className="absolute right-[21px] top-[19px] text-[8px] font-extrabold tracking-[0.1em] text-ink/55">
                 FOR {recipientFirst.toUpperCase()} · {context.deliveredLabel.toUpperCase()}
@@ -118,7 +118,7 @@ export default function GuestMemoryPreviewPage() {
           </div>
         </div>
 
-        <aside className="rounded-[14px] bg-porcelain p-[18px] text-ink">
+        <aside className="rounded-[14px] bg-paper p-[18px] text-ink">
           <span className="text-[9px] font-extrabold tracking-[0.13em] text-champagne">BEFORE YOU SEAL</span>
           <h2 className="my-[7px] font-display text-[24px]">Personal, private, yours.</h2>
           <p className="text-[10px] leading-[1.55] text-ink/65">

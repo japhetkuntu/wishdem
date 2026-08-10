@@ -49,7 +49,7 @@ export default function BloomCoverPage() {
       </nav>
 
       <section className="mt-[72px] grid gap-4 sm:grid-cols-[minmax(0,1fr)_265px] sm:items-center">
-        <article className="relative overflow-hidden rounded-[22px] bg-mulberry p-8 shadow-card">
+        <article className="relative overflow-hidden rounded-[22px] bg-mulberry p-8 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232] shadow-card">
           <span className="text-[9px] font-extrabold tracking-[0.14em] text-champagne">
             A BIRTHDAY BLOOM, GATHERED FOR YOU
           </span>
@@ -61,7 +61,7 @@ export default function BloomCoverPage() {
             something safe for today. Take all the time you need.
           </p>
 
-          <div className="mt-[22px] rounded-[14px] bg-porcelain p-[17px] text-ink">
+          <div className="mt-[22px] rounded-[14px] bg-paper p-[17px] text-ink">
             <b className="text-[9px] tracking-[0.1em] text-mulberry">FROM {bloom.organizerName.toUpperCase()}</b>
             <p className="my-[7px] font-display text-[18px] leading-[1.45]">"{bloom.organizerNote}"</p>
             <span className="text-[9px] text-ink/62">

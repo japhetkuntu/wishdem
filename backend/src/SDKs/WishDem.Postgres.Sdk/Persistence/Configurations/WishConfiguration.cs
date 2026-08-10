@@ -25,5 +25,10 @@ public class WishConfiguration : IEntityTypeConfiguration<Wish>
 
         builder.HasIndex(x => x.CustomerUserId);
         builder.HasIndex(x => x.Status);
+        // Delivery-worker polling and admin dashboards filter/sort by these frequently.
+        builder.HasIndex(x => x.DeliveredAtUtc);
+        builder.HasIndex(x => x.OpenedAtUtc);
+        builder.HasIndex(x => x.SealedAtUtc);
+        builder.HasIndex(x => x.NextDeliveryAttemptAtUtc);
     }
 }

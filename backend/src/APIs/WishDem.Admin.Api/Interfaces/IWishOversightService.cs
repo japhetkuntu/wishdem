@@ -10,12 +10,12 @@ public interface IWishOversightService
 
     Task<IApiResponse<AdminWishResponse>> GetByIdAsync(Guid wishId, CancellationToken ct = default);
 
-    Task<IApiResponse<AdminWishResponse>> UpdateStatusAsync(Guid wishId, WishStatus status, CancellationToken ct = default);
+    Task<IApiResponse<AdminWishResponse>> UpdateStatusAsync(Guid adminUserId, Guid wishId, WishStatus status, CancellationToken ct = default);
 
-    Task<IApiResponse<bool>> DeleteAsync(Guid wishId, CancellationToken ct = default);
+    Task<IApiResponse<bool>> DeleteAsync(Guid adminUserId, Guid wishId, CancellationToken ct = default);
 
     /// <summary>Placeholder action until a real delivery worker/queue exists: clears delivery
     /// state so the wish re-enters the "due" bucket the next time /api/delivery-health is computed.
     /// Does NOT trigger any real message being sent.</summary>
-    Task<IApiResponse<AdminWishResponse>> RedeliverAsync(Guid wishId, CancellationToken ct = default);
+    Task<IApiResponse<AdminWishResponse>> RedeliverAsync(Guid adminUserId, Guid wishId, CancellationToken ct = default);
 }

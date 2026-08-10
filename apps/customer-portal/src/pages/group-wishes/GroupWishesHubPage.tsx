@@ -13,7 +13,7 @@ function InvitationCard({ invitation }: { invitation: GroupWishInvitation }) {
   return (
     <article className="flex items-start justify-between gap-3 border-t border-porcelain/[0.09] py-[14px] first:border-0">
       <div className="flex items-start gap-[10px]">
-        <div className="grid h-[33px] w-[33px] flex-none place-items-center rounded-full bg-mulberry text-[11px] font-extrabold text-porcelain">
+        <div className="grid h-[33px] w-[33px] flex-none place-items-center rounded-full bg-mulberry text-[11px] font-extrabold text-[#F6F0E8]">
           {invitation.avatarInitial}
         </div>
         <div>
@@ -88,7 +88,7 @@ export default function GroupWishesHubPage() {
   }, [pendingInvites, chips]);
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="groupWishes" />
 
       <div className="flex flex-wrap gap-[18px] border-b border-porcelain/[0.12] py-4 text-[11px] font-bold">
@@ -130,7 +130,7 @@ export default function GroupWishesHubPage() {
             onClick={() => setSubTab(tab.key)}
             className={clsx(
               "whitespace-nowrap rounded-pill border border-porcelain/[0.17] px-[10px] py-[7px] text-[9px] font-extrabold",
-              subTab === tab.key ? "bg-porcelain text-plum" : "text-porcelain/70",
+              subTab === tab.key ? "bg-paper text-plum" : "text-porcelain/70",
             )}
           >
             {tab.label}
@@ -214,7 +214,7 @@ export default function GroupWishesHubPage() {
           )}
         </div>
 
-        <aside className="grid content-start gap-[14px] rounded-md bg-porcelain p-[17px] text-ink shadow-card">
+        <aside className="grid content-start gap-[14px] rounded-md bg-paper p-[17px] text-ink shadow-card">
           <div>
             <span className="mb-2 block text-[9px] font-extrabold tracking-[0.12em] text-mulberry">
               JOINED · NEEDS YOUR MEMORY

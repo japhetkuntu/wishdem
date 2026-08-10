@@ -47,7 +47,7 @@ export default function OverviewPage() {
         />
         <div className="flex items-center gap-3 text-[11px]">
           <b className="rounded-pill bg-champagne/25 px-2 py-[6px] text-[10px]">GMT / ACCRA</b>
-          <span className="hidden text-ink/55 sm:inline">
+          <span className="hidden text-porcelain/60 sm:inline">
             {lastRefreshedAt
               ? `Last refreshed ${lastRefreshedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
               : "Refreshing…"}
@@ -55,7 +55,7 @@ export default function OverviewPage() {
           <button
             type="button"
             onClick={refresh}
-            className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-porcelain"
+            className="rounded-pill bg-plum px-[13px] py-[10px] text-[10px] font-extrabold text-[#F6F0E8]"
           >
             Refresh data
           </button>
@@ -69,7 +69,7 @@ export default function OverviewPage() {
           </span>
           <h1 className="mt-1 font-display text-[34px]">Today's operating condition</h1>
         </div>
-        <p className="text-[11px] text-ink/60">
+        <p className="text-[11px] text-porcelain/60">
           {openModerationCount > 0
             ? `${openModerationCount} case${openModerationCount === 1 ? "" : "s"} awaiting review`
             : "All core systems reporting"}
@@ -88,7 +88,7 @@ export default function OverviewPage() {
           <div
             key={kpi.label}
             className={clsx(
-              "rounded-md border p-[13px]",
+              "rounded-md border p-[13px] text-ink",
               kpi.alert ? "border-rose bg-background-warm" : "border-plum/[0.1] bg-background-warm",
             )}
           >
@@ -105,7 +105,7 @@ export default function OverviewPage() {
 
       <section className="mt-[15px] grid gap-[14px] lg:grid-cols-[1.25fr_.75fr]">
         <div className="grid gap-[14px]">
-          <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4">
+          <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4 text-ink">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-[21px]">Needs attention</h2>
               <Link to="/attention" className="text-[10px] font-extrabold text-mulberry">
@@ -140,7 +140,7 @@ export default function OverviewPage() {
                       type="button"
                       className={clsx(
                         "rounded-pill px-[13px] py-[10px] text-[10px] font-extrabold",
-                        item.severity === "critical" ? "bg-champagne text-plum" : "bg-plum text-porcelain",
+                        item.severity === "critical" ? "bg-champagne text-plum" : "bg-plum text-[#F6F0E8]",
                       )}
                     >
                       {item.actionLabel}
@@ -151,7 +151,7 @@ export default function OverviewPage() {
             </div>
           </article>
 
-          <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4">
+          <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4 text-ink">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-[21px]">Delivery readiness</h2>
               <Link to="/delivery" className="text-[10px] font-extrabold text-mulberry">
@@ -179,7 +179,7 @@ export default function OverviewPage() {
           </article>
         </div>
 
-        <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4">
+        <article className="rounded-md border border-plum/[0.1] bg-background-warm p-4 text-ink">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-[21px]">Recent activity</h2>
             <Link to="/activity" className="text-[10px] font-extrabold text-mulberry">
@@ -200,7 +200,7 @@ export default function OverviewPage() {
           </div>
           <div className="mt-[14px] grid grid-cols-3 gap-[10px]">
             {data.signals.map((signal) => (
-              <div key={signal.label} className="rounded-md bg-plum p-[13px] text-porcelain">
+              <div key={signal.label} className="rounded-md bg-plum p-[13px] text-[#F6F0E8]">
                 <b className="block font-display text-[25px] text-champagne">{signal.value}</b>
                 <span className="text-[10px]">{signal.label}</span>
               </div>

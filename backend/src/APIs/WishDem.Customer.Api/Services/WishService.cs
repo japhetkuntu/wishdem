@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Exceptions;
 using WishDem.Common.Sdk.Responses;
@@ -11,9 +12,18 @@ using WishDem.Storage.Sdk;
 
 namespace WishDem.Customer.Api.Services;
 
-public class WishService(IRepository<Wish> wishes, IStorageService storageService, ILogger<WishService> logger) : IWishService
+public class WishService(
+    IRepository<Wish> wishes,
+    IStorageService storageService,
+    ICacheService cache,
+    ILogger<WishService> logger) : IWishService
 {
     private const long MaxAttachmentBytes = 25 * 1024 * 1024;
+
+    // Scarcity, not a technical limit: a free product with no cap invites spam/abuse of
+    // the SMS/WhatsApp delivery pipeline. Measured in UTC calendar days for simplicity —
+    // good enough for a soft daily cap, not trying to be precise per sender timezone.
+    private const int MaxWishesPerDay = 3;
 
     private static readonly Dictionary<string, AttachmentKind> ContentTypeKinds = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -80,6 +90,13 @@ public class WishService(IRepository<Wish> wishes, IStorageService storageServic
     {
         try
         {
+            var usedToday = await GetUsedTodayAsync(customerUserId, ct);
+            if (usedToday >= MaxWishesPerDay)
+            {
+                return ApiResponseFactory.TooManyRequests<WishResponse>(
+                    $"You've reached today's limit of {MaxWishesPerDay} wishes. Come back tomorrow to create more.");
+            }
+
             var wish = new Wish
             {
                 CustomerUserId = customerUserId,
@@ -90,6 +107,12 @@ public class WishService(IRepository<Wish> wishes, IStorageService storageServic
             ApplyRequest(wish, request);
 
             await wishes.AddAsync(wish, ct);
+
+            // The cache key is guaranteed to exist by now (GetUsedTodayAsync just seeded it),
+            // so this is a plain atomic bump — no read-then-write race with concurrent
+            // creates the way re-counting from Postgres on every request would have.
+            await cache.IncrementAsync(WishCountCacheKey(customerUserId), TimeUntilNextUtcMidnight());
+
             return ToResponse(wish).ToCreatedApiResponse("Wish created successfully.");
         }
         catch (Exception e)
@@ -98,6 +121,126 @@ public class WishService(IRepository<Wish> wishes, IStorageService storageServic
             return ApiResponseFactory.InternalError<WishResponse>("Failed to create wish.");
         }
     }
+
+    // Generous relative to the daily-limit counter: a visitor might reasonably start a wish,
+    // go find their inbox to check a code, and come back the next morning to finish signing up.
+    private static readonly TimeSpan DraftTtl = TimeSpan.FromHours(48);
+
+    private static string DraftCacheKey(Guid draftId) => $"customer:wish-draft:{draftId:D}";
+
+    public async Task<IApiResponse<GuestDraftResponse>> CreateDraftAsync(SaveWishRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var draftId = Guid.NewGuid();
+            await cache.SetAsync(DraftCacheKey(draftId), request, DraftTtl);
+            return new GuestDraftResponse(draftId).ToCreatedApiResponse("Draft saved.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[CreateDraftAsync] Failed to create guest wish draft");
+            return ApiResponseFactory.InternalError<GuestDraftResponse>("Failed to save your progress.");
+        }
+    }
+
+    public async Task<IApiResponse<GuestDraftResponse>> UpdateDraftAsync(Guid draftId, SaveWishRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            await cache.SetAsync(DraftCacheKey(draftId), request, DraftTtl);
+            return new GuestDraftResponse(draftId).ToOkApiResponse("Draft saved.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[UpdateDraftAsync] Failed to update guest wish draft {DraftId}", draftId);
+            return ApiResponseFactory.InternalError<GuestDraftResponse>("Failed to save your progress.");
+        }
+    }
+
+    public async Task<IApiResponse<SaveWishRequest>> GetDraftAsync(Guid draftId, CancellationToken ct = default)
+    {
+        try
+        {
+            var draft = await cache.GetAsync<SaveWishRequest>(DraftCacheKey(draftId));
+            if (draft is null)
+                return ApiResponseFactory.NotFound<SaveWishRequest>("That draft could not be found or has expired.");
+
+            return draft.ToOkApiResponse("Draft retrieved successfully.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[GetDraftAsync] Failed to get guest wish draft {DraftId}", draftId);
+            return ApiResponseFactory.InternalError<SaveWishRequest>("Failed to retrieve your progress.");
+        }
+    }
+
+    public async Task<IApiResponse<WishResponse>> ClaimDraftAsync(Guid customerUserId, Guid draftId, CancellationToken ct = default)
+    {
+        try
+        {
+            var draft = await cache.GetAsync<SaveWishRequest>(DraftCacheKey(draftId));
+            if (draft is null)
+                return ApiResponseFactory.NotFound<WishResponse>("That draft could not be found or has expired. Please start again.");
+
+            var created = await CreateAsync(customerUserId, draft, ct);
+            if (created.Code is 200 or 201)
+                await cache.RemoveAsync(DraftCacheKey(draftId));
+
+            return created;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[ClaimDraftAsync] Failed to claim guest wish draft {DraftId} for customer {CustomerUserId}", draftId, customerUserId);
+            return ApiResponseFactory.InternalError<WishResponse>("Failed to continue your wish. Please try again.");
+        }
+    }
+
+    public async Task<IApiResponse<DailyWishLimitResponse>> GetDailyLimitAsync(Guid customerUserId, CancellationToken ct = default)
+    {
+        try
+        {
+            var usedToday = await GetUsedTodayAsync(customerUserId, ct);
+            var response = new DailyWishLimitResponse(
+                Used: usedToday,
+                Max: MaxWishesPerDay,
+                Remaining: Math.Max(0, MaxWishesPerDay - usedToday),
+                ResetsAtUtc: DateTime.UtcNow.Date.AddDays(1));
+
+            return response.ToOkApiResponse("Daily wish limit retrieved successfully.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[GetDailyLimitAsync] Failed to get daily wish limit for customer {CustomerUserId}", customerUserId);
+            return ApiResponseFactory.InternalError<DailyWishLimitResponse>("Failed to retrieve daily wish limit.");
+        }
+    }
+
+    /// <summary>Cache-aside read of "how many wishes has this customer created today" — the
+    /// create wizard's first step calls GetDailyLimitAsync on every load, so without this
+    /// every page view would otherwise be a Postgres COUNT query. Falls back to Postgres only
+    /// on a cache miss (first check of the day, or after a Redis restart/eviction), then seeds
+    /// the cache so every subsequent read/check for the rest of the day is Redis-only.</summary>
+    private async Task<int> GetUsedTodayAsync(Guid customerUserId, CancellationToken ct)
+    {
+        var key = WishCountCacheKey(customerUserId);
+        var cached = await cache.GetAsync<int?>(key);
+        if (cached is not null) return cached.Value;
+
+        var todayStartUtc = DateTime.UtcNow.Date;
+        var createdToday = await wishes.FindManyAsync(
+            w => w.CustomerUserId == customerUserId && w.CreatedAtUtc >= todayStartUtc,
+            ct);
+        var count = createdToday.Count;
+
+        await cache.SetAsync(key, count, TimeUntilNextUtcMidnight());
+        return count;
+    }
+
+    private static string WishCountCacheKey(Guid customerUserId) => $"customer:wish-count:{customerUserId:D}:{DateTime.UtcNow:yyyyMMdd}";
+
+    // Naturally expires the counter at day rollover instead of tracking day boundaries
+    // ourselves — tomorrow's first read/write just seeds a fresh key from scratch.
+    private static TimeSpan TimeUntilNextUtcMidnight() => DateTime.UtcNow.Date.AddDays(1) - DateTime.UtcNow;
 
     public async Task<IApiResponse<WishResponse>> UpdateAsync(Guid customerUserId, Guid wishId, SaveWishRequest request, CancellationToken ct = default)
     {

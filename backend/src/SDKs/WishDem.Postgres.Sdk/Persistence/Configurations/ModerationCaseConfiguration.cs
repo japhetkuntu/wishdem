@@ -32,5 +32,10 @@ public class ModerationCaseConfiguration : IEntityTypeConfiguration<ModerationCa
             .WithMany()
             .HasForeignKey(x => x.ReviewerAdminUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.AssignedAdminUser)
+            .WithMany()
+            .HasForeignKey(x => x.AssignedAdminUserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

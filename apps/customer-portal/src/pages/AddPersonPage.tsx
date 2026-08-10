@@ -56,7 +56,7 @@ export default function AddPersonPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 pb-9 pt-6 sm:px-8">
+    <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <AppNav active="circle" />
 
       <section className="grid gap-8 py-8 sm:grid-cols-[.85fr_1.15fr] sm:items-center sm:gap-14 sm:py-12">
@@ -83,7 +83,7 @@ export default function AddPersonPage() {
             e.preventDefault();
             submitPerson(false);
           }}
-          className="rounded-lg bg-porcelain p-6 text-ink shadow-card"
+          className="rounded-lg bg-paper p-6 text-ink shadow-card"
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <h2 className="font-display text-[26px]">Who would you like to remember?</h2>
@@ -139,7 +139,7 @@ export default function AddPersonPage() {
                 onClick={() => setRelationship(option)}
                 className={clsx(
                   "rounded-pill border border-plum/[0.15] px-[10px] py-2 text-[9px] font-extrabold",
-                  relationship === option ? "border-mulberry bg-mulberry text-porcelain" : "text-ink/70",
+                  relationship === option ? "border-mulberry bg-mulberry text-[#F6F0E8]" : "text-ink/70",
                 )}
               >
                 {option}

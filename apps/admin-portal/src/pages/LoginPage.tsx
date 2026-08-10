@@ -57,7 +57,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="rounded-[22px] bg-porcelain p-[27px] text-ink shadow-deep">
+          <form onSubmit={handleSubmit} className="rounded-[22px] bg-paper p-[27px] text-ink shadow-deep">
             <h2 className="font-display text-[29px]">Sign in securely</h2>
             <p className="mb-5 mt-[5px] text-[10px] text-ink/60">
               Use your WishDem work account to continue.
@@ -118,7 +118,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={signing}
-              className="mt-[19px] w-full rounded-pill bg-plum px-3 py-[12px] text-[10px] font-extrabold text-porcelain disabled:opacity-60"
+              className="mt-[19px] w-full rounded-pill bg-plum px-3 py-[12px] text-[10px] font-extrabold text-[#F6F0E8] disabled:opacity-60"
             >
               {signing ? "Signing in…" : "Sign in securely"}
             </button>
@@ -137,6 +137,6 @@ export default function LoginPage() {
 
 function clsxCheck(checked: boolean) {
   return `mt-[2px] inline-grid h-[13px] w-[13px] flex-none place-items-center rounded-[3px] border text-[10px] ${
-    checked ? "border-mulberry bg-mulberry text-porcelain" : "border-mulberry text-mulberry"
+    checked ? "border-mulberry bg-mulberry text-[#F6F0E8]" : "border-mulberry text-mulberry"
   }`;
 }

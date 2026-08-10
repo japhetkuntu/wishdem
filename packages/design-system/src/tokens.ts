@@ -17,6 +17,24 @@ export const colors = {
   secondaryRose: "#D99AA9",
 } as const;
 
+/**
+ * The two reactive roles that flip between dark and light mode — everything
+ * else (paper, ink, plum, champagne, mulberry, rose, moss, periwinkle) is a
+ * fixed brand constant that stays the same in both themes. See base.css for
+ * how these become CSS custom properties, and tailwind-preset.js for how
+ * `bg-midnight` / `text-porcelain` resolve to them.
+ */
+export const themes = {
+  dark: {
+    canvas: "#1B111D", // brand-bg — the app's page background in dark mode
+    inkOnCanvas: "#F6F0E8", // default text/border color sitting directly on canvas
+  },
+  light: {
+    canvas: "#F9F9FB", // brand-background-warm — the page background in light mode
+    inkOnCanvas: "#241D24", // brand-ink — default text/border color on canvas
+  },
+} as const;
+
 export const fonts = {
   display: '"Playfair Display", serif',
   ui: "Manrope, sans-serif",

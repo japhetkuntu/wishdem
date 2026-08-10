@@ -9,9 +9,32 @@ public interface IWishService
 {
     Task<IApiResponse<PagedResult<WishResponse>>> GetMyWishesAsync(Guid customerUserId, int pageIndex, int pageSize, CancellationToken ct = default);
 
+    /// <summary>How many of today's (UTC) 3-wish creation cap this customer has used —
+    /// lets the create wizard show the count before they hit the wall.</summary>
+    Task<IApiResponse<DailyWishLimitResponse>> GetDailyLimitAsync(Guid customerUserId, CancellationToken ct = default);
+
     Task<IApiResponse<WishResponse>> GetByIdAsync(Guid customerUserId, Guid wishId, CancellationToken ct = default);
 
     Task<IApiResponse<WishResponse>> CreateAsync(Guid customerUserId, SaveWishRequest request, CancellationToken ct = default);
+
+    /// <summary>Unauthenticated: stashes wizard progress in the cache under a fresh id, so a
+    /// visitor who hasn't signed in yet can keep going instead of hitting a 401. Never touches
+    /// Postgres and never counts against the daily cap — only ClaimDraftAsync does that,
+    /// once there's a real customer to attach the wish to.</summary>
+    Task<IApiResponse<GuestDraftResponse>> CreateDraftAsync(SaveWishRequest request, CancellationToken ct = default);
+
+    /// <summary>Unauthenticated: overwrites a previously stashed draft as the visitor moves
+    /// through later wizard steps (message, theme, delivery channel).</summary>
+    Task<IApiResponse<GuestDraftResponse>> UpdateDraftAsync(Guid draftId, SaveWishRequest request, CancellationToken ct = default);
+
+    /// <summary>Unauthenticated: lets the wizard re-hydrate a stashed draft, e.g. after a
+    /// page reload while the visitor is still on the login/verify screen.</summary>
+    Task<IApiResponse<SaveWishRequest>> GetDraftAsync(Guid draftId, CancellationToken ct = default);
+
+    /// <summary>Authenticated: exchanges a stashed guest draft for a real wish belonging to
+    /// the now-signed-in customer, then deletes the cached draft. Goes through the same
+    /// daily-limit check as CreateAsync since this is the first point a real customer exists.</summary>
+    Task<IApiResponse<WishResponse>> ClaimDraftAsync(Guid customerUserId, Guid draftId, CancellationToken ct = default);
 
     Task<IApiResponse<WishResponse>> UpdateAsync(Guid customerUserId, Guid wishId, SaveWishRequest request, CancellationToken ct = default);
 

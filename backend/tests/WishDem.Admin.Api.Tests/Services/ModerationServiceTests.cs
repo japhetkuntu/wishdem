@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using Moq;
 using WishDem.Admin.Api.Models.Requests;
+using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Responses;
@@ -20,7 +21,7 @@ public class ModerationServiceTests
 
     public ModerationServiceTests()
     {
-        _sut = new ModerationService(_cases.Object, _wishes.Object, _adminUsers.Object, Mock.Of<Microsoft.Extensions.Logging.ILogger<ModerationService>>());
+        _sut = new ModerationService(_cases.Object, _wishes.Object, _adminUsers.Object, Mock.Of<IAuditLogService>(), Mock.Of<Microsoft.Extensions.Logging.ILogger<ModerationService>>());
     }
 
     private static ModerationCase NewCase(Guid wishId) => new()

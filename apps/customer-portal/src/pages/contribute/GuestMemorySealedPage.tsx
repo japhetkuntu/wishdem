@@ -47,7 +47,7 @@ export default function GuestMemorySealedPage() {
       </nav>
 
       <section className="mx-auto mt-[80px] grid max-w-[830px] gap-4 sm:grid-cols-[minmax(0,1fr)_270px]">
-        <article className="relative overflow-hidden rounded-[22px] bg-mulberry p-8 text-porcelain shadow-card">
+        <article className="relative overflow-hidden rounded-[22px] bg-mulberry p-8 text-[#F6F0E8] shadow-card">
           <span className="text-[9px] font-extrabold tracking-[0.14em] text-champagne">
             YOUR MEMORY HAS BEEN SEALED
           </span>
@@ -71,7 +71,7 @@ export default function GuestMemorySealedPage() {
           </div>
         </article>
 
-        <aside className="self-start rounded-[14px] bg-porcelain p-4 text-ink">
+        <aside className="self-start rounded-[14px] bg-paper p-4 text-ink">
           <span className="text-[9px] font-extrabold tracking-[0.13em] text-mulberry">THE GATHERING</span>
           <h2 className="my-[4px] font-display text-[24px]">A little closer.</h2>
           <p className="text-[10px] leading-[1.5] text-ink/65">
@@ -92,7 +92,7 @@ export default function GuestMemorySealedPage() {
           </div>
           <div className="mt-[15px] grid gap-[7px]">
             <Link to={`/contribute/${id}/preview`}>
-              <button type="button" className="w-full rounded-pill bg-plum px-[10px] py-[10px] text-[9px] font-extrabold text-porcelain">
+              <button type="button" className="w-full rounded-pill bg-plum px-[10px] py-[10px] text-[9px] font-extrabold text-[#F6F0E8]">
                 View your sealed memory
               </button>
             </Link>
