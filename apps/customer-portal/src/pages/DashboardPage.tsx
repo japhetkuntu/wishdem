@@ -49,7 +49,7 @@ export default function DashboardPage() {
             description="Start with one person. Write while the feeling is here, and let WishDem hold it for their day."
             chips={["For a best friend", "For Mum", "For someone far away", "For next year"]}
             action={
-              <Link to="/create/who">
+              <Link to="/create/message">
                 <Button>Create your first wish</Button>
               </Link>
             }

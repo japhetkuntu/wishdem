@@ -31,7 +31,7 @@ export default function HomePage() {
               birthday message safely, then sends it at exactly the right moment.
             </p>
             <div className="flex flex-wrap items-center gap-[13px]">
-              <Link to="/create/who">
+              <Link to="/create/message">
                 <Button>Start a future wish</Button>
               </Link>
               <Link to="/how-it-works" className="px-2 py-[14px] text-[13px] font-extrabold">

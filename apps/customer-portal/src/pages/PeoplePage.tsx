@@ -242,7 +242,7 @@ export default function PeoplePage() {
                   <Button variant="outline-inverse" size="sm" className="min-h-0 border-plum/15 py-[9px] text-[9px]">
                     Find a time
                   </Button>
-                  <Link to="/create/who">
+                  <Link to="/create/message">
                     <Button variant="outline-inverse" size="sm" className="min-h-0 w-full border-plum/15 py-[9px] text-[9px]">
                       Create a wish
                     </Button>
@@ -258,7 +258,7 @@ export default function PeoplePage() {
               <div className="mt-[15px] rounded-sm bg-plum/[0.05] p-3 text-[10px] text-ink/65">
                 <b className="mb-1 block text-ink">{selected.nextMomentTitle}</b>
                 {selected.nextMomentSubtitle} · {selected.stateLabel}
-                <Link to="/create/who" className="mt-3 block">
+                <Link to="/create/message" className="mt-3 block">
                   <Button variant="dark" size="sm" className="min-h-0 w-full py-[9px] text-[9px]">
                     Create a wish for {selected.name.split(" ")[0]}
                   </Button>

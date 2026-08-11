@@ -5,8 +5,8 @@ export interface StepDef {
 }
 
 export const CREATE_STEPS: StepDef[] = [
-  { label: "Who it's for" },
   { label: "Your message" },
+  { label: "Who it's for" },
   { label: "Choose a look" },
   { label: "Seal & schedule" },
 ];

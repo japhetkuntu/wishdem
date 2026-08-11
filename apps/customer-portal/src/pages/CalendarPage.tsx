@@ -124,7 +124,7 @@ export default function CalendarPage() {
             description="Birthdays, scheduled deliveries, and group wish deadlines all land on this one timeline — nothing to set up."
             chips={[]}
             action={
-              <Link to="/create/who">
+              <Link to="/create/message">
                 <Button>Create your first wish</Button>
               </Link>
             }

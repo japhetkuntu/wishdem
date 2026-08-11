@@ -59,7 +59,7 @@ export function SiteNav() {
             </Button>
           </Link>
         )}
-        <Link to="/create/who" className="hidden sm:inline-block">
+        <Link to="/create/message" className="hidden sm:inline-block">
           <Button size="sm">Create a wish</Button>
         </Link>
 
@@ -91,7 +91,7 @@ export function SiteNav() {
                 </Link>
               ))}
               <Link
-                to="/create/who"
+                to="/create/message"
                 onClick={() => setMenuOpen(false)}
                 className="mt-1 block rounded-sm border-t border-porcelain/10 px-3 pb-1 pt-2 text-[13px] font-bold text-champagne hover:bg-porcelain/10"
               >

@@ -110,7 +110,7 @@ export default function HowItWorksPage() {
               privately in the recipient's local time—so care arrives exactly when you
               intended.
             </p>
-            <Link to="/create/who">
+            <Link to="/create/message">
               <Button>Create a birthday wish</Button>
             </Link>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -280,7 +280,7 @@ export default function HowItWorksPage() {
                 Sign in to your portal
               </Button>
             </Link>
-            <Link to="/create/who" className="w-full sm:w-auto">
+            <Link to="/create/message" className="w-full sm:w-auto">
               <Button className="w-full sm:w-auto">Create a wish</Button>
             </Link>
           </div>

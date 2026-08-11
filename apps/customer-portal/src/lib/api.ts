@@ -264,15 +264,19 @@ export interface DraftInput {
   id?: string;
   recipient: Recipient;
   fromName?: string;
+  /** The message is written in its own step before this one runs — carry
+   * whatever's already in the wizard store into the wish being created. */
+  message?: string;
 }
 
 export async function saveWhoStep(input: DraftInput): Promise<Wish> {
   const fromName = input.fromName ?? "You";
+  const message = input.message ?? "";
 
   if (input.id) {
     const existing = await getWish(input.id);
     if (existing) {
-      const updated: Wish = { ...existing, recipient: input.recipient, fromName };
+      const updated: Wish = { ...existing, recipient: input.recipient, fromName, message };
       const res = await apiRequest<WishResponse>(`/api/wishes/${input.id}`, {
         method: "PUT",
         body: JSON.stringify(saveWishBodyFromWish(updated)),
@@ -284,7 +288,7 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
   const draft: Wish = {
     id: input.id ?? "",
     recipient: input.recipient,
-    message: "",
+    message,
     attachment: null,
     themeId: null,
     channel: null,
@@ -308,11 +312,16 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
  * Postgres. Nothing becomes a real wish, and nothing counts against the
  * daily cap, until claimGuestDraft runs right after login/registration.
  */
-export async function saveGuestWhoDraft(draftId: string | null, recipient: Recipient, fromName = "You"): Promise<string> {
+export async function saveGuestWhoDraft(
+  draftId: string | null,
+  recipient: Recipient,
+  fromName = "You",
+  message = "",
+): Promise<string> {
   const body = saveWishBodyFromWish({
     id: "",
     recipient,
-    message: "",
+    message,
     attachment: null,
     themeId: null,
     channel: null,

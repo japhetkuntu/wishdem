@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@wishdem/design-system";
+import { GOOGLE_AUTH_ENABLED } from "@/lib/featureFlags";
 
 export function AuthPrompt({
   title = "Keep this message safely held.",
@@ -12,7 +13,10 @@ export function AuthPrompt({
   onGoogle: () => void;
   onEmail: (email: string) => void;
 }) {
-  const [showEmailField, setShowEmailField] = useState(false);
+  // With Google hidden, email is the only path in — skip straight to the
+  // input instead of making someone tap a "Continue with email" reveal button
+  // that's now the sole option anyway.
+  const [showEmailField, setShowEmailField] = useState(!GOOGLE_AUTH_ENABLED);
   const [email, setEmail] = useState("");
 
   function handleEmailSubmit(e: React.FormEvent) {
@@ -31,9 +35,11 @@ export function AuthPrompt({
       </span>
       <h2 className="my-[10px] font-display text-[29px]">{title}</h2>
       <p className="text-[13px] leading-[1.6] text-porcelain/75">{description}</p>
-      <Button type="button" onClick={onGoogle} className="mt-3 w-full">
-        Continue with Google
-      </Button>
+      {GOOGLE_AUTH_ENABLED && (
+        <Button type="button" onClick={onGoogle} className="mt-3 w-full">
+          Continue with Google
+        </Button>
+      )}
       {showEmailField ? (
         <form onSubmit={handleEmailSubmit} className="mt-3 flex flex-col gap-2">
           <input

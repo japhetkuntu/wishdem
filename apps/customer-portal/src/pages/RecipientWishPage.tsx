@@ -193,7 +193,7 @@ export default function RecipientWishPage() {
             <p className="mb-4 text-[13px] leading-[1.6] text-porcelain/80">
               Write it while the feeling is here. We'll deliver it when it matters.
             </p>
-            <Link to="/create/who">
+            <Link to="/create/message">
               <Button>Create a wish</Button>
             </Link>
           </section>

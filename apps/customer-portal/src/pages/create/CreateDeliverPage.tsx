@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
+import { StickyMobileAction } from "@/components/StickyMobileAction";
 import { WishPreviewModal } from "@/components/WishPreviewModal";
 import { useWizardStore } from "@/store/wizardStore";
 import { saveDeliverStep, sealWish } from "@/lib/api";
@@ -126,7 +127,7 @@ export default function CreateDeliverPage() {
         </div>
       )}
 
-      <div className="mt-7 flex flex-wrap items-center gap-4">
+      <StickyMobileAction>
         <Button type="button" onClick={handleContinue} disabled={!canContinue || saving}>
           {saving ? "Sealing…" : "Seal this wish →"}
         </Button>
@@ -137,7 +138,7 @@ export default function CreateDeliverPage() {
         >
           Preview your wish →
         </button>
-      </div>
+      </StickyMobileAction>
       {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
 
       {previewing && (

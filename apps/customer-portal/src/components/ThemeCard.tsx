@@ -30,19 +30,23 @@ export function ThemeCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={clsx(
-        "relative min-h-[145px] overflow-hidden rounded-lg border p-[14px] text-left transition-colors sm:min-h-[180px] sm:p-5",
+        "relative h-[145px] overflow-hidden rounded-lg border p-[14px] text-left transition-colors sm:h-[180px] sm:p-5",
         !image && theme.swatch,
         selected ? "border-champagne" : "border-porcelain/20",
       )}
     >
       {image && (
         <>
-          <SmoothImage
-            src={image.src}
-            alt=""
-            ariaHidden
-            className="absolute inset-0"
-          />
+          {/* This wrapper — not SmoothImage's className prop — carries the absolute
+              positioning. SmoothImage's own root div always hardcodes "relative"
+              (it needs to, for its internal loading-pulse overlay), and Tailwind
+              resolves relative/absolute by each utility's position in the generated
+              stylesheet rather than by order in the class list — so a caller-supplied
+              "absolute" there silently loses to the built-in "relative" and the image
+              renders at its natural aspect ratio instead of filling the card. */}
+          <div className="absolute inset-0">
+            <SmoothImage src={image.src} alt="" ariaHidden className="h-full w-full" />
+          </div>
           {/* Scrim sits behind the title/description, which are top-anchored — darkens
               top-to-bottom so the text has real contrast regardless of how bright the
               underlying photo is. */}
@@ -61,7 +65,7 @@ export function ThemeCard({
       </b>
       <p
         className={clsx(
-          "relative mt-1 max-w-[80%] text-[12px]",
+          "relative mt-1 line-clamp-3 max-w-[80%] text-[12px]",
           image ? "text-[#F6F0E8]/85" : "opacity-75",
         )}
       >

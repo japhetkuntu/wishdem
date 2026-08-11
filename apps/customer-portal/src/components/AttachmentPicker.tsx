@@ -71,9 +71,10 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-plum/80 text-[#F6F0E8]"
+          aria-label="Remove photo"
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-plum/80 text-[#F6F0E8] backdrop-blur-sm transition-colors hover:bg-plum"
         >
-          ✕
+          <CloseIcon />
         </button>
       </div>
     );
@@ -93,12 +94,41 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-porcelain/40 text-[13px] font-bold text-porcelain/75"
+        className="group flex min-h-[140px] w-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-porcelain/30 text-[13px] font-bold text-porcelain/75 transition-colors hover:border-champagne/50 hover:bg-porcelain/[0.03] disabled:cursor-not-allowed"
       >
-        <span className="text-[22px]">{uploading ? "⏳" : "🖼️"}</span>
+        <span className="grid h-11 w-11 place-items-center rounded-full border border-porcelain/20 bg-porcelain/[0.05] text-porcelain/65 transition-colors group-hover:border-champagne/40 group-hover:text-champagne">
+          {uploading ? <SpinnerIcon /> : <PhotoUploadIcon />}
+        </span>
         {uploading ? "Uploading…" : "Choose a photo to keep with your letter"}
       </button>
       {uploadError && <p className="mt-2 text-[12px] text-rose">{uploadError}</p>}
     </div>
+  );
+}
+
+function PhotoUploadIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="4.5" width="19" height="15" rx="3" />
+      <circle cx="8.5" cy="10" r="1.6" />
+      <path d="M4 16.5 9 12l3.2 3.2L16 11l4 4.2" />
+    </svg>
+  );
+}
+
+function SpinnerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="animate-spin">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
   );
 }

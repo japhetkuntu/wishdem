@@ -21,7 +21,10 @@ export function CreateLayout({
   return (
     <main
       className={clsx(
-        "mx-auto w-full max-w-[1260px] px-4 pb-10 pt-6 sm:px-8",
+        // Extra bottom padding on mobile reserves room for StickyMobileAction's
+        // fixed bar, wherever a step uses one — harmless whitespace on the rare
+        // step that doesn't.
+        "mx-auto w-full max-w-[1260px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-10",
         fitViewport && "sm:flex sm:h-screen sm:flex-col sm:overflow-hidden sm:pb-4",
       )}
     >

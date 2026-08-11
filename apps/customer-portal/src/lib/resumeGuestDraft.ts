@@ -17,7 +17,9 @@ export async function resumeAfterAuth(navigate: NavigateFunction): Promise<void>
       const wish = await claimGuestDraft(draftId);
       setWishId(wish.id);
       clearDraftId();
-      navigate("/create/message");
+      // The message was already written before signing in (message is now step
+      // 1) — the draft carried it along, so pick up at theme, not message again.
+      navigate("/create/theme");
       return;
     } catch {
       // Draft expired, or the daily limit was hit on this now-known account — either way

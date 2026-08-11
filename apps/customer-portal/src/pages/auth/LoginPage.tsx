@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWizardStore } from "@/store/wizardStore";
 import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
 import { Seo } from "@/components/Seo";
+import { GOOGLE_AUTH_ENABLED } from "@/lib/featureFlags";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -98,21 +99,25 @@ export default function LoginPage() {
           </p>
         )}
 
-        <Button
-          type="button"
-          variant="outline-inverse"
-          disabled={googleLoading}
-          onClick={handleGoogle}
-          className="w-full border-plum/20 text-ink"
-        >
-          {googleLoading ? "Connecting…" : "Continue with Google"}
-        </Button>
+        {GOOGLE_AUTH_ENABLED && (
+          <>
+            <Button
+              type="button"
+              variant="outline-inverse"
+              disabled={googleLoading}
+              onClick={handleGoogle}
+              className="w-full border-plum/20 text-ink"
+            >
+              {googleLoading ? "Connecting…" : "Continue with Google"}
+            </Button>
 
-        <div className="my-[17px] flex items-center gap-3 text-[10px] font-bold text-ink/40">
-          <span className="h-px flex-1 bg-plum/[0.13]" />
-          or
-          <span className="h-px flex-1 bg-plum/[0.13]" />
-        </div>
+            <div className="my-[17px] flex items-center gap-3 text-[10px] font-bold text-ink/40">
+              <span className="h-px flex-1 bg-plum/[0.13]" />
+              or
+              <span className="h-px flex-1 bg-plum/[0.13]" />
+            </div>
+          </>
+        )}
 
         <span className="text-[9px] font-extrabold tracking-[0.11em] text-mulberry">
           EMAIL ACCESS

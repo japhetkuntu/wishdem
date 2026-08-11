@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
+import { StickyMobileAction } from "@/components/StickyMobileAction";
 import { useWizardStore } from "@/store/wizardStore";
 import { useAuth } from "@/hooks/useAuth";
 import { getDailyWishLimit, getWish, saveGuestWhoDraft, saveWhoStep, type DailyWishLimit } from "@/lib/api";
@@ -41,6 +42,7 @@ export default function CreateWhoPage() {
   const {
     recipient,
     fromName: wizardFromName,
+    message,
     wishId,
     draftId,
     setWishId,
@@ -67,6 +69,14 @@ export default function CreateWhoPage() {
     if (user?.name && !yourName) setYourName(user.name);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.name]);
+
+  // This step now runs second — arriving here with nothing written yet (no
+  // wishId to resume, no queryWishId to hydrate from) means the message step
+  // was skipped, not that someone genuinely wants to start here.
+  useEffect(() => {
+    if (!message.trim() && !wishId && !queryWishId) navigate("/create/message", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Only a brand-new wish counts against the daily cap — continuing an existing draft
   // (has a wishId already) never creates a second row, so the limit doesn't apply to it.
@@ -112,16 +122,17 @@ export default function CreateWhoPage() {
     const senderName = yourName.trim();
     try {
       if (hasSession()) {
-        const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec, fromName: senderName });
+        const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec, fromName: senderName, message });
         setWishId(wish.id);
         setRecipient(rec);
         setFromName(senderName);
-        navigate("/create/message");
+        navigate("/create/theme");
       } else {
-        // Not signed in yet: stash the recipient in the cache under a draft id instead of
-        // 401ing, then send them to sign in/register. resumeAfterAuth picks this draft back
-        // up right after and continues straight on to /create/message.
-        const newDraftId = await saveGuestWhoDraft(draftId, rec, senderName);
+        // Not signed in yet: stash the recipient (and the message already written)
+        // in the cache under a draft id instead of 401ing, then send them to sign
+        // in/register. resumeAfterAuth picks this draft back up right after and
+        // continues straight on to /create/theme.
+        const newDraftId = await saveGuestWhoDraft(draftId, rec, senderName, message);
         setDraftId(newDraftId);
         setRecipient(rec);
         setFromName(senderName);
@@ -140,7 +151,7 @@ export default function CreateWhoPage() {
   }
 
   return (
-    <CreateLayout activeIndex={0}>
+    <CreateLayout activeIndex={1}>
       <Seo
         title="Who Is This Wish For — WishDem"
         description="Start creating a private birthday wish by choosing who it's for and when it will arrive."
@@ -150,16 +161,15 @@ export default function CreateWhoPage() {
       <section className="grid gap-6 sm:grid-cols-[1.15fr_.85fr] sm:gap-10">
         <div>
           <span className="text-[10px] font-extrabold tracking-[0.14em] text-champagne">
-            START WITH THE PERSON
+            THAT'S SAVED
           </span>
           <h1 className="my-3 max-w-[540px] font-display text-[clamp(34px,4.3vw,54px)] leading-[1.05] tracking-[-1.1px]">
-            Who deserves a note
+            Now, who deserves
             <br />
-            from future you?
+            to read it?
           </h1>
           <p className="mb-3 max-w-[560px] text-[13px] leading-[1.6] text-porcelain/70">
-            Add the person and the moment. You can shape the message next, then
-            choose exactly how their birthday wish will arrive.
+            Add the person and the moment, and we'll take it from here.
           </p>
 
           {isNewWish && dailyLimit && (
@@ -246,14 +256,16 @@ export default function CreateWhoPage() {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
+
+            <StickyMobileAction>
               <Button type="submit" disabled={saving || atDailyLimit}>
                 {saving
                   ? "Saving…"
                   : atDailyLimit
                     ? "Daily limit reached"
                     : hasSession()
-                      ? "Continue to your message →"
+                      ? "Continue to choose a look →"
                       : "Continue →"}
               </Button>
               <span className="text-[11px] leading-[1.45] text-porcelain/60">
@@ -261,8 +273,7 @@ export default function CreateWhoPage() {
                   ? "Nothing is sent yet. Your draft stays in your hands."
                   : "Nothing is sent yet. We'll ask you to sign in next to keep this wish safe."}
               </span>
-            </div>
-            {error && <p className="mt-3 text-[12px] text-rose">{error}</p>}
+            </StickyMobileAction>
           </form>
         </div>
 
@@ -294,19 +305,6 @@ export default function CreateWhoPage() {
             <p className="mt-[13px] text-[12px] leading-[1.55] text-ink/70">
               You have time to make this unforgettable. WishDem will deliver at{" "}
               {deliveryTime || "9:00 AM"} in their local timezone.
-            </p>
-          </div>
-
-          <div className="rounded-lg bg-mulberry p-[18px] text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
-            <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
-              A GENTLE START
-            </span>
-            <h2 className="my-1 font-display text-[25px] leading-[1.15]">
-              What do you want {name || "them"} to wake up knowing?
-            </h2>
-            <p className="text-[12px] leading-[1.6] text-porcelain/75">
-              There is no need to get it perfect. Begin with the thing you would
-              say if they were sitting beside you.
             </p>
           </div>
 

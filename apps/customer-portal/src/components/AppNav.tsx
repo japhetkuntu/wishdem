@@ -191,7 +191,7 @@ export function AppNav({ active }: { active: AppNavKey }) {
         />
 
         <Link
-          to="/create/who"
+          to="/create/message"
           className="hidden items-center gap-[6px] rounded-pill bg-champagne px-[17px] py-[11px] text-[11px] font-extrabold text-plum shadow-[0_8px_18px_rgba(230,200,122,.15)] transition-all hover:brightness-105 sm:inline-flex"
         >
           <PlusIcon className="h-[13px] w-[13px]" />
@@ -222,7 +222,7 @@ export function AppNav({ active }: { active: AppNavKey }) {
         })}
 
         <Link
-          to="/create/who"
+          to="/create/message"
           aria-label="Create a wish"
           className="relative -top-4 mx-1 grid h-[52px] w-[52px] flex-none place-items-center rounded-full bg-champagne text-plum shadow-deep transition-transform active:scale-95"
         >
