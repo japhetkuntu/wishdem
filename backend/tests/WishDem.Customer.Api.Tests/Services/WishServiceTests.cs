@@ -454,6 +454,9 @@ public class WishServiceTests
             RecipientTimezone = "Africa/Accra",
             Message = "Happy birthday, this is a surprise!",
             Status = WishStatus.Sealed,
+            RecipientOccasionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+            DeliveryTime = new TimeOnly(0, 0),
+            SealedAtUtc = DateTime.UtcNow.AddDays(-10),
         };
         _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
 
@@ -529,6 +532,9 @@ public class WishServiceTests
             RecipientRelationship = "Brother",
             RecipientTimezone = "Africa/Accra",
             Status = WishStatus.Sealed,
+            RecipientOccasionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+            DeliveryTime = new TimeOnly(0, 0),
+            SealedAtUtc = DateTime.UtcNow.AddDays(-10),
         };
         _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
         _customerUsers.Setup(r => r.GetByIdAsync(customerUserId, It.IsAny<CancellationToken>()))
@@ -537,6 +543,30 @@ public class WishServiceTests
         await _sut.MarkOpenedAsync(wish.Id);
 
         _emailSender.Verify(e => e.SendAsync("sender@example.com", It.Is<string>(s => s.Contains("Kojo")), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenSealedButNotYetDue_ReturnsConflictAndDoesNotOpen()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Message = "Happy birthday, this is a surprise!",
+            Status = WishStatus.Sealed,
+            // Sealed moments ago, occasion is weeks away — nowhere near due.
+            RecipientOccasionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+            DeliveryTime = new TimeOnly(9, 0),
+            SealedAtUtc = DateTime.UtcNow,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.MarkOpenedAsync(wish.Id);
+
+        response.Code.Should().Be(409);
+        wish.Status.Should().Be(WishStatus.Sealed);
+        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

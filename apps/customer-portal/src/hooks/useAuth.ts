@@ -1,32 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getCurrentUser,
   requestOtp,
   signInWithGoogle,
   signOut,
   updateProfile,
   type UpdateProfileInput,
 } from "@/lib/api";
-import type { User } from "@/types";
+import { useAuthStore } from "@/store/authStore";
+import { useWishesStore } from "@/store/wishesStore";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, setUser, ensureLoaded } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    getCurrentUser().then((u) => {
-      setUser(u);
-      setLoading(false);
-    });
-  }, []);
+    ensureLoaded();
+  }, [ensureLoaded]);
 
   const continueWithGoogle = useCallback(async () => {
     const u = await signInWithGoogle();
     setUser(u);
     return u;
-  }, []);
+  }, [setUser]);
 
   /**
    * There's no synchronous email sign-in on the real backend — it's always
@@ -51,13 +47,14 @@ export function useAuth() {
   const logOut = useCallback(async () => {
     await signOut();
     setUser(null);
-  }, []);
+    useWishesStore.getState().reset();
+  }, [setUser]);
 
   const saveProfile = useCallback(async (input: UpdateProfileInput) => {
     const u = await updateProfile(input);
     setUser(u);
     return u;
-  }, []);
+  }, [setUser]);
 
   return { user, loading, continueWithGoogle, continueWithEmail, logOut, saveProfile };
 }

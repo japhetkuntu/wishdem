@@ -4,18 +4,20 @@ export interface StepDef {
   label: string;
 }
 
+// Down from 4 steps to 3 — theme + delivery channel used to be separate screens,
+// but they're both just "how it looks and arrives," so picking a look now seals
+// the wish on the same screen instead of forcing one more click-through.
 export const CREATE_STEPS: StepDef[] = [
   { label: "Your message" },
   { label: "Who it's for" },
-  { label: "Choose a look" },
-  { label: "Seal & schedule" },
+  { label: "Choose & seal" },
 ];
 
 export function Stepper({ activeIndex }: { activeIndex: number }) {
   return (
     <nav
       aria-label="Wish creation steps"
-      className="mt-4 grid grid-cols-2 gap-[7px] sm:grid-cols-4 sm:gap-2"
+      className="mt-4 grid grid-cols-3 gap-[7px] sm:gap-2"
     >
       {CREATE_STEPS.map((step, index) => {
         const isActive = index === activeIndex;

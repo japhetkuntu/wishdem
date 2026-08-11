@@ -9,7 +9,6 @@ const VerifyPage = lazy(() => import("@/pages/auth/VerifyPage"));
 const CreateWhoPage = lazy(() => import("@/pages/create/CreateWhoPage"));
 const CreateMessagePage = lazy(() => import("@/pages/create/CreateMessagePage"));
 const CreateThemePage = lazy(() => import("@/pages/create/CreateThemePage"));
-const CreateDeliverPage = lazy(() => import("@/pages/create/CreateDeliverPage"));
 const CreateScheduledPage = lazy(() => import("@/pages/create/CreateScheduledPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
@@ -64,7 +63,9 @@ export default function App() {
         <Route path="/create/who" element={<CreateWhoPage />} />
         <Route path="/create/message" element={<CreateMessagePage />} />
         <Route path="/create/theme" element={<CreateThemePage />} />
-        <Route path="/create/deliver" element={<CreateDeliverPage />} />
+        {/* Theme + delivery merged into one step — redirect any old bookmarked/shared
+            link straight to it instead of 404ing. */}
+        <Route path="/create/deliver" element={<Navigate to="/create/theme" replace />} />
         <Route path="/create/scheduled" element={<CreateScheduledPage />} />
         <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
         <Route path="/account" element={<RequireAuth><ProfilePage /></RequireAuth>} />

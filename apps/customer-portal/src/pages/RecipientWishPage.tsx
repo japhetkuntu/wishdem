@@ -13,6 +13,24 @@ import { formatWeekdayDate } from "@/lib/date";
 import { occasionPhrase } from "@/lib/occasion";
 import { getThemeImage } from "@/lib/themeImages";
 
+/** This page is reached either from an outside link (SMS/share, no in-app history to
+ * go back to) or from a sender's own dashboard ("View details") — either way, there
+ * was previously no way out except the browser's own back button. A link to home
+ * covers both cases without needing to know which one brought them here. */
+function BackHome({ className }: { className?: string }) {
+  return (
+    <Link
+      to="/"
+      className={clsx(
+        "inline-flex items-center gap-1 text-[11px] font-extrabold tracking-[0.08em] text-champagne/80 transition-colors hover:text-champagne",
+        className,
+      )}
+    >
+      ← WishDem
+    </Link>
+  );
+}
+
 export default function RecipientWishPage() {
   const { id } = useParams<{ id: string }>();
   const { wish, loading, setWish } = usePublicWish(id);
@@ -50,27 +68,42 @@ export default function RecipientWishPage() {
   }
 
   const isOpened = revealed || wish.status === "opened";
+  // "sealed" means the delivery worker hasn't confirmed the scheduled moment has
+  // arrived yet — the backend rejects opening it early regardless, but showing that
+  // up front (no clickable seal at all) is a much better experience than letting
+  // someone tap it and get an error back.
+  const isDue = wish.status !== "sealed";
   const vesselImage = getThemeImage(wish.themeId, "reveal");
 
   async function handleOpen() {
     if (!id) return;
-    // The public GET never includes the message/attachment before the wish is opened —
-    // markOpened's response is what actually reveals the content, so we store that.
-    const revealedWish = await markOpened(id);
-    setWish(revealedWish);
-    setRevealed(true);
+    try {
+      // The public GET never includes the message/attachment before the wish is opened —
+      // markOpened's response is what actually reveals the content, so we store that.
+      const revealedWish = await markOpened(id);
+      setWish(revealedWish);
+      setRevealed(true);
+    } catch {
+      // SealButton already played its crack animation optimistically by the time this
+      // rejects (the isDue gate above makes it exceedingly rare — only a race where the
+      // wish's due moment hasn't landed by a few seconds) — a full reload is simpler and
+      // more honest than trying to reverse an animation that's already mid-flight, and it
+      // naturally re-renders the correct "not yet" state if it's still not due.
+      window.location.reload();
+    }
   }
 
   if (!isOpened) {
     const phrase = occasionPhrase(wish.recipient.occasion, wish.recipient.occasionLabel);
     return (
-      <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-5 py-10 text-center">
+      <main className="relative grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-5 py-10 text-center">
         <Seo
           title={`A ${phrase[0].toUpperCase()}${phrase.slice(1)} for ${wish.recipient.name} — WishDem`}
           description={`Someone saved a private ${phrase} for ${wish.recipient.name} on WishDem.`}
           path="/w/:id"
           noindex
         />
+        <BackHome className="absolute left-5 top-5" />
         <section>
           <span className="text-[10px] font-extrabold tracking-[0.15em] text-champagne">
             A {phrase.toUpperCase()} FOR {wish.recipient.name.toUpperCase()}
@@ -84,18 +117,34 @@ export default function RecipientWishPage() {
             From {wish.fromName} · Held for {formatWeekdayDate(wish.recipient.occasionDateISO)}
           </p>
 
-          <div className="mt-9">
-            <SealButton
-              recipientName={wish.recipient.name}
-              onOpen={handleOpen}
-              imageSrc={vesselImage.src}
-              imageAlt={vesselImage.alt}
-            />
-          </div>
-
-          <div className="mt-4 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
-            A PRIVATE WISH, HELD FOR YOUR DAY
-          </div>
+          {isDue ? (
+            <>
+              <div className="mt-9">
+                <SealButton
+                  recipientName={wish.recipient.name}
+                  onOpen={handleOpen}
+                  imageSrc={vesselImage.src}
+                  imageAlt={vesselImage.alt}
+                />
+              </div>
+              <div className="mt-4 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
+                A PRIVATE WISH, HELD FOR YOUR DAY
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-9 opacity-60 grayscale">
+                <img
+                  src={vesselImage.src}
+                  alt={vesselImage.alt}
+                  className="mx-auto h-[220px] w-[220px] rounded-2xl object-cover shadow-deep"
+                />
+              </div>
+              <div className="mt-4 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
+                NOT YET — COME BACK ON {formatWeekdayDate(wish.recipient.occasionDateISO).toUpperCase()}
+              </div>
+            </>
+          )}
         </section>
       </main>
     );
@@ -110,6 +159,7 @@ export default function RecipientWishPage() {
         path="/w/:id"
         noindex
       />
+      <BackHome className="mb-5" />
       <header className="mb-7 flex flex-wrap justify-between gap-2 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
         <span>FOR {wish.recipient.name.toUpperCase()}</span>
         <span>FROM {wish.fromName.toUpperCase()}</span>

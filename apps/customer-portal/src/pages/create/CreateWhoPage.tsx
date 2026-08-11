@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
@@ -37,6 +37,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 export default function CreateWhoPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const queryWishId = params.get("wishId");
   const {
@@ -63,7 +64,12 @@ export default function CreateWhoPage() {
   const [deliveryTime, setDeliveryTime] = useState(recipient?.deliveryTime ?? "09:00");
   const [yourName, setYourName] = useState(wizardFromName !== "You" ? wizardFromName : "");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // A failed guest-draft resume (expired cache TTL, daily limit hit while they were
+  // signing in) lands them back here via resumeAfterAuth's navigate state — surface
+  // that instead of silently losing what they already wrote.
+  const [error, setError] = useState<string | null>(
+    (location.state as { resumeError?: string } | null)?.resumeError ?? null,
+  );
 
   // Backfill from the signed-in account's name once it loads, but only if the
   // sender hasn't already typed something into the field themselves.
@@ -174,8 +180,10 @@ export default function CreateWhoPage() {
       if (err instanceof ApiError && err.code === 429) {
         setError(err.message);
         setDailyLimit((prev) => (prev ? { ...prev, used: prev.max, remaining: 0 } : prev));
+      } else if (err instanceof ApiError) {
+        setError(err.message);
       } else {
-        setError("We couldn't save that just now. Please try again.");
+        setError("We couldn't reach WishDem just now — check your connection and try again.");
       }
     } finally {
       setSaving(false);

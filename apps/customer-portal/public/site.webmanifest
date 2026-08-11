@@ -1,7 +1,7 @@
 {
   "name": "WishDem",
   "short_name": "WishDem",
-  "description": "Write a birthday message today and have it delivered privately on the day it matters.",
+  "description": "Write a message today for any occasion and have it delivered privately on the day it matters.",
   "icons": [
     { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }

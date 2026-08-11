@@ -3,7 +3,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type { Attachment, DeliveryChannel, Recipient, ThemeId, Wish } from "@/types";
 
 /**
- * Shared state for the 4-step creation wizard (/create/who -> /create/deliver).
+ * Shared state for the 3-step creation wizard (/create/message -> /create/who ->
+ * /create/theme, which also handles delivery + sealing).
  * Persisted to sessionStorage so navigating back and forth between steps,
  * or refreshing mid-flow, never loses what's been entered.
  */

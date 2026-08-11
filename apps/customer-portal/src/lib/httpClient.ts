@@ -29,7 +29,7 @@ interface ApiEnvelope<T> {
 
 export function getAccessToken(): string | null {
   try {
-    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
   } catch {
     return null;
   }
@@ -37,7 +37,7 @@ export function getAccessToken(): string | null {
 
 function getRefreshToken(): string | null {
   try {
-    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
   } catch {
     return null;
   }
@@ -45,8 +45,8 @@ function getRefreshToken(): string | null {
 
 export function setTokens(accessToken: string, refreshToken: string) {
   try {
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   } catch {
     // Storage unavailable — session just won't survive a reload.
   }
@@ -54,8 +54,8 @@ export function setTokens(accessToken: string, refreshToken: string) {
 
 export function clearTokens() {
   try {
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
   } catch {
     // Nothing to clean up if storage isn't available.
   }

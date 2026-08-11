@@ -1,22 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
-import { getPublicWish, getWish, listWishes } from "@/lib/api";
+import { getPublicWish, getWish } from "@/lib/api";
+import { useWishesStore } from "@/store/wishesStore";
 import type { Wish } from "@/types";
 
 export function useWishes() {
-  const [wishes, setWishes] = useState<Wish[] | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(() => {
-    setLoading(true);
-    listWishes().then((data) => {
-      setWishes(data);
-      setLoading(false);
-    });
-  }, []);
+  const { wishes, loading, ensureLoaded, refresh } = useWishesStore();
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    ensureLoaded();
+  }, [ensureLoaded]);
 
   return { wishes, loading, refresh };
 }

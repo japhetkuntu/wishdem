@@ -10,6 +10,7 @@ using WishDem.Customer.Api.Models.Requests;
 using WishDem.Customer.Api.Models.Responses;
 using WishDem.Messaging.Sdk.Abstractions;
 using WishDem.Messaging.Sdk.Templates;
+using WishDem.Postgres.Sdk.Delivery;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 using WishDem.Storage.Sdk;
@@ -27,7 +28,7 @@ public class WishService(
 {
     private readonly DeliverySettings _delivery = deliverySettings.Value;
 
-    private const long MaxAttachmentBytes = 25 * 1024 * 1024;
+    private const long MaxAttachmentBytes = 10 * 1024 * 1024;
 
     // Scarcity, not a technical limit: a free product with no cap invites spam/abuse of
     // the SMS/WhatsApp delivery pipeline. Measured in UTC calendar days for simplicity —
@@ -385,10 +386,16 @@ public class WishService(
             if (wish.Status == WishStatus.Draft)
                 throw new NotFoundException("That wish could not be found.");
 
+            // The whole ceremony (and the sender's trust that "it arrives exactly when I
+            // chose") depends on the seal genuinely not breaking early — someone with a
+            // "give me the link" wish could otherwise open it the moment it's sealed, not
+            // on the day it was meant for. Delivered/Opened means the delivery worker has
+            // already confirmed the moment arrived; Sealed-but-not-yet-due hasn't.
+            if (wish.Status == WishStatus.Sealed && !WishDeliveryTiming.IsDue(wish, DateTime.UtcNow))
+                throw new ConflictException("This wish isn't ready to open yet — it arrives on its day.");
+
             if (wish.Status != WishStatus.Opened)
             {
-                // No real delivery worker exists yet in this skeleton, so if the wish hasn't
-                // been marked delivered yet, opening it also stamps delivery now.
                 if (wish.DeliveredAtUtc is null)
                     wish.DeliveredAtUtc = DateTime.UtcNow;
 
@@ -425,7 +432,7 @@ public class WishService(
                 return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("Please choose a file to upload.");
 
             if (file.Length > MaxAttachmentBytes)
-                return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file is too large. The maximum size is 25MB.");
+                return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file is too large. The maximum size is 10MB.");
 
             if (!ContentTypeKinds.TryGetValue(file.ContentType, out var kind))
                 return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file type isn't supported.");

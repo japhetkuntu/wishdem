@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 export function EmptyState({
   badge,
@@ -12,6 +13,9 @@ export function EmptyState({
   eyebrow: string;
   title: ReactNode;
   description: string;
+  /** Each chip is a real shortcut into the wizard, not decoration — they used to look
+   * like buttons (bordered pill shape) without being clickable, which is exactly the
+   * kind of dead-end tap that makes an app feel broken. */
   chips?: string[];
   action?: ReactNode;
 }) {
@@ -31,12 +35,13 @@ export function EmptyState({
         {chips && chips.length > 0 && (
           <div className="mt-7 flex flex-wrap justify-center gap-[9px]">
             {chips.map((chip) => (
-              <b
+              <Link
                 key={chip}
-                className="rounded-pill border border-porcelain/25 px-[13px] py-[10px] text-[12px] font-normal"
+                to="/create/message"
+                className="rounded-pill border border-porcelain/25 px-[13px] py-[10px] text-[12px] font-normal transition-colors hover:border-champagne/60 hover:text-champagne"
               >
                 {chip}
-              </b>
+              </Link>
             ))}
           </div>
         )}

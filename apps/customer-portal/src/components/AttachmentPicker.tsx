@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { uploadAttachment } from "@/lib/api";
+import { ApiError } from "@/lib/httpClient";
 import { SmoothImage } from "@/components/SmoothImage";
 import type { Attachment } from "@/types";
 
@@ -26,7 +27,14 @@ export function AttachmentPicker({ value, onChange, wishId }: PickerProps) {
 
 // The <input accept="image/*"> hint is a UI convenience only — a user can still pick
 // "All Files" and choose anything, so we re-check type and cap size before upload.
+// Matches the backend's real cap (WishService.MaxAttachmentBytes) exactly.
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+const HEIC_PATTERN = /\.(heic|heif)$/i;
+
+function formatMB(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
 
 export function ImagePanel({ value, onChange, wishId }: PanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,12 +48,25 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
     e.target.value = "";
     setUploadError(null);
 
-    if (!file.type.startsWith("image/")) {
-      setUploadError("That file isn't a photo. Please choose an image.");
+    // iPhones save photos as HEIC by default — a real image, but a format neither the
+    // server nor most browsers can display, so it needs its own clear explanation
+    // rather than a generic "unsupported file type" that leaves someone stuck.
+    if (file.type === "image/heic" || file.type === "image/heif" || HEIC_PATTERN.test(file.name)) {
+      setUploadError(
+        "That's an iPhone HEIC photo, which isn't supported yet. In Settings → Camera → Formats, switch to \"Most Compatible,\" or choose a different photo.",
+      );
+      return;
+    }
+    // Only reject client-side when the browser has confidently told us it's not an
+    // image — an empty/missing type (common for some gallery pickers) isn't proof of
+    // anything, so we let the server's real content-type check have the final say
+    // rather than blocking a possibly-valid photo on a guess.
+    if (file.type && !file.type.startsWith("image/")) {
+      setUploadError(`That's a ${file.type} file, not a photo — please choose a JPG, PNG, GIF, or WEBP image.`);
       return;
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setUploadError("That photo is too large — please choose one under 10MB.");
+      setUploadError(`That photo is ${formatMB(file.size)} — please choose one under ${formatMB(MAX_FILE_SIZE_BYTES)}.`);
       return;
     }
 
@@ -57,8 +78,14 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
     try {
       const attachment = await uploadAttachment(wishId, file, file.name);
       onChange(attachment);
-    } catch {
-      setUploadError("We couldn't upload that photo. Please try again.");
+    } catch (err) {
+      // Surface the server's actual reason (wrong type, too large, etc.) instead of a
+      // one-size-fits-all message that hides why it really failed.
+      setUploadError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't upload that photo — check your connection and try again.",
+      );
     } finally {
       setUploading(false);
     }

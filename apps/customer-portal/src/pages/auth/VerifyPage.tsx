@@ -9,6 +9,7 @@ import { requestOtp, verifyOtp } from "@/lib/api";
 import { daysUntilOccasion } from "@/lib/date";
 import { formatCountdown } from "@/lib/format";
 import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
+import { useAuthStore } from "@/store/authStore";
 
 interface VerifyLocationState {
   email: string;
@@ -65,7 +66,11 @@ export default function VerifyPage() {
     e.preventDefault();
     if (!complete || !state) return;
     setVerifying(true);
-    await verifyOtp(state.email, code.join(""), state.isNewCustomer ? name : undefined);
+    const user = await verifyOtp(state.email, code.join(""), state.isNewCustomer ? name : undefined);
+    // The auth store caches "no user" from before sign-in — without pushing the freshly
+    // verified user in directly, RequireAuth would trust that stale cache and bounce
+    // straight back to /login on the very next navigation.
+    useAuthStore.getState().setUser(user);
     setVerifying(false);
     await resumeAfterAuth(navigate);
   }

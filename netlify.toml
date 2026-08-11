@@ -11,3 +11,14 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# ShareableWishCard.tsx captures the seal/theme photo onto a <canvas> (for the
+# "download/share as image" feature) via an <img crossOrigin="anonymous">, which
+# needs an explicit Access-Control-Allow-Origin response header to avoid a tainted
+# canvas — Netlify doesn't guarantee that header on static assets by default. Same
+# root cause as the third-party-CDN fix in bb3decd, just one layer further in:
+# self-hosting the images wasn't enough on its own without this too.
+[[headers]]
+  for = "/themes/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

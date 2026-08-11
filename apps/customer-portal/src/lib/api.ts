@@ -419,18 +419,11 @@ export async function saveMessageStep(
   return putFullWish({ ...wish, message, attachment });
 }
 
-export async function saveThemeStep(
+/** Theme + delivery used to be two separate wizard steps (and two separate
+ * fetch-then-save round trips) — now one screen, so one round trip covers both. */
+export async function saveThemeAndDeliverStep(
   id: string,
   themeId: ThemeId,
-  recipient?: Recipient,
-  fromName?: string,
-): Promise<Wish> {
-  const wish = await ensureWish(id, recipient, fromName);
-  return putFullWish({ ...wish, themeId });
-}
-
-export async function saveDeliverStep(
-  id: string,
   channel: DeliveryChannel,
   recipient?: Recipient,
   phoneNumber?: string,
@@ -439,6 +432,7 @@ export async function saveDeliverStep(
   const wish = await ensureWish(id, recipient, fromName);
   return putFullWish({
     ...wish,
+    themeId,
     channel,
     recipient: phoneNumber ? { ...wish.recipient, phoneNumber } : wish.recipient,
   });

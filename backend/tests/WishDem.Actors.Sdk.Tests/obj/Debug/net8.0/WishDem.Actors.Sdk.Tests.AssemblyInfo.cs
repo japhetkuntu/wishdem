@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WishDem.Actors.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+46e81ae8766bda99ba98cc964cb22d6ff196d6ff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b14e68959e4d530a9e3d9b6bebc5a56572b3a6a")]
 [assembly: System.Reflection.AssemblyProductAttribute("WishDem.Actors.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WishDem.Actors.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
