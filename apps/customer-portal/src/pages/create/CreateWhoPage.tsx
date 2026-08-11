@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
 import { useWizardStore } from "@/store/wizardStore";
+import { useAuth } from "@/hooks/useAuth";
 import { getDailyWishLimit, getWish, saveGuestWhoDraft, saveWhoStep, type DailyWishLimit } from "@/lib/api";
 import { ApiError, hasSession } from "@/lib/httpClient";
 import { daysUntil } from "@/lib/date";
@@ -36,8 +38,18 @@ export default function CreateWhoPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const queryWishId = params.get("wishId");
-  const { recipient, wishId, draftId, setWishId, setDraftId, setRecipient, hydrateFromWish } =
-    useWizardStore();
+  const {
+    recipient,
+    fromName: wizardFromName,
+    wishId,
+    draftId,
+    setWishId,
+    setDraftId,
+    setRecipient,
+    setFromName,
+    hydrateFromWish,
+  } = useWizardStore();
+  const { user } = useAuth();
 
   const [name, setName] = useState(recipient?.name ?? "");
   const [relationship, setRelationship] = useState<Relationship>(
@@ -45,8 +57,16 @@ export default function CreateWhoPage() {
   );
   const [birthdayISO, setBirthdayISO] = useState(recipient?.birthdayISO ?? "");
   const [deliveryTime, setDeliveryTime] = useState(recipient?.deliveryTime ?? "09:00");
+  const [yourName, setYourName] = useState(wizardFromName !== "You" ? wizardFromName : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Backfill from the signed-in account's name once it loads, but only if the
+  // sender hasn't already typed something into the field themselves.
+  useEffect(() => {
+    if (user?.name && !yourName) setYourName(user.name);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.name]);
 
   // Only a brand-new wish counts against the daily cap — continuing an existing draft
   // (has a wishId already) never creates a second row, so the limit doesn't apply to it.
@@ -62,6 +82,7 @@ export default function CreateWhoPage() {
         setRelationship(wish.recipient.relationship);
         setBirthdayISO(wish.recipient.birthdayISO);
         setDeliveryTime(wish.recipient.deliveryTime);
+        if (wish.fromName !== "You") setYourName(wish.fromName);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +99,7 @@ export default function CreateWhoPage() {
 
   async function handleContinue(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !birthdayISO || atDailyLimit) return;
+    if (!name.trim() || !yourName.trim() || !birthdayISO || atDailyLimit) return;
     setSaving(true);
     setError(null);
     const rec = {
@@ -88,19 +109,22 @@ export default function CreateWhoPage() {
       deliveryTime,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
+    const senderName = yourName.trim();
     try {
       if (hasSession()) {
-        const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec });
+        const wish = await saveWhoStep({ id: wishId ?? undefined, recipient: rec, fromName: senderName });
         setWishId(wish.id);
         setRecipient(rec);
+        setFromName(senderName);
         navigate("/create/message");
       } else {
         // Not signed in yet: stash the recipient in the cache under a draft id instead of
         // 401ing, then send them to sign in/register. resumeAfterAuth picks this draft back
         // up right after and continues straight on to /create/message.
-        const newDraftId = await saveGuestWhoDraft(draftId, rec);
+        const newDraftId = await saveGuestWhoDraft(draftId, rec, senderName);
         setDraftId(newDraftId);
         setRecipient(rec);
+        setFromName(senderName);
         navigate("/login");
       }
     } catch (err) {
@@ -117,6 +141,12 @@ export default function CreateWhoPage() {
 
   return (
     <CreateLayout activeIndex={0}>
+      <Seo
+        title="Who Is This Wish For — WishDem"
+        description="Start creating a private birthday wish by choosing who it's for and when it will arrive."
+        path="/create/who"
+        noindex
+      />
       <section className="grid gap-6 sm:grid-cols-[1.15fr_.85fr] sm:gap-10">
         <div>
           <span className="text-[10px] font-extrabold tracking-[0.14em] text-champagne">
@@ -147,6 +177,22 @@ export default function CreateWhoPage() {
           )}
 
           <form onSubmit={handleContinue}>
+            <div className="mb-4 overflow-hidden rounded-lg border border-champagne/45 bg-porcelain/[0.04]">
+              <div className="px-[18px] py-1">
+                <Field label="YOUR NAME">
+                  <input
+                    value={yourName}
+                    onChange={(e) => setYourName(e.target.value)}
+                    required
+                    placeholder="How should they see your name?"
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
+              <p className="border-t border-porcelain/10 px-[18px] py-[10px] text-[11px] leading-[1.5] text-porcelain/60">
+                {name || "They"}'ll see this wish is from you, not from WishDem.
+              </p>
+            </div>
             <div className="overflow-hidden rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04]">
               <header className="flex items-center justify-between border-b border-porcelain/10 px-[18px] py-[14px]">
                 <h2 className="font-display text-[21px]">

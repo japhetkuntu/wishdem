@@ -140,10 +140,11 @@ public class AuthService(
                 var subject = $"{code} is your WishDem admin reset code";
                 var textBody = $"Your password reset code is {code}. It expires in {expiryMinutes} minutes.";
                 var htmlBody = EmailTemplate.Shell(subject, $"""
-                    <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">Reset your password</h1>
+                    {EmailTemplate.Eyebrow("Password reset")}
+                    <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">Reset your password</h1>
                     <p style="margin:0;">Hi {EmailTemplate.Encode(user.FullName)}, use this code to reset your WishDem Admin password.</p>
-                    {EmailTemplate.CodeBox(code)}
-                    <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">This code expires in {expiryMinutes} minutes. If you didn't request this, let a teammate know.</p>
+                    {EmailTemplate.CodeBox(code, $"Expires in {expiryMinutes} minutes")}
+                    <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.55);">Didn't request this? Let a teammate know — your password hasn't been changed.</p>
                     """);
 
                 await emailSender.SendAsync(normalizedEmail, subject, textBody, htmlBody, ct);

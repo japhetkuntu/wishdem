@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { SiteNav } from "@/components/SiteNav";
+import { Seo } from "@/components/Seo";
 
 const STEPS = [
   {
@@ -86,6 +87,11 @@ export default function HowItWorksPage() {
 
   return (
     <div className="w-full">
+      <Seo
+        title="How It Works — Schedule a Future Birthday Message | WishDem"
+        description="See exactly how WishDem works: write a birthday message today, choose their birthday and delivery time, and we deliver it privately — free, with no app to install."
+        path="/how-it-works"
+      />
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
         <SiteNav />
 

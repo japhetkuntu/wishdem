@@ -1,4 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import type { MemoryFormat } from "@/types";
 import { useContributionContext } from "@/hooks/useContribution";
 
@@ -15,7 +17,13 @@ export default function GuestMemoryEntryPage() {
   if (loading) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 pt-6 sm:px-8">
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Seo
+          title="Add a Memory — WishDem"
+          description="A private, secure invitation to contribute a memory to someone's keepsake on WishDem."
+          path="/contribute/:id"
+          noindex
+        />
+        <Loading />
       </main>
     );
   }
@@ -23,6 +31,12 @@ export default function GuestMemoryEntryPage() {
   if (!context) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 pt-6 sm:px-8">
+        <Seo
+          title="Invitation Not Found — WishDem"
+          description="This guest contribution invitation could not be found."
+          path="/contribute/:id"
+          noindex
+        />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           We couldn't find that invitation. It may have expired or the link may be incorrect.
         </p>
@@ -34,6 +48,12 @@ export default function GuestMemoryEntryPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1160px] px-4 pb-10 sm:px-8">
+      <Seo
+        title={`Add a Memory for ${recipientFirst} — WishDem`}
+        description={`${context.inviterName} invited you to add a private memory for ${recipientFirst}'s keepsake on WishDem.`}
+        path="/contribute/:id"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />

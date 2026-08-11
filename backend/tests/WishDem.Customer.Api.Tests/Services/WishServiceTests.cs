@@ -4,12 +4,15 @@ using System.Text;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
+using WishDem.Actors.Sdk.Configuration;
 using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Responses;
 using WishDem.Customer.Api.Models.Requests;
 using WishDem.Customer.Api.Services;
+using WishDem.Messaging.Sdk.Abstractions;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 using WishDem.Storage.Sdk;
@@ -20,8 +23,10 @@ namespace WishDem.Customer.Api.Tests.Services;
 public class WishServiceTests
 {
     private readonly Mock<IRepository<Wish>> _wishes = new();
+    private readonly Mock<IRepository<CustomerUser>> _customerUsers = new();
     private readonly Mock<IStorageService> _storageService = new();
     private readonly Mock<ICacheService> _cache = new();
+    private readonly Mock<IEmailSender> _emailSender = new();
     private readonly WishService _sut;
 
     public WishServiceTests()
@@ -35,7 +40,10 @@ public class WishServiceTests
         _cache.Setup(c => c.GetAsync<int?>(It.IsAny<string>())).ReturnsAsync((int?)null);
         _cache.Setup(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<TimeSpan?>())).ReturnsAsync(1);
 
-        _sut = new WishService(_wishes.Object, _storageService.Object, _cache.Object, Mock.Of<ILogger<WishService>>());
+        var deliverySettings = Options.Create(new DeliverySettings { FrontendBaseUrl = "http://localhost:5173" });
+        _sut = new WishService(
+            _wishes.Object, _customerUsers.Object, _storageService.Object, _cache.Object,
+            _emailSender.Object, deliverySettings, Mock.Of<ILogger<WishService>>());
     }
 
     private static SaveWishRequest ValidRequest() => new(
@@ -506,6 +514,92 @@ public class WishServiceTests
         var response = await _sut.MarkOpenedAsync(Guid.NewGuid());
 
         response.Code.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenSealed_NotifiesSenderByEmail()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _customerUsers.Setup(r => r.GetByIdAsync(customerUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CustomerUser { Id = customerUserId, Email = "sender@example.com", Name = "Ama" });
+
+        await _sut.MarkOpenedAsync(wish.Id);
+
+        _emailSender.Verify(e => e.SendAsync("sender@example.com", It.Is<string>(s => s.Contains("Kojo")), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkOpenedAsync_WhenAlreadyOpened_DoesNotResendNotification()
+    {
+        var wish = new Wish
+        {
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Opened,
+            OpenedAtUtc = DateTime.UtcNow.AddHours(-1),
+            DeliveredAtUtc = DateTime.UtcNow.AddHours(-1),
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        await _sut.MarkOpenedAsync(wish.Id);
+
+        _emailSender.Verify(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RetryDeliveryAsync_WhenDeliveryFailed_UpdatesPhoneAndResetsAttemptBookkeeping()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+            DeliveryAttemptCount = 8,
+            NextDeliveryAttemptAtUtc = DateTime.MaxValue,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.RetryDeliveryAsync(customerUserId, wish.Id, new RetryDeliveryRequest("0244123456"));
+
+        response.Code.Should().Be(200);
+        wish.RecipientPhoneNumber.Should().Be("0244123456");
+        wish.DeliveryAttemptCount.Should().Be(0);
+        wish.NextDeliveryAttemptAtUtc.Should().NotBe(DateTime.MaxValue);
+        response.Data!.DeliveryFailed.Should().BeFalse();
+        _wishes.Verify(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RetryDeliveryAsync_WhenNotInFailedState_ReturnsConflict()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            Status = WishStatus.Sealed,
+        };
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+
+        var response = await _sut.RetryDeliveryAsync(customerUserId, wish.Id, new RetryDeliveryRequest("0244123456"));
+
+        response.Code.Should().Be(409);
+        _wishes.Verify(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static IFormFile MakeFormFile(string fileName, string contentType, byte[] content)

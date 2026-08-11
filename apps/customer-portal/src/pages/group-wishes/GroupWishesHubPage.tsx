@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { useGroupWishes } from "@/hooks/useGroupWishes";
 import type { GroupWishInvitation } from "@/types";
@@ -89,6 +90,12 @@ export default function GroupWishesHubPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Group Wishes — WishDem"
+        description="Your private hub for group wishes you've been invited to, joined, or created."
+        path="/group-wishes"
+        noindex
+      />
       <AppNav active="groupWishes" />
 
       <div className="flex flex-wrap gap-[18px] border-b border-porcelain/[0.12] py-4 text-[11px] font-bold">
@@ -141,7 +148,7 @@ export default function GroupWishesHubPage() {
       <section className="grid gap-[13px] sm:grid-cols-[minmax(0,1fr)_300px]">
         <div className="rounded-md border border-porcelain/[0.1] p-[14px]">
           {loading ? (
-            <p className="py-10 text-center text-[12px] text-porcelain/55">Loading…</p>
+            <Loading />
           ) : subTab === "invited" ? (
             <>
               <div className="mb-3 flex flex-wrap gap-[6px]">

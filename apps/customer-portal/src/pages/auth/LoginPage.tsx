@@ -5,6 +5,7 @@ import { requestOtp } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useWizardStore } from "@/store/wizardStore";
 import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
+import { Seo } from "@/components/Seo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -38,6 +39,11 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto grid w-full max-w-[1180px] gap-7 px-5 py-6 sm:grid-cols-[1.03fr_.97fr] sm:items-center sm:gap-8 sm:px-8 sm:py-8">
+      <Seo
+        title="Sign In to WishDem — Continue to Your Wishes"
+        description="Sign in to WishDem to write, schedule, and manage the future birthday wishes you're keeping for the people you love."
+        path="/login"
+      />
       <section className="flex min-h-0 flex-col justify-between sm:min-h-[610px]">
         <div>
           <Link to="/" className="text-[21px] font-extrabold tracking-[-1.5px]">
@@ -156,9 +162,14 @@ export default function LoginPage() {
           <Link to="/how-it-works" className="font-extrabold text-mulberry">
             How WishDem works
           </Link>
-          <Link to="/how-it-works#faq" className="font-extrabold text-mulberry">
-            Privacy
-          </Link>
+          <span className="flex gap-3">
+            <Link to="/terms" className="font-extrabold text-mulberry">
+              Terms
+            </Link>
+            <Link to="/privacy" className="font-extrabold text-mulberry">
+              Privacy
+            </Link>
+          </span>
         </div>
       </section>
     </main>

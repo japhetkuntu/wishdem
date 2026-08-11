@@ -1,5 +1,6 @@
 import { findGifTile } from "@/mocks/gifLibrary";
 import { formatDuration } from "@/lib/format";
+import { SmoothImage } from "@/components/SmoothImage";
 import type { Attachment } from "@/types";
 
 /** Renders a saved attachment for the recipient's reveal — real playback
@@ -13,11 +14,10 @@ export function AttachmentDisplay({
 }) {
   if (attachment.kind === "image") {
     return attachment.url ? (
-      <img
+      <SmoothImage
         src={attachment.url}
         alt={`A memory from ${fromName}`}
-        loading="lazy"
-        className="mt-6 h-[220px] w-full rounded-md object-cover"
+        className="mt-6 h-[220px] w-full rounded-md"
       />
     ) : null;
   }

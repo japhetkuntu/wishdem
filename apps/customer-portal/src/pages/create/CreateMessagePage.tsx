@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
 import { AuthPrompt } from "@/components/AuthPrompt";
 import { AttachmentPicker } from "@/components/AttachmentPicker";
@@ -10,7 +11,7 @@ import { saveMessageStep } from "@/lib/api";
 
 export default function CreateMessagePage() {
   const navigate = useNavigate();
-  const { wishId, recipient, message, attachment, setMessage, setAttachment, markSaved } =
+  const { wishId, recipient, fromName, message, attachment, setMessage, setAttachment, markSaved } =
     useWizardStore();
   const { user, continueWithGoogle, continueWithEmail } = useAuth();
   const [saving, setSaving] = useState(false);
@@ -25,7 +26,7 @@ export default function CreateMessagePage() {
     setSaving(true);
     setError(null);
     try {
-      await saveMessageStep(wishId, message, attachment, recipient ?? undefined);
+      await saveMessageStep(wishId, message, attachment, recipient ?? undefined, fromName);
       markSaved();
       navigate("/create/theme");
     } catch {
@@ -49,6 +50,12 @@ export default function CreateMessagePage() {
 
   return (
     <CreateLayout activeIndex={1}>
+      <Seo
+        title="Write Your Message — WishDem"
+        description="Write the private birthday message you want your recipient to keep."
+        path="/create/message"
+        noindex
+      />
       <section className="grid gap-6 sm:grid-cols-[1.2fr_.8fr] sm:gap-10">
         <div>
           <span className="text-[11px] font-extrabold tracking-[0.13em] text-champagne">

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { OtpInput } from "@/components/OtpInput";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useWishes } from "@/hooks/useWishes";
@@ -76,6 +77,12 @@ export default function VerifyPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1100px] px-5 py-6 sm:px-8">
+      <Seo
+        title="Verify Your Email — WishDem"
+        description="Enter the six-digit code sent to your email to securely sign in to WishDem."
+        path="/login/verify"
+        noindex
+      />
       <BrandHeader />
 
       <div className="grid gap-6 py-9 sm:grid-cols-[1fr_.8fr] sm:items-center sm:gap-5 sm:py-12">

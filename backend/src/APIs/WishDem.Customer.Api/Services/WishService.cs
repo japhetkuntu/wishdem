@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using WishDem.Actors.Sdk.Configuration;
 using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Exceptions;
@@ -6,6 +8,8 @@ using WishDem.Common.Sdk.Responses;
 using WishDem.Customer.Api.Interfaces;
 using WishDem.Customer.Api.Models.Requests;
 using WishDem.Customer.Api.Models.Responses;
+using WishDem.Messaging.Sdk.Abstractions;
+using WishDem.Messaging.Sdk.Templates;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 using WishDem.Storage.Sdk;
@@ -14,10 +18,15 @@ namespace WishDem.Customer.Api.Services;
 
 public class WishService(
     IRepository<Wish> wishes,
+    IRepository<CustomerUser> customerUsers,
     IStorageService storageService,
     ICacheService cache,
+    IEmailSender emailSender,
+    IOptions<DeliverySettings> deliverySettings,
     ILogger<WishService> logger) : IWishService
 {
+    private readonly DeliverySettings _delivery = deliverySettings.Value;
+
     private const long MaxAttachmentBytes = 25 * 1024 * 1024;
 
     // Scarcity, not a technical limit: a free product with no cap invites spam/abuse of
@@ -289,6 +298,31 @@ public class WishService(
         }
     }
 
+    public async Task<IApiResponse<WishResponse>> RetryDeliveryAsync(Guid customerUserId, Guid wishId, RetryDeliveryRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var wish = await GetOwnedAsync(customerUserId, wishId, ct);
+            if (!IsDeliveryFailed(wish))
+                return ApiResponseFactory.Conflict<WishResponse>("This wish isn't in a failed-delivery state.");
+
+            wish.RecipientPhoneNumber = request.RecipientPhoneNumber;
+            wish.DeliveryAttemptCount = 0;
+            wish.NextDeliveryAttemptAtUtc = DateTime.UtcNow;
+            await wishes.UpdateAsync(wish, ct);
+            return ToResponse(wish).ToOkApiResponse("We'll try delivering this wish again shortly.");
+        }
+        catch (WishDemException ex)
+        {
+            return ApiResponseFactory.FromException<WishResponse>(ex);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[RetryDeliveryAsync] Failed to retry delivery for wish {WishId}, customer {CustomerUserId}", wishId, customerUserId);
+            return ApiResponseFactory.InternalError<WishResponse>("Failed to retry delivery.");
+        }
+    }
+
     public async Task<IApiResponse<bool>> DeleteAsync(Guid customerUserId, Guid wishId, CancellationToken ct = default)
     {
         try
@@ -361,6 +395,11 @@ public class WishService(
                 wish.Status = WishStatus.Opened;
                 wish.OpenedAtUtc = DateTime.UtcNow;
                 await wishes.UpdateAsync(wish, ct);
+
+                // Best-effort — the recipient's own "your wish is open" experience must never
+                // hinge on whether this notification succeeds, so failures here are logged,
+                // not thrown.
+                await NotifySenderOfOpenAsync(wish, ct);
             }
 
             return ToResponse(wish).ToOkApiResponse("Wish marked as opened.");
@@ -447,6 +486,9 @@ public class WishService(
         wish.Channel = request.Channel;
     }
 
+    private static bool IsDeliveryFailed(Wish w) =>
+        w.Status == WishStatus.Sealed && w.DeliveredAtUtc is null && w.NextDeliveryAttemptAtUtc == DateTime.MaxValue;
+
     private static WishResponse ToResponse(Wish w) => new(
         w.Id,
         w.FromName,
@@ -467,5 +509,31 @@ public class WishService(
         w.SealedAtUtc,
         w.DeliveredAtUtc,
         w.OpenedAtUtc,
-        w.CreatedAtUtc);
+        w.CreatedAtUtc,
+        DeliveryFailed: IsDeliveryFailed(w));
+
+    private async Task NotifySenderOfOpenAsync(Wish wish, CancellationToken ct)
+    {
+        try
+        {
+            var sender = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);
+            if (sender is null || string.IsNullOrWhiteSpace(sender.Email)) return;
+
+            var subject = $"{wish.RecipientName} just opened your wish";
+            var textBody = $"Good news — {wish.RecipientName} just opened the birthday wish you sent them on WishDem.";
+            var dashboardUrl = $"{_delivery.FrontendBaseUrl.TrimEnd('/')}/dashboard";
+            var htmlBody = EmailTemplate.Shell(subject, $"""
+                {EmailTemplate.Eyebrow("Delivered & opened")}
+                <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">{EmailTemplate.Encode(wish.RecipientName)} just opened your wish</h1>
+                <p style="margin:0;">The birthday wish you wrote is in their hands now — they opened it moments ago. That feeling you kept safe until today just landed exactly where it was meant to.</p>
+                {EmailTemplate.Button("See it on your dashboard", dashboardUrl)}
+                """);
+
+            await emailSender.SendAsync(sender.Email, subject, textBody, htmlBody, ct);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[NotifySenderOfOpenAsync] Failed to notify sender for wish {WishId}", wish.Id);
+        }
+    }
 }

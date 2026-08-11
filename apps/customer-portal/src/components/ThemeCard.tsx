@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import clsx from "clsx";
+import { SmoothImage } from "@/components/SmoothImage";
 import type { Theme, ThemeId } from "@/types";
 import { ASSETS } from "@/lib/assets";
 
@@ -36,12 +37,11 @@ export function ThemeCard({
     >
       {image && (
         <>
-          <img
+          <SmoothImage
             src={image.src}
             alt=""
-            aria-hidden
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
+            ariaHidden
+            className="absolute inset-0"
           />
           {/* Scrim sits behind the title/description, which are top-anchored — darkens
               top-to-bottom so the text has real contrast regardless of how bright the
@@ -105,11 +105,10 @@ export function ThemePreviewPanel({
     <aside className="rounded-lg bg-paper p-5 text-ink shadow-card sm:p-6">
       {previewImage && (
         <div className="relative mb-5 overflow-hidden rounded-md">
-          <img
+          <SmoothImage
             src={previewImage.src}
             alt={previewImage.alt}
-            loading="lazy"
-            className="h-[200px] w-full object-cover sm:h-[270px]"
+            className="h-[200px] w-full sm:h-[270px]"
           />
           <span className="absolute bottom-[18px] left-[18px] rounded-pill bg-champagne px-3 py-2 text-[11px] font-extrabold text-plum">
             {theme.name}

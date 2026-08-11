@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { CreateLayout } from "@/components/CreateLayout";
 import { ThemeCard, ThemePreviewPanel } from "@/components/ThemeCard";
 import { useThemes } from "@/hooks/useThemes";
@@ -11,7 +12,7 @@ import type { ThemeId } from "@/types";
 export default function CreateThemePage() {
   const navigate = useNavigate();
   const { themes } = useThemes();
-  const { wishId, recipient, themeId, setTheme, markSaved } = useWizardStore();
+  const { wishId, recipient, fromName, themeId, setTheme, markSaved } = useWizardStore();
   const [selected, setSelected] = useState<ThemeId | null>(themeId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export default function CreateThemePage() {
     setSaving(true);
     setError(null);
     try {
-      await saveThemeStep(wishId, selected, recipient ?? undefined);
+      await saveThemeStep(wishId, selected, recipient ?? undefined, fromName);
       setTheme(selected);
       markSaved();
       navigate("/create/deliver");
@@ -40,6 +41,12 @@ export default function CreateThemePage() {
 
   return (
     <CreateLayout activeIndex={2}>
+      <Seo
+        title="Choose a Theme — WishDem"
+        description="Choose how your private birthday letter will look and arrive."
+        path="/create/theme"
+        noindex
+      />
       <h1 className="font-display text-[clamp(32px,5vw,54px)] leading-[1.03]">
         Choose the vessel
         <br />

@@ -46,12 +46,13 @@ public class AuthService(
             var subject = $"{code} is your WishDem sign-in code";
             var textBody = $"Your one-time code is {code}. It expires in {expiryMinutes} minutes.";
             var htmlBody = EmailTemplate.Shell(subject, $"""
-                <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">{(isNewCustomer ? "Welcome to WishDem" : "Welcome back")}</h1>
+                {EmailTemplate.Eyebrow(isNewCustomer ? "Welcome to WishDem" : "Sign-in code")}
+                <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">{(isNewCustomer ? "Let's get you set up" : "Welcome back")}</h1>
                 <p style="margin:0;">{(isNewCustomer
                     ? "Enter this code to finish setting up your account — WishDem will keep your birthday wishes safe until it's their day."
                     : "Enter this code to sign back in and pick up right where you left off.")}</p>
-                {EmailTemplate.CodeBox(code)}
-                <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">This code expires in {expiryMinutes} minutes. If you didn't request it, you can safely ignore this email.</p>
+                {EmailTemplate.CodeBox(code, $"Expires in {expiryMinutes} minutes")}
+                <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.55);">Didn't request this? You can safely ignore this email — no account changes were made.</p>
                 """);
 
             await emailSender.SendAsync(normalizedEmail, subject, textBody, htmlBody, ct);

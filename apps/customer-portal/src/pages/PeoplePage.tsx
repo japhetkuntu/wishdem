@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { usePeople } from "@/hooks/usePeople";
 import type { EventTone, Person } from "@/types";
@@ -119,6 +120,12 @@ export default function PeoplePage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="People — WishDem"
+        description="Your private list of the people you hold in mind and their upcoming moments."
+        path="/people"
+        noindex
+      />
       <AppNav active="people" />
 
       <header className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">

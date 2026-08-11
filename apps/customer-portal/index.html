@@ -3,26 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WishDem — Future kindness, beautifully kept</title>
+
+    <!-- Static fallback for the homepage — react-helmet-async overrides all of
+         this per-route once the app hydrates (see src/components/Seo.tsx), but
+         crawlers/unfurlers that don't execute JS only ever see what's here. -->
+    <title>WishDem — Write a Birthday Message Today, Delivered on Their Day</title>
     <meta
       name="description"
-      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters — weeks, months, or years from now. Free to use, no app required."
     />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://wishdem.com/" />
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="WishDem" />
-    <meta property="og:title" content="WishDem — Future kindness, beautifully kept" />
+    <meta property="og:title" content="WishDem — Write a Birthday Message Today, Delivered on Their Day" />
     <meta
       property="og:description"
-      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters — weeks, months, or years from now. Free to use, no app required."
     />
-    <meta property="og:image" content="/themes/home-hero.webp" />
+    <meta property="og:url" content="https://wishdem.com/" />
+    <meta property="og:image" content="https://wishdem.com/themes/home-hero.webp" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="WishDem — Future kindness, beautifully kept" />
+    <meta name="twitter:title" content="WishDem — Write a Birthday Message Today, Delivered on Their Day" />
     <meta
       name="twitter:description"
-      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters. Free to use."
+      content="Write a birthday message now, and let WishDem deliver it privately on the day it matters — weeks, months, or years from now. Free to use, no app required."
     />
-    <meta name="twitter:image" content="/themes/home-hero.webp" />
+    <meta name="twitter:image" content="https://wishdem.com/themes/home-hero.webp" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#2A1629" />
+
+    <!-- The Google Fonts import in base.css blocks first paint until it resolves —
+         preconnecting to both origins starts that connection immediately instead
+         of waiting for the CSS to be parsed first. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "WishDem",
+        "url": "https://wishdem.com/",
+        "logo": "https://wishdem.com/favicon.svg",
+        "description": "Write a birthday message today and have WishDem deliver it privately on the exact day it matters."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WishDem",
+        "url": "https://wishdem.com/"
+      }
+    </script>
+
     <script>
       // Runs before paint so there's no flash of the wrong theme. Mirrors
       // useTheme()'s own logic — customer-portal defaults to dark until the

@@ -22,3 +22,11 @@ public class SaveWishRequestValidator : AbstractValidator<SaveWishRequest>
             .WithMessage("A phone number is required for SMS or WhatsApp delivery.");
     }
 }
+
+public class RetryDeliveryRequestValidator : AbstractValidator<RetryDeliveryRequest>
+{
+    public RetryDeliveryRequestValidator()
+    {
+        RuleFor(x => x.RecipientPhoneNumber).NotEmpty().MaximumLength(32);
+    }
+}

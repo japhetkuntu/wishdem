@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { SiteNav } from "@/components/SiteNav";
+import { Seo } from "@/components/Seo";
+import { SmoothImage } from "@/components/SmoothImage";
 import { ASSETS } from "@/lib/assets";
 
 export default function HomePage() {
   return (
     <div className="w-full overflow-hidden">
+      <Seo
+        title="WishDem — Write a Birthday Message Today, Delivered on Their Day"
+        description="Write a birthday message now, and let WishDem deliver it privately on the day it matters — weeks, months, or years from now. Free to use, no app required."
+        path="/"
+      />
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
         <SiteNav />
 
@@ -43,10 +50,11 @@ export default function HomePage() {
             <div className="absolute h-[260px] w-[260px] rounded-full border border-champagne/20 sm:h-[410px] sm:w-[410px]" />
             <div className="absolute h-[204px] w-[204px] rounded-full border border-rose/20 sm:h-[354px] sm:w-[354px]" />
             <div className="relative aspect-[4/5] w-[220px] rotate-[4deg] overflow-hidden rounded-lg shadow-deep sm:w-[min(100%,430px)]">
-              <img
+              <SmoothImage
                 src={ASSETS.homeHeroGift.src}
                 alt={ASSETS.homeHeroGift.alt}
-                className="h-full w-full object-cover"
+                loading="eager"
+                className="h-full w-full"
               />
             </div>
             <div className="absolute right-[10px] top-[30px] grid h-[72px] w-[72px] place-items-center rounded-full bg-champagne text-center font-display text-[14px] leading-[1.05] text-plum shadow-deep sm:right-[-15px] sm:top-[65px] sm:h-[88px] sm:w-[88px]">
@@ -63,7 +71,11 @@ export default function HomePage() {
 
         <div className="hidden items-center justify-between border-t border-porcelain/10 py-5 text-[11px] text-porcelain/45 sm:flex">
           <span>Made for the moments you do not want to miss.</span>
-          <span>WishDem © 2026</span>
+          <span className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-porcelain/70">Terms</Link>
+            <Link to="/privacy" className="hover:text-porcelain/70">Privacy</Link>
+            <span>WishDem © 2026</span>
+          </span>
         </div>
       </div>
     </div>

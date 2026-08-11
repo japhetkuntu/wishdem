@@ -22,7 +22,11 @@ public record WishResponse(
     DateTime? SealedAtUtc,
     DateTime? DeliveredAtUtc,
     DateTime? OpenedAtUtc,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    /// <summary>True once the delivery worker has exhausted its retries without success —
+    /// derived, not stored (see WishDeliveryProcessor's max-attempts cap). Sealed status is
+    /// otherwise indistinguishable from "still trying".</summary>
+    bool DeliveryFailed);
 
 /// <summary>Lets the create wizard show "2 of 3 used today" up front instead of only
 /// discovering the cap when the create call itself gets rejected.</summary>

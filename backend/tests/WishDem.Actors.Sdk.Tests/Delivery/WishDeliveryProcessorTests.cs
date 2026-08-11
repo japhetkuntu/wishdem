@@ -15,13 +15,17 @@ namespace WishDem.Actors.Sdk.Tests.Delivery;
 public class WishDeliveryProcessorTests
 {
     private readonly Mock<IRepository<Wish>> _wishes = new();
+    private readonly Mock<IRepository<CustomerUser>> _customerUsers = new();
     private readonly Mock<ISmsSender> _smsSender = new();
+    private readonly Mock<IEmailSender> _emailSender = new();
     private readonly WishDeliveryProcessor _sut;
 
     public WishDeliveryProcessorTests()
     {
         var settings = Options.Create(new DeliverySettings { FrontendBaseUrl = "http://localhost:5173" });
-        _sut = new WishDeliveryProcessor(_wishes.Object, _smsSender.Object, settings, Mock.Of<ILogger<WishDeliveryProcessor>>());
+        _sut = new WishDeliveryProcessor(
+            _wishes.Object, _customerUsers.Object, _smsSender.Object, _emailSender.Object,
+            settings, Mock.Of<ILogger<WishDeliveryProcessor>>());
     }
 
     private static readonly DateTime SealedLongAgo = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -60,8 +64,8 @@ public class WishDeliveryProcessorTests
     [Fact]
     public async Task DeliverAsync_ForWhatsAppChannelWithPhone_SendsViaSmsAsFallback()
     {
-        // Arkesel (the configured provider) has no WhatsApp API — WhatsApp-channel wishes
-        // fall back to SMS, deliberately, not silently dropped.
+        // No WhatsApp provider is wired up — WhatsApp-channel wishes fall back to SMS,
+        // deliberately, not silently dropped.
         var wish = NewDueSealedWish(DeliveryChannel.WhatsApp, "0244123456");
         SetupWish(wish);
         _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
@@ -133,6 +137,23 @@ public class WishDeliveryProcessorTests
         delivered.Should().BeFalse();
         wish.DeliveryAttemptCount.Should().Be(8);
         wish.NextDeliveryAttemptAtUtc.Should().Be(DateTime.MaxValue);
+    }
+
+    [Fact]
+    public async Task DeliverAsync_AfterMaxAttempts_NotifiesSenderByEmail()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, phoneNumber: null);
+        wish.CustomerUserId = customerUserId;
+        wish.DeliveryAttemptCount = 7;
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _customerUsers.Setup(r => r.GetByIdAsync(customerUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CustomerUser { Id = customerUserId, Email = "sender@example.com", Name = "Ama" });
+
+        await _sut.DeliverAsync(wish.Id);
+
+        _emailSender.Verify(e => e.SendAsync("sender@example.com", It.Is<string>(s => s.Contains("Kojo")), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

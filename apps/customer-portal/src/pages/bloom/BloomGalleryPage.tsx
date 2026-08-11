@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
+import { Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { useBirthdayBloom } from "@/hooks/useBirthdayBloom";
 import type { BloomWish } from "@/types";
 
@@ -136,7 +138,13 @@ export default function BloomGalleryPage() {
   if (loading) {
     return (
       <main className="mx-auto w-full max-w-[1280px] px-4 pb-9 sm:px-8">
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Seo
+          title="Birthday Bloom Gallery — WishDem"
+          description="Browse a private gallery of birthday memories gathered just for you on WishDem."
+          path="/bloom/:id/gallery"
+          noindex
+        />
+        <Loading />
       </main>
     );
   }
@@ -144,6 +152,12 @@ export default function BloomGalleryPage() {
   if (!bloom) {
     return (
       <main className="mx-auto w-full max-w-[1280px] px-4 pb-9 sm:px-8">
+        <Seo
+          title="Birthday Bloom Gallery — WishDem"
+          description="This private Birthday Bloom gallery could not be found."
+          path="/bloom/:id/gallery"
+          noindex
+        />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           Nothing has been gathered here yet.
         </p>
@@ -165,6 +179,12 @@ export default function BloomGalleryPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 pb-10 sm:px-8">
+      <Seo
+        title={`${bloom.recipientName.split(" ")[0]}'s Birthday Bloom Gallery — WishDem`}
+        description={`Browse all ${bloom.wishes.length} private birthday wishes gathered for ${bloom.recipientName.split(" ")[0]} on WishDem.`}
+        path="/bloom/:id/gallery"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.3px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />

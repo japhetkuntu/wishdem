@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { useContributionContext, useMemoryDraft } from "@/hooks/useContribution";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 
@@ -25,7 +27,13 @@ export default function GuestMemoryPreviewPage() {
   if (loading) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Seo
+          title="Preview Your Memory — WishDem"
+          description="Preview your private memory contribution before sealing it on WishDem."
+          path="/contribute/:id/preview"
+          noindex
+        />
+        <Loading />
       </main>
     );
   }
@@ -33,6 +41,12 @@ export default function GuestMemoryPreviewPage() {
   if (!memory) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
+        <Seo
+          title="No Memory Yet — WishDem"
+          description="You haven't written a memory yet for this WishDem contribution."
+          path="/contribute/:id/preview"
+          noindex
+        />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           You haven't written a memory yet.
         </p>
@@ -49,6 +63,12 @@ export default function GuestMemoryPreviewPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1160px] px-4 pb-10 sm:px-8">
+      <Seo
+        title={`Preview Your Memory for ${recipientFirst} — WishDem`}
+        description={`See your private memory as ${recipientFirst} will receive it, before sealing on WishDem.`}
+        path="/contribute/:id/preview"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.3px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />

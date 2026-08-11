@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { WishCard } from "@/components/WishCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,14 +9,24 @@ import { useWishes } from "@/hooks/useWishes";
 import { daysUntil, formatWeekdayDate } from "@/lib/date";
 
 export default function DashboardPage() {
-  const { wishes, loading } = useWishes();
+  const { wishes, loading, refresh } = useWishes();
   const [params] = useSearchParams();
   // `?empty=1` forces the empty-dashboard layout for local testing —
   // otherwise this route reflects the mock data layer's current wishes.
   const forceEmpty = params.get("empty") === "1";
 
   if (loading) {
-    return <main className="grid min-h-screen place-items-center text-porcelain/60">Loading…</main>;
+    return (
+      <main>
+        <Seo
+          title="Your Wishes — WishDem"
+          description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+          path="/dashboard"
+          noindex
+        />
+        <Loading size="page" label="Gathering your wishes" />
+      </main>
+    );
   }
 
   const showEmpty = forceEmpty || (wishes && wishes.length === 0);
@@ -23,6 +34,12 @@ export default function DashboardPage() {
   if (showEmpty) {
     return (
       <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+        <Seo
+          title="Your Wishes — WishDem"
+          description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+          path="/dashboard"
+          noindex
+        />
         <AppNav active="wishes" />
         <div className="grid min-h-[70vh] place-items-center py-8">
           <EmptyState
@@ -60,6 +77,12 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Your Wishes — WishDem"
+        description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+        path="/dashboard"
+        noindex
+      />
       <AppNav active="wishes" />
 
       <section className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
@@ -90,7 +113,7 @@ export default function DashboardPage() {
               </span>
             </header>
             {list.map((wish) => (
-              <WishCard key={wish.id} wish={wish} />
+              <WishCard key={wish.id} wish={wish} onRetried={refresh} />
             ))}
           </section>
 

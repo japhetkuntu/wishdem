@@ -7,7 +7,7 @@ export type Relationship =
   | "Friend"
   | "Other";
 
-export type DeliveryChannel = "whatsapp" | "sms" | "link";
+export type DeliveryChannel = "sms" | "link";
 
 export type ThemeId =
   | "velvet-night"
@@ -41,8 +41,8 @@ export interface Recipient {
   birthdayISO: string; // yyyy-mm-dd
   deliveryTime: string; // HH:mm
   timezone: string;
-  /** Required for whatsapp/sms delivery — the recipient never has a WishDem account,
-   * so this is the only way to reach them for those channels. Not needed for "link". */
+  /** Required for sms delivery — the recipient never has a WishDem account,
+   * so this is the only way to reach them for that channel. Not needed for "link". */
   phoneNumber?: string;
 }
 
@@ -59,6 +59,9 @@ export interface Wish {
   createdAt: string;
   sealedAt?: string;
   openedAt?: string;
+  /** True once the delivery worker has exhausted its retries without reaching the
+   * recipient — usually a bad phone number. Retry it via retryWishDelivery(). */
+  deliveryFailed: boolean;
 }
 
 export interface User {

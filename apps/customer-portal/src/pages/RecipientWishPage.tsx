@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Button } from "@wishdem/design-system";
+import clsx from "clsx";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { SealButton } from "@/components/SealButton";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 import { ShareLinks } from "@/components/ShareLinks";
@@ -16,12 +18,28 @@ export default function RecipientWishPage() {
   const [revealed, setRevealed] = useState(false);
 
   if (loading) {
-    return <main className="grid min-h-screen place-items-center text-porcelain/60">Loading…</main>;
+    return (
+      <main>
+        <Seo
+          title="Your Wish — WishDem"
+          description="A private birthday wish held for you on WishDem."
+          path="/w/:id"
+          noindex
+        />
+        <Loading size="page" label="Unwrapping your wish" />
+      </main>
+    );
   }
 
   if (!wish) {
     return (
       <main className="grid min-h-screen place-items-center px-5 text-center">
+        <Seo
+          title="Wish Not Found — WishDem"
+          description="This private wish link could not be found."
+          path="/w/:id"
+          noindex
+        />
         <div>
           <h1 className="mb-3 font-display text-[32px]">This wish could not be found.</h1>
           <Link to="/" className="text-champagne">Return home →</Link>
@@ -45,6 +63,12 @@ export default function RecipientWishPage() {
   if (!isOpened) {
     return (
       <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-5 py-10 text-center">
+        <Seo
+          title={`A Birthday Wish for ${wish.recipient.name} — WishDem`}
+          description={`Someone saved a private birthday wish for ${wish.recipient.name} on WishDem.`}
+          path="/w/:id"
+          noindex
+        />
         <section>
           <span className="text-[10px] font-extrabold tracking-[0.15em] text-champagne">
             A BIRTHDAY WISH FOR {wish.recipient.name.toUpperCase()}
@@ -77,21 +101,37 @@ export default function RecipientWishPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1250px] px-4 pb-10 pt-6 sm:px-10">
+      <Seo
+        title={`${wish.recipient.name}'s Birthday Wish — WishDem`}
+        description={`An opened birthday wish from ${wish.fromName} to ${wish.recipient.name} on WishDem.`}
+        path="/w/:id"
+        noindex
+      />
       <header className="mb-7 flex flex-wrap justify-between gap-2 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
         <span>FOR {wish.recipient.name.toUpperCase()}, ON YOUR BIRTHDAY</span>
         <span>FROM {wish.fromName.toUpperCase()}</span>
       </header>
 
       <section className="grid items-start gap-6 sm:grid-cols-[minmax(0,1.2fr)_minmax(270px,.65fr)] sm:gap-8">
-        <article className="rounded-lg bg-paper p-6 text-ink shadow-deep sm:p-12">
-          <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
+        <article className={clsx("rounded-lg bg-paper p-6 text-ink shadow-deep sm:p-12", revealed && "animate-wd-reveal-rise")}>
+          <span
+            className={clsx("text-[10px] font-extrabold tracking-[0.14em] text-mulberry", revealed && "animate-wd-reveal-rise")}
+            style={revealed ? { animationDelay: "80ms" } : undefined}
+          >
             {formatWeekdayDate(wish.recipient.birthdayISO).toUpperCase()}
           </span>
-          <h1 className="my-[22px] font-display text-[36px] sm:text-[44px]">
+          <h1
+            className={clsx("my-[22px] font-display text-[36px] sm:text-[44px]", revealed && "animate-wd-reveal-rise")}
+            style={revealed ? { animationDelay: "180ms" } : undefined}
+          >
             Dear {wish.recipient.name},
           </h1>
           {wish.message.split("\n\n").map((paragraph, i) => (
-            <p key={i} className="mb-4 font-display text-[17px] leading-[1.65] sm:text-[19px]">
+            <p
+              key={i}
+              className={clsx("mb-4 font-display text-[17px] leading-[1.65] sm:text-[19px]", revealed && "animate-wd-reveal-rise")}
+              style={revealed ? { animationDelay: `${280 + i * 130}ms` } : undefined}
+            >
               {paragraph.split("\n").map((line, j) => (
                 <span key={j}>
                   {line}
@@ -102,7 +142,12 @@ export default function RecipientWishPage() {
           ))}
 
           {wish.attachment && (
-            <AttachmentDisplay attachment={wish.attachment} fromName={wish.fromName} />
+            <div
+              className={revealed ? "animate-wd-reveal-rise" : undefined}
+              style={revealed ? { animationDelay: `${280 + wish.message.split("\n\n").length * 130 + 120}ms` } : undefined}
+            >
+              <AttachmentDisplay attachment={wish.attachment} fromName={wish.fromName} />
+            </div>
           )}
 
           <div className="mt-[22px] border-t border-ink/10 pt-[18px]">
@@ -129,7 +174,10 @@ export default function RecipientWishPage() {
           </div>
         </article>
 
-        <aside className="grid gap-[15px] sm:grid-cols-2">
+        <aside
+          className={clsx("grid gap-[15px] sm:grid-cols-2", revealed && "animate-wd-reveal-rise")}
+          style={revealed ? { animationDelay: "520ms" } : undefined}
+        >
           <div className="col-span-2 mx-auto grid h-[166px] w-[166px] place-items-center rounded-full bg-champagne text-center font-display text-[20px] leading-[1.1] text-plum shadow-deep sm:col-span-1">
             opened
             <br />

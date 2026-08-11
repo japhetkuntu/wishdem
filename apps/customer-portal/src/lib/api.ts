@@ -96,13 +96,15 @@ export async function listThemes(): Promise<Theme[]> {
 /* Wishes                                                                     */
 /* -------------------------------------------------------------------------- */
 
-/** Backend uses capital-A "whatsApp"; the frontend uses lowercase "whatsapp". */
-function channelToBackend(channel: DeliveryChannel): "whatsApp" | "sms" | "link" {
-  return channel === "whatsapp" ? "whatsApp" : channel;
+function channelToBackend(channel: DeliveryChannel): "sms" | "link" {
+  return channel;
 }
 
+// WhatsApp isn't offered as a delivery channel anymore, but the backend enum still has it
+// (DeliveryChannel.WhatsApp — kept for data compatibility, delivered via SMS under the
+// hood). A wish saved with that channel before this change would otherwise fail to decode.
 function channelFromBackend(channel: "whatsApp" | "sms" | "link"): DeliveryChannel {
-  return channel === "whatsApp" ? "whatsapp" : channel;
+  return channel === "whatsApp" ? "sms" : channel;
 }
 
 /** "HH:mm" (frontend) <-> "HH:mm:ss" (backend). */
@@ -135,6 +137,7 @@ interface WishResponse {
   deliveredAtUtc: string | null;
   openedAtUtc: string | null;
   createdAtUtc: string;
+  deliveryFailed: boolean;
 }
 
 interface WishListResponse {
@@ -174,6 +177,7 @@ function wishFromResponse(res: WishResponse): Wish {
     createdAt: res.createdAtUtc,
     sealedAt: res.sealedAtUtc ?? undefined,
     openedAt: res.openedAtUtc ?? undefined,
+    deliveryFailed: res.deliveryFailed,
   };
 }
 
@@ -268,7 +272,7 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
   if (input.id) {
     const existing = await getWish(input.id);
     if (existing) {
-      const updated: Wish = { ...existing, recipient: input.recipient };
+      const updated: Wish = { ...existing, recipient: input.recipient, fromName };
       const res = await apiRequest<WishResponse>(`/api/wishes/${input.id}`, {
         method: "PUT",
         body: JSON.stringify(saveWishBodyFromWish(updated)),
@@ -288,6 +292,7 @@ export async function saveWhoStep(input: DraftInput): Promise<Wish> {
     fromName,
     priceLabel: "GH₵1.49",
     createdAt: new Date().toISOString(),
+    deliveryFailed: false,
   };
   const res = await apiRequest<WishResponse>("/api/wishes", {
     method: "POST",
@@ -315,6 +320,7 @@ export async function saveGuestWhoDraft(draftId: string | null, recipient: Recip
     fromName,
     priceLabel: "",
     createdAt: new Date().toISOString(),
+    deliveryFailed: false,
   });
 
   const res = draftId
@@ -346,11 +352,15 @@ export async function claimGuestDraft(draftId: string): Promise<Wish> {
  * wishId or recipient the frontend hasn't confirmed exists yet — mirrors the
  * old mock's `ensureWish` recovery behavior, but against the real API.
  */
-async function ensureWish(id: string, recipient: Recipient | null | undefined): Promise<Wish> {
+async function ensureWish(
+  id: string,
+  recipient: Recipient | null | undefined,
+  fromName?: string,
+): Promise<Wish> {
   const existing = await getWish(id);
   if (existing) return existing;
   if (!recipient) throw new Error(`Wish ${id} not found`);
-  return saveWhoStep({ recipient });
+  return saveWhoStep({ recipient, fromName });
 }
 
 async function putFullWish(wish: Wish): Promise<Wish> {
@@ -385,8 +395,9 @@ export async function saveMessageStep(
   message: string,
   attachment: Attachment | null,
   recipient?: Recipient,
+  fromName?: string,
 ): Promise<Wish> {
-  const wish = await ensureWish(id, recipient);
+  const wish = await ensureWish(id, recipient, fromName);
   return putFullWish({ ...wish, message, attachment });
 }
 
@@ -394,8 +405,9 @@ export async function saveThemeStep(
   id: string,
   themeId: ThemeId,
   recipient?: Recipient,
+  fromName?: string,
 ): Promise<Wish> {
-  const wish = await ensureWish(id, recipient);
+  const wish = await ensureWish(id, recipient, fromName);
   return putFullWish({ ...wish, themeId });
 }
 
@@ -404,8 +416,9 @@ export async function saveDeliverStep(
   channel: DeliveryChannel,
   recipient?: Recipient,
   phoneNumber?: string,
+  fromName?: string,
 ): Promise<Wish> {
-  const wish = await ensureWish(id, recipient);
+  const wish = await ensureWish(id, recipient, fromName);
   return putFullWish({
     ...wish,
     channel,
@@ -418,6 +431,17 @@ export async function sealWish(wishId: string): Promise<Wish> {
   const res = await apiRequest<WishResponse>(`/api/wishes/${wishId}/seal`, {
     method: "POST",
     body: JSON.stringify({ promoCode: null }),
+  });
+  return wishFromResponse(res);
+}
+
+/** Fixes up the recipient phone number on a wish stuck in `deliveryFailed` and re-queues
+ * an immediate delivery attempt. Rejected by the backend for a wish that isn't actually
+ * in the failed state. */
+export async function retryWishDelivery(wishId: string, recipientPhoneNumber: string): Promise<Wish> {
+  const res = await apiRequest<WishResponse>(`/api/wishes/${wishId}/retry-delivery`, {
+    method: "POST",
+    body: JSON.stringify({ recipientPhoneNumber }),
   });
   return wishFromResponse(res);
 }

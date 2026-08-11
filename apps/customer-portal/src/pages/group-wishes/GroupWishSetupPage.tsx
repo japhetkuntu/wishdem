@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { useGroupWishes } from "@/hooks/useGroupWishes";
 import type { GroupWishFormat } from "@/types";
@@ -71,6 +72,12 @@ export default function GroupWishSetupPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Create a Group Wish — WishDem"
+        description="Set up a new private group wish and invite others to add memories to it."
+        path="/group-wishes/new"
+        noindex
+      />
       <AppNav active="groupWishes" />
 
       <section className="grid gap-8 py-8 sm:grid-cols-[1.15fr_.85fr] sm:gap-14 sm:py-10">

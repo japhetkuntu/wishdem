@@ -4,6 +4,7 @@ using WishDem.Actors.Sdk.Configuration;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Messaging.Sdk;
 using WishDem.Messaging.Sdk.Abstractions;
+using WishDem.Messaging.Sdk.Templates;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -14,7 +15,9 @@ namespace WishDem.Actors.Sdk.Delivery;
 /// DeliveryWorkerActor can run many of these concurrently instead of one at a time.</summary>
 public class WishDeliveryProcessor(
     IRepository<Wish> wishes,
+    IRepository<CustomerUser> customerUsers,
     ISmsSender smsSender,
+    IEmailSender emailSender,
     IOptions<DeliverySettings> options,
     ILogger<WishDeliveryProcessor> logger) : IWishDeliveryProcessor
 {
@@ -55,11 +58,13 @@ public class WishDeliveryProcessor(
         if (wish.DeliveryAttemptCount >= MaxDeliveryAttempts)
         {
             // Give up — leave it undelivered but stop scheduling further attempts so it
-            // doesn't retry every poll cycle forever. Surfaces loudly so an admin notices.
+            // doesn't retry every poll cycle forever. Surfaces loudly so an admin notices —
+            // and, just as importantly, tells the sender directly (see NotifySenderOfFailureAsync).
             wish.NextDeliveryAttemptAtUtc = DateTime.MaxValue;
             logger.LogCritical(
                 "[DeliverAsync] Wish {WishId} failed delivery {Attempts} times — giving up, needs manual attention.",
                 wishId, wish.DeliveryAttemptCount);
+            await NotifySenderOfFailureAsync(wish, ct);
         }
         else
         {
@@ -91,9 +96,9 @@ public class WishDeliveryProcessor(
                     return false;
                 }
 
-                // Arkesel (the configured SMS provider) has no WhatsApp product, so
-                // WhatsApp-channel wishes are also sent via SMS for now — see MessagingSdk
-                // README/comments. This is a deliberate, documented compromise, not a bug.
+                // No WhatsApp provider is wired up — WhatsApp-channel wishes are also sent
+                // via SMS for now, deliberately, not silently dropped. See MessagingSdk
+                // README/comments for why (compliance/ops tradeoffs of the WhatsApp options).
                 var message = BuildMessage(wish, link);
                 try
                 {
@@ -116,4 +121,30 @@ public class WishDeliveryProcessor(
 
     private static string BuildMessage(Wish wish, string link) =>
         $"{wish.FromName} sent {wish.RecipientName} a birthday wish on WishDem! Open it here: {link}";
+
+    private async Task NotifySenderOfFailureAsync(Wish wish, CancellationToken ct)
+    {
+        try
+        {
+            var sender = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);
+            if (sender is null || string.IsNullOrWhiteSpace(sender.Email)) return;
+
+            var subject = $"We couldn't deliver your wish for {wish.RecipientName}";
+            var textBody = $"We tried several times but couldn't deliver your birthday wish for {wish.RecipientName} — the phone number on file may be incorrect. Sign in to WishDem to check it.";
+            var dashboardUrl = $"{_settings.FrontendBaseUrl.TrimEnd('/')}/dashboard";
+            var htmlBody = EmailTemplate.Shell(subject, $"""
+                {EmailTemplate.Eyebrow("Delivery needs your attention")}
+                <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">We couldn't reach {EmailTemplate.Encode(wish.RecipientName)}</h1>
+                <p style="margin:0;">We tried several times to deliver this wish and it never went through — the phone number on file is the most common reason. Your message hasn't gone anywhere; it's still safely held on your dashboard.</p>
+                {EmailTemplate.Button("Check the delivery details", dashboardUrl)}
+                <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.55);">Update the number or delivery method there and we'll try again.</p>
+                """);
+
+            await emailSender.SendAsync(sender.Email, subject, textBody, htmlBody, ct);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "[NotifySenderOfFailureAsync] Failed to notify sender for wish {WishId}", wish.Id);
+        }
+    }
 }

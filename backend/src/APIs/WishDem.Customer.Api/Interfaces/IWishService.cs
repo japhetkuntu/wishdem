@@ -40,6 +40,12 @@ public interface IWishService
 
     Task<IApiResponse<WishResponse>> SealAsync(Guid customerUserId, Guid wishId, SealWishRequest request, CancellationToken ct = default);
 
+    /// <summary>Owner-only: the delivery worker gave up on this wish (DeliveryFailed is
+    /// true) — updates the recipient phone number and re-queues an immediate delivery
+    /// attempt. Rejects wishes that aren't actually in the failed state so this can't be
+    /// used to jump the delivery queue.</summary>
+    Task<IApiResponse<WishResponse>> RetryDeliveryAsync(Guid customerUserId, Guid wishId, RetryDeliveryRequest request, CancellationToken ct = default);
+
     Task<IApiResponse<bool>> DeleteAsync(Guid customerUserId, Guid wishId, CancellationToken ct = default);
 
     /// <summary>Public, unauthenticated: the wish recipient has no WishDem account, so this

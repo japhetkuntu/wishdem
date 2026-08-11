@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { useCircle } from "@/hooks/useCircle";
 import { daysUntil, formatWishDate } from "@/lib/date";
@@ -108,6 +109,12 @@ export default function CirclePage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Your Circle — WishDem"
+        description="Your private constellation of people and shared celebrations you're holding close."
+        path="/circle"
+        noindex
+      />
       <AppNav active="circle" />
 
       <header className="flex flex-col gap-3 py-6 sm:flex-row sm:items-end sm:justify-between">
@@ -150,7 +157,7 @@ export default function CirclePage() {
               {SECTION_TITLES[filter]}
             </h2>
             {loading ? (
-              <p className="py-10 text-center text-[12px] text-porcelain/55">Loading…</p>
+              <Loading />
             ) : filtered.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-porcelain/55">
                 No one here yet.

@@ -1,4 +1,6 @@
 import { Link, useParams } from "react-router-dom";
+import { Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { useBirthdayBloom } from "@/hooks/useBirthdayBloom";
 
 export default function BloomCoverPage() {
@@ -8,7 +10,13 @@ export default function BloomCoverPage() {
   if (loading) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Seo
+          title="Your Birthday Bloom — WishDem"
+          description="A private collection of birthday memories gathered just for you on WishDem."
+          path="/bloom/:id"
+          noindex
+        />
+        <Loading />
       </main>
     );
   }
@@ -16,6 +24,12 @@ export default function BloomCoverPage() {
   if (!bloom) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
+        <Seo
+          title="Birthday Bloom Not Found — WishDem"
+          description="This private Birthday Bloom collection could not be found."
+          path="/bloom/:id"
+          noindex
+        />
         <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
           <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
             Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
@@ -37,6 +51,12 @@ export default function BloomCoverPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1160px] px-4 pb-10 sm:px-8">
+      <Seo
+        title={`${bloom.recipientName.split(" ")[0]}'s Birthday Bloom — WishDem`}
+        description={`A private Birthday Bloom gathered by ${bloom.organizerName} for ${bloom.recipientName.split(" ")[0]} on WishDem.`}
+        path="/bloom/:id"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />

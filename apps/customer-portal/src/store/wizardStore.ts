@@ -25,6 +25,7 @@ interface WizardState {
   setDraftId: (id: string) => void;
   clearDraftId: () => void;
   setRecipient: (recipient: Recipient) => void;
+  setFromName: (fromName: string) => void;
   setMessage: (message: string) => void;
   setAttachment: (attachment: Attachment | null) => void;
   setTheme: (themeId: ThemeId) => void;
@@ -50,6 +51,7 @@ const initialState = {
   | "setDraftId"
   | "clearDraftId"
   | "setRecipient"
+  | "setFromName"
   | "setMessage"
   | "setAttachment"
   | "setTheme"
@@ -67,6 +69,7 @@ export const useWizardStore = create<WizardState>()(
       setDraftId: (id) => set({ draftId: id }),
       clearDraftId: () => set({ draftId: null }),
       setRecipient: (recipient) => set({ recipient, lastSavedAt: Date.now() }),
+      setFromName: (fromName) => set({ fromName, lastSavedAt: Date.now() }),
       setMessage: (message) => set({ message, lastSavedAt: Date.now() }),
       setAttachment: (attachment) => set({ attachment, lastSavedAt: Date.now() }),
       setTheme: (themeId) => set({ themeId, lastSavedAt: Date.now() }),

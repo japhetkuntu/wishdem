@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { EmptyState } from "@/components/EmptyState";
 import { useCalendarDays, useCalendarEvents } from "@/hooks/useCalendar";
@@ -92,6 +93,12 @@ export default function CalendarPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Calendar — WishDem"
+        description="Your private timeline of upcoming birthdays, wish deliveries, and group wish deadlines."
+        path="/calendar"
+        noindex
+      />
       <AppNav active="calendar" />
 
       <header className="flex flex-col gap-4 py-6">
@@ -107,7 +114,7 @@ export default function CalendarPage() {
       </header>
 
       {daysLoading ? (
-        <p className="py-16 text-center text-[13px] text-porcelain/55">Loading…</p>
+        <Loading />
       ) : days.length === 0 ? (
         <div className="grid min-h-[50vh] place-items-center py-8">
           <EmptyState
@@ -248,7 +255,7 @@ export default function CalendarPage() {
               </div>
 
               {eventsLoading ? (
-                <p className="py-8 text-center text-[12px] text-porcelain/55">Loading…</p>
+                <Loading className="py-6" />
               ) : events.length === 0 ? (
                 <p className="py-8 text-center text-[12px] text-porcelain/55">
                   Nothing scheduled for this day yet.

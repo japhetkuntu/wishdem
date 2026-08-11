@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AuthPrompt } from "@/components/AuthPrompt";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -84,6 +85,12 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-[1040px] px-4 pb-10 sm:px-7">
+      <Seo
+        title="Account Settings — WishDem"
+        description="Manage your personal WishDem profile, sender details, and account settings."
+        path="/account"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
@@ -103,7 +110,7 @@ export default function ProfilePage() {
         </header>
 
         {loading ? (
-          <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+          <Loading />
         ) : !user ? (
           <AuthPrompt
             title="Sign in to manage your profile."

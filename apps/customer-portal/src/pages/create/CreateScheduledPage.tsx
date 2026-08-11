@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { ShareLinks } from "@/components/ShareLinks";
 import { ShareImageActions } from "@/components/ShareImageActions";
+import { SmoothImage } from "@/components/SmoothImage";
 import { useWizardStore } from "@/store/wizardStore";
 import { daysUntil, formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
@@ -19,12 +21,7 @@ export default function CreateScheduledPage() {
   if (!recipient) return null;
 
   const days = daysUntil(recipient.birthdayISO);
-  const channelLabel =
-    channel === "whatsapp"
-      ? "WhatsApp notification"
-      : channel === "sms"
-        ? "SMS notification"
-        : "private link";
+  const channelLabel = channel === "sms" ? "SMS notification" : "private link";
 
   function handleDashboard() {
     reset();
@@ -33,6 +30,12 @@ export default function CreateScheduledPage() {
 
   return (
     <main className="grid min-h-screen items-center gap-6 bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-6 py-12 sm:grid-cols-2 sm:gap-16 sm:px-[8%]">
+      <Seo
+        title={`${recipient.name}'s Wish Is Sealed — WishDem`}
+        description={`${recipient.name}'s private birthday wish has been sealed and scheduled for delivery on WishDem.`}
+        path="/create/scheduled"
+        noindex
+      />
       <section>
         <span className="text-[10px] font-extrabold tracking-[0.14em] text-champagne">
           DELIVERY SECURED
@@ -93,10 +96,11 @@ export default function CreateScheduledPage() {
       </section>
 
       <div className="relative order-first mx-auto w-full max-w-[410px] justify-self-center sm:order-none">
-        <img
+        <SmoothImage
           src={vesselImage.src}
           alt={vesselImage.alt}
-          className="aspect-square w-full rounded-full border border-champagne/55 object-cover shadow-deep"
+          loading="eager"
+          className="aspect-square w-full rounded-full border border-champagne/55 shadow-deep"
         />
         <div className="absolute bottom-[26px] right-[-10px] rounded-md bg-paper px-[17px] py-[14px] text-right font-display text-[25px] text-plum shadow-deep">
           {days}

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { useContributionContext, useMemoryDraft } from "@/hooks/useContribution";
 
 export default function GuestMemorySealedPage() {
@@ -11,7 +13,13 @@ export default function GuestMemorySealedPage() {
   if (loading || contextLoading) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Seo
+          title="Memory Sealed — WishDem"
+          description="Your private memory contribution has been sealed and is waiting for delivery on WishDem."
+          path="/contribute/:id/sealed"
+          noindex
+        />
+        <Loading />
       </main>
     );
   }
@@ -19,6 +27,12 @@ export default function GuestMemorySealedPage() {
   if (!memory || !memory.sealed) {
     return (
       <main className="mx-auto w-full max-w-[1160px] px-4 pb-9 sm:px-8">
+        <Seo
+          title="Memory Not Sealed — WishDem"
+          description="This memory hasn't been sealed yet on WishDem."
+          path="/contribute/:id/sealed"
+          noindex
+        />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           This memory hasn't been sealed yet.
         </p>
@@ -38,6 +52,12 @@ export default function GuestMemorySealedPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1160px] px-4 pb-10 sm:px-8">
+      <Seo
+        title={`Your Memory for ${recipientFirst} Is Sealed — WishDem`}
+        description={`Your private memory for ${recipientFirst} has been sealed and tucked into their keepsake on WishDem.`}
+        path="/contribute/:id/sealed"
+        noindex
+      />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
         <Link to="/" className="text-[21px] font-extrabold tracking-[-1.3px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />

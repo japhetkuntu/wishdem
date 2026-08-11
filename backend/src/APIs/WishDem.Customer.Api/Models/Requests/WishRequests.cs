@@ -18,3 +18,5 @@ public record SaveWishRequest(
     DeliveryChannel? Channel);
 
 public record SealWishRequest(string? PromoCode);
+
+public record RetryDeliveryRequest(string RecipientPhoneNumber);

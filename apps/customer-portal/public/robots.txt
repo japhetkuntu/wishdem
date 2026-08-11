@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /how-it-works
+Allow: /login
+Allow: /terms
+Allow: /privacy
+
+# Authenticated-only app pages — nothing behind a login wall belongs in search.
+Disallow: /dashboard
+Disallow: /account
+Disallow: /calendar
+Disallow: /people
+Disallow: /circle
+Disallow: /group-wishes
+Disallow: /create/
+
+# Personal one-off links (a specific recipient's wish, a guest contribution,
+# an invitation) — addressed to one person, never meant for search results.
+Disallow: /w/
+Disallow: /bloom/
+Disallow: /contribute/
+Disallow: /login/verify
+
+Sitemap: https://wishdem.com/sitemap.xml

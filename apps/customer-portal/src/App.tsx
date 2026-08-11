@@ -28,6 +28,8 @@ const GuestMemoryPreviewPage = lazy(() => import("@/pages/contribute/GuestMemory
 const GuestMemorySealedPage = lazy(() => import("@/pages/contribute/GuestMemorySealedPage"));
 const BloomCoverPage = lazy(() => import("@/pages/bloom/BloomCoverPage"));
 const BloomGalleryPage = lazy(() => import("@/pages/bloom/BloomGalleryPage"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/legal/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("@/pages/legal/TermsPage"));
 
 // Account-only pages have no guest use case, unlike /create/* (guests start a wish before
 // signing in, via the embedded AuthPrompt) or /w/:id, /contribute/*, /bloom/*,
@@ -55,6 +57,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
         <Route path="/login/verify" element={<RedirectIfAuthed><VerifyPage /></RedirectIfAuthed>} />
         <Route path="/create/who" element={<CreateWhoPage />} />

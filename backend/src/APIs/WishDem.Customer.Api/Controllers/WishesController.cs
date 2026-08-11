@@ -62,6 +62,14 @@ public class WishesController(IWishService wishService) : ControllerBase
         return StatusCode(response.Code, response);
     }
 
+    [HttpPost("{id:guid}/retry-delivery")]
+    public async Task<IActionResult> RetryDelivery(Guid id, [FromBody] RetryDeliveryRequest request, CancellationToken ct)
+    {
+        var userId = ClaimsReader.GetUserId(User);
+        var response = await wishService.RetryDeliveryAsync(userId, id, request, ct);
+        return StatusCode(response.Code, response);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {

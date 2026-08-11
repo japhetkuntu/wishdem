@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { Button } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { useCircle } from "@/hooks/useCircle";
 import { daysUntil } from "@/lib/date";
@@ -57,6 +58,12 @@ export default function AddPersonPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title="Add Someone to Your Circle — WishDem"
+        description="Add a person's name and birthday to your private WishDem Circle."
+        path="/circle/new"
+        noindex
+      />
       <AppNav active="circle" />
 
       <section className="grid gap-8 py-8 sm:grid-cols-[.85fr_1.15fr] sm:items-center sm:gap-14 sm:py-12">

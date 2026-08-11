@@ -158,13 +158,15 @@ public class AdminUserService(
         var textBody = $"Hi {fullName}, you've been added to the WishDem operations workspace. " +
             $"Sign in with {email} and the temporary password {tempPassword} — you'll be asked to change it.";
         var htmlBody = EmailTemplate.Shell(subject, $"""
-            <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1629;">Welcome to the team</h1>
-            <p style="margin:0;">Hi {EmailTemplate.Encode(fullName)}, you've been added to the WishDem operations workspace. Sign in with the credentials below — you'll be asked to change your password.</p>
+            {EmailTemplate.Eyebrow("Team invite")}
+            <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">Welcome to the team</h1>
+            <p style="margin:0;">Hi {EmailTemplate.Encode(fullName)}, you've been added to the WishDem operations workspace. Sign in with the credentials below — you'll be asked to choose your own password right after.</p>
             {EmailTemplate.CredentialBox(
                 EmailTemplate.CredentialRow("Email", email) +
                 EmailTemplate.CredentialRow("Temporary password", tempPassword))}
-            {EmailTemplate.Button("Sign in", _adminPortal.Url)}
-            <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.6);">If you weren't expecting this invite, you can ignore this email.</p>
+            {EmailTemplate.Button("Sign in to WishDem Admin", _adminPortal.Url)}
+            {EmailTemplate.Divider()}
+            <p style="margin:0;font-size:12px;color:rgba(36,29,36,0.55);">If you weren't expecting this invite, you can safely ignore this email — no account was created for you to worry about.</p>
             """);
 
         return emailSender.SendAsync(email, subject, textBody, htmlBody, ct);

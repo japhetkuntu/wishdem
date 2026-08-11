@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { uploadAttachment } from "@/lib/api";
+import { SmoothImage } from "@/components/SmoothImage";
 import type { Attachment } from "@/types";
 
 export interface PickerProps {
@@ -66,7 +67,7 @@ export function ImagePanel({ value, onChange, wishId }: PanelProps) {
   if (hasImage) {
     return (
       <div className="relative overflow-hidden rounded-md">
-        <img src={value!.url} alt="Attached memory" className="h-[180px] w-full object-cover" />
+        <SmoothImage src={value!.url!} alt="Attached memory" loading="eager" className="h-[180px] w-full" />
         <button
           type="button"
           onClick={() => onChange(null)}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button } from "@wishdem/design-system";
+import { Button, Loading } from "@wishdem/design-system";
+import { Seo } from "@/components/Seo";
 import { AppNav } from "@/components/AppNav";
 import { useGroupWish } from "@/hooks/useGroupWishes";
 
@@ -70,8 +71,14 @@ export default function GroupWishLobbyPage() {
   if (loading) {
     return (
       <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+        <Seo
+          title="Invite People — WishDem"
+          description="Invite people to contribute to your private group wish on WishDem."
+          path="/group-wishes/:id/invite"
+          noindex
+        />
         <AppNav active="groupWishes" />
-        <p className="py-16 text-center text-[12px] text-porcelain/55">Loading…</p>
+        <Loading />
       </main>
     );
   }
@@ -79,6 +86,12 @@ export default function GroupWishLobbyPage() {
   if (!groupWish) {
     return (
       <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+        <Seo
+          title="Group Wish Not Found — WishDem"
+          description="This group wish could not be found."
+          path="/group-wishes/:id/invite"
+          noindex
+        />
         <AppNav active="groupWishes" />
         <p className="py-16 text-center text-[12px] text-porcelain/55">
           We couldn't find that group wish.
@@ -89,6 +102,12 @@ export default function GroupWishLobbyPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
+      <Seo
+        title={`Invite People to ${groupWish.title} — WishDem`}
+        description={`Invite people to contribute memories to ${groupWish.title} on WishDem.`}
+        path="/group-wishes/:id/invite"
+        noindex
+      />
       <AppNav active="groupWishes" />
 
       <header className="flex flex-wrap items-center gap-[10px] py-6">
