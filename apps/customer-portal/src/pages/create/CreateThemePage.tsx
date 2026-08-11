@@ -46,7 +46,7 @@ export default function CreateThemePage() {
     <CreateLayout activeIndex={2}>
       <Seo
         title="Choose a Theme — WishDem"
-        description="Choose how your private birthday letter will look and arrive."
+        description="Choose how your private letter will look and arrive."
         path="/create/theme"
         noindex
       />

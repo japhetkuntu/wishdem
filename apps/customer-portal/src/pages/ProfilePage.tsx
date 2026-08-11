@@ -5,7 +5,45 @@ import { Seo } from "@/components/Seo";
 import { AuthPrompt } from "@/components/AuthPrompt";
 import { useAuth } from "@/hooks/useAuth";
 
-const COUNTRIES = ["United Kingdom", "United States", "Canada", "Australia", "Portugal", "Other"];
+// Ghana leads the list since it's WishDem's primary market today (delivery SMS and
+// phone-number parsing are currently tuned for it) — everyone else can still pick their
+// own country here, it just means delivery details may need a little more care for now.
+const COUNTRIES = [
+  "Ghana",
+  "Nigeria",
+  "Kenya",
+  "South Africa",
+  "Egypt",
+  "Ethiopia",
+  "Tanzania",
+  "Uganda",
+  "Ivory Coast",
+  "Senegal",
+  "Cameroon",
+  "Morocco",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Ireland",
+  "Germany",
+  "France",
+  "Spain",
+  "Portugal",
+  "Netherlands",
+  "Italy",
+  "Sweden",
+  "United Arab Emirates",
+  "Saudi Arabia",
+  "India",
+  "Pakistan",
+  "China",
+  "Japan",
+  "Singapore",
+  "Brazil",
+  "Mexico",
+  "Other",
+];
 
 interface ProfileForm {
   firstName: string;
@@ -31,7 +69,7 @@ export default function ProfilePage() {
       lastName: user?.lastName ?? rest.join(" ") ?? "",
       avatarUrl: user?.avatarUrl ?? null,
       dateOfBirth: user?.dateOfBirth ?? "",
-      country: user?.country ?? "United Kingdom",
+      country: user?.country ?? "Ghana",
       region: user?.region ?? "",
     };
   };

@@ -36,7 +36,7 @@ public class WishDeliveryProcessorTests
         RecipientName = "Kojo",
         RecipientRelationship = "Brother",
         RecipientTimezone = "Africa/Accra",
-        RecipientBirthday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+        RecipientOccasionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
         DeliveryTime = new TimeOnly(0, 0),
         RecipientPhoneNumber = phoneNumber,
         Channel = channel,

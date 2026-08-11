@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { ThemeToggle, useTheme } from "@wishdem/design-system";
 import { useAuth } from "@/hooks/useAuth";
 import { useWishes } from "@/hooks/useWishes";
-import { daysUntil } from "@/lib/date";
+import { daysUntilOccasion } from "@/lib/date";
 
 export type AppNavKey = "wishes" | "calendar" | "people" | "circle" | "groupWishes";
 
@@ -66,7 +66,7 @@ function useNextMoment() {
 
   const upcoming = wishes
     .filter((w) => w.status === "sealed")
-    .map((w) => ({ wish: w, days: daysUntil(w.recipient.birthdayISO) }))
+    .map((w) => ({ wish: w, days: daysUntilOccasion(w.recipient.occasion, w.recipient.occasionDateISO) }))
     .sort((a, b) => a.days - b.days);
 
   return upcoming[0] ?? null;

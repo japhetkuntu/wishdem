@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
     <>
       <Seo
         title="Privacy Policy — WishDem"
-        description="How WishDem collects, uses, and protects your information and the birthday wishes you create."
+        description="How WishDem collects, uses, and protects your information and the wishes you create."
         path="/privacy"
       />
       <LegalLayout
@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
             body: (
               <>
                 <p>When you create an account: your email address, and — if you sign in with Google — the name, email, and account identifier Google shares with us.</p>
-                <p>When you create a wish: the recipient's name, relationship to you, birthday, delivery time and timezone, and — if you choose SMS delivery — their phone number. Your written message, and any photo, video, or voice note you attach.</p>
+                <p>When you create a wish: the recipient's name, relationship to you, the occasion and its date, delivery time and timezone, and — if you choose SMS delivery — their phone number. Your written message, and any photo, video, or voice note you attach.</p>
                 <p>When a recipient opens a wish: the time they opened it, recorded against that wish so you can see it was received.</p>
                 <p>We don't collect payment information — every feature on WishDem is currently free.</p>
               </>

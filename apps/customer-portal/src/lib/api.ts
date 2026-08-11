@@ -18,6 +18,7 @@ import type {
   GroupWishMemory,
   OrganizerGroupWishInvitation,
   MemoryFormat,
+  OccasionType,
   Person,
   Recipient,
   Theme,
@@ -121,7 +122,9 @@ interface WishResponse {
   fromName: string;
   recipientName: string;
   recipientRelationship: string;
-  recipientBirthday: string;
+  occasion: OccasionType;
+  occasionLabel: string | null;
+  recipientOccasionDate: string;
   deliveryTime: string;
   recipientTimezone: string;
   recipientPhoneNumber: string | null;
@@ -162,7 +165,9 @@ function wishFromResponse(res: WishResponse): Wish {
     recipient: {
       name: res.recipientName,
       relationship: res.recipientRelationship as Recipient["relationship"],
-      birthdayISO: res.recipientBirthday,
+      occasion: res.occasion,
+      occasionLabel: res.occasionLabel ?? undefined,
+      occasionDateISO: res.recipientOccasionDate,
       deliveryTime: deliveryTimeFromBackend(res.deliveryTime),
       timezone: res.recipientTimezone,
       phoneNumber: res.recipientPhoneNumber ?? undefined,
@@ -185,7 +190,9 @@ interface SaveWishRequestBody {
   fromName: string;
   recipientName: string;
   recipientRelationship: string;
-  recipientBirthday: string;
+  occasion: OccasionType;
+  occasionLabel: string | null;
+  recipientOccasionDate: string;
   deliveryTime: string;
   recipientTimezone: string;
   recipientPhoneNumber: string | null;
@@ -202,7 +209,9 @@ function saveWishBodyFromWish(wish: Wish): SaveWishRequestBody {
     fromName: wish.fromName,
     recipientName: wish.recipient.name,
     recipientRelationship: wish.recipient.relationship,
-    recipientBirthday: wish.recipient.birthdayISO,
+    occasion: wish.recipient.occasion,
+    occasionLabel: wish.recipient.occasionLabel ?? null,
+    recipientOccasionDate: wish.recipient.occasionDateISO,
     deliveryTime: deliveryTimeToBackend(wish.recipient.deliveryTime),
     recipientTimezone: wish.recipient.timezone,
     recipientPhoneNumber: wish.recipient.phoneNumber ?? null,

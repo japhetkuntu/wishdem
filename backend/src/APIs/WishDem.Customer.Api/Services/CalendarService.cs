@@ -27,8 +27,13 @@ public class CalendarService(
                 w => w.CustomerUserId == customerUserId && w.Status == WishStatus.Sealed, ct);
             foreach (var wish in myWishes)
             {
-                var occurrence = NextOccurrence(wish.RecipientBirthday, from);
-                if (occurrence is { } date && date <= to)
+                // Birthday/Anniversary wishes recur yearly, so show the next upcoming
+                // occurrence like a recurring reminder — everything else is a one-shot
+                // delivery, so show the exact date the customer picked.
+                var occurrence = wish.Occasion is OccasionType.Birthday or OccasionType.Anniversary
+                    ? NextOccurrence(wish.RecipientOccasionDate, from)
+                    : wish.RecipientOccasionDate;
+                if (occurrence is { } date && date >= from && date <= to)
                 {
                     events.Add(new CalendarEventResponse(
                         wish.Id,

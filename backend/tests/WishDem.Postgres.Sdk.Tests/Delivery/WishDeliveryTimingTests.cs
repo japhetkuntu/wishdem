@@ -1,4 +1,5 @@
 using FluentAssertions;
+using WishDem.Common.Sdk.Enums;
 using WishDem.Postgres.Sdk.Delivery;
 using WishDem.Postgres.Sdk.Entities;
 using Xunit;
@@ -7,12 +8,15 @@ namespace WishDem.Postgres.Sdk.Tests.Delivery;
 
 public class WishDeliveryTimingTests
 {
-    private static Wish NewWish(DateOnly birthday, TimeOnly deliveryTime, string timezone, DateTime sealedAtUtc) => new()
+    private static Wish NewWish(
+        DateOnly occasionDate, TimeOnly deliveryTime, string timezone, DateTime sealedAtUtc,
+        OccasionType occasion = OccasionType.Birthday) => new()
     {
         RecipientName = "Kojo",
         RecipientRelationship = "Brother",
         RecipientTimezone = timezone,
-        RecipientBirthday = birthday,
+        Occasion = occasion,
+        RecipientOccasionDate = occasionDate,
         DeliveryTime = deliveryTime,
         SealedAtUtc = sealedAtUtc,
     };
@@ -88,6 +92,21 @@ public class WishDeliveryTimingTests
         var act = () => WishDeliveryTiming.TargetOccurrenceUtc(wish);
 
         act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void TargetOccurrenceUtc_ForOneTimeOccasion_TargetsExactDateEvenIfInThePast()
+    {
+        // Congratulations doesn't recur — unlike a birthday, a date that's already passed
+        // should NOT get rolled forward into next year; it should just be due immediately.
+        var wish = NewWish(
+            new DateOnly(2026, 3, 1), new TimeOnly(9, 0), "Africa/Accra", SealedInJanuary2026,
+            occasion: OccasionType.Congratulations);
+
+        var occurrence = WishDeliveryTiming.TargetOccurrenceUtc(wish);
+
+        occurrence.Should().Be(new DateTime(2026, 3, 1, 9, 0, 0, DateTimeKind.Utc));
+        WishDeliveryTiming.IsDue(wish, new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)).Should().BeTrue();
     }
 
     [Fact]

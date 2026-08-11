@@ -8,6 +8,19 @@ public enum WishStatus
     Opened = 3,
 }
 
+/// <summary>What the wish marks. Birthday/Anniversary recur every year on the same
+/// month+day (see WishDeliveryTiming); everything else targets the exact stored date
+/// once and doesn't get recomputed into a future year.</summary>
+public enum OccasionType
+{
+    Birthday = 0,
+    Anniversary = 1,
+    Congratulations = 2,
+    ThankYou = 3,
+    JustBecause = 4,
+    Other = 5,
+}
+
 public enum DeliveryChannel
 {
     WhatsApp = 0,

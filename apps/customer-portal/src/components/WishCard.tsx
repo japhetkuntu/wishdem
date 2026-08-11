@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge, Button } from "@wishdem/design-system";
 import type { BadgeTone } from "@wishdem/design-system";
 import type { Wish } from "@/types";
-import { daysUntil, formatWishDate } from "@/lib/date";
+import { daysUntilOccasion, formatWishDate } from "@/lib/date";
 import { retryWishDelivery } from "@/lib/api";
 
 const AVATAR_COLORS = ["bg-rose text-plum", "bg-moss text-paper", "bg-champagne text-plum", "bg-periwinkle text-plum"];
@@ -39,7 +39,7 @@ export function WishCard({ wish, onRetried }: { wish: Wish; onRetried?: () => vo
       ? "Continue draft →"
       : "Start a wish →"
     : "View details →";
-  const days = daysUntil(wish.recipient.birthdayISO);
+  const days = daysUntilOccasion(wish.recipient.occasion, wish.recipient.occasionDateISO);
 
   const [retrying, setRetrying] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(wish.recipient.phoneNumber ?? "");
@@ -86,8 +86,8 @@ export function WishCard({ wish, onRetried }: { wish: Wish; onRetried?: () => vo
           </div>
           <p className="mt-1 truncate text-[11px] leading-[1.45] text-porcelain/65 sm:whitespace-nowrap">
             {isDraft
-              ? `${formatWishDate(wish.recipient.birthdayISO)} · ${days >= 0 ? `${days} days away` : "date passed"}`
-              : `${formatWishDate(wish.recipient.birthdayISO)} · ${wish.channel ?? "link"} · ${wish.attachment ? wish.attachment.kind : "written note"}`}
+              ? `${formatWishDate(wish.recipient.occasionDateISO)} · ${days >= 0 ? `${days} days away` : "date passed"}`
+              : `${formatWishDate(wish.recipient.occasionDateISO)} · ${wish.channel ?? "link"} · ${wish.attachment ? wish.attachment.kind : "written note"}`}
           </p>
         </div>
         <Link

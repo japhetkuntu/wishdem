@@ -49,7 +49,9 @@ interface AdminWishResponseDto {
   fromName: string;
   recipientName: string;
   recipientRelationship: string;
-  recipientBirthday: string | null;
+  occasion: string;
+  occasionLabel: string | null;
+  recipientOccasionDate: string | null;
   /** Null until the sender reaches the deliver step of the wizard — draft wishes have no channel yet. */
   channel: string | null;
   status: BackendWishStatus;

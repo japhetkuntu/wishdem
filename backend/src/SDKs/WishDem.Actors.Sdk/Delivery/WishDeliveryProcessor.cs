@@ -10,8 +10,8 @@ using WishDem.Postgres.Sdk.Repositories;
 
 namespace WishDem.Actors.Sdk.Delivery;
 
-/// <summary>The actual "does anything happen on the recipient's birthday" logic for one
-/// wish — moved out of the (now purely dispatching) WishDeliveryDispatchService so
+/// <summary>The actual "does anything happen on the recipient's occasion date" logic for
+/// one wish — moved out of the (now purely dispatching) WishDeliveryDispatchService so
 /// DeliveryWorkerActor can run many of these concurrently instead of one at a time.</summary>
 public class WishDeliveryProcessor(
     IRepository<Wish> wishes,
@@ -120,7 +120,7 @@ public class WishDeliveryProcessor(
     }
 
     private static string BuildMessage(Wish wish, string link) =>
-        $"{wish.FromName} sent {wish.RecipientName} a birthday wish on WishDem! Open it here: {link}";
+        $"{wish.FromName} sent {wish.RecipientName} a {wish.Occasion.WishPhrase(wish.OccasionLabel)} on WishDem! Open it here: {link}";
 
     private async Task NotifySenderOfFailureAsync(Wish wish, CancellationToken ct)
     {
@@ -130,7 +130,7 @@ public class WishDeliveryProcessor(
             if (sender is null || string.IsNullOrWhiteSpace(sender.Email)) return;
 
             var subject = $"We couldn't deliver your wish for {wish.RecipientName}";
-            var textBody = $"We tried several times but couldn't deliver your birthday wish for {wish.RecipientName} — the phone number on file may be incorrect. Sign in to WishDem to check it.";
+            var textBody = $"We tried several times but couldn't deliver your {wish.Occasion.WishPhrase(wish.OccasionLabel)} for {wish.RecipientName} — the phone number on file may be incorrect. Sign in to WishDem to check it.";
             var dashboardUrl = $"{_settings.FrontendBaseUrl.TrimEnd('/')}/dashboard";
             var htmlBody = EmailTemplate.Shell(subject, $"""
                 {EmailTemplate.Eyebrow("Delivery needs your attention")}

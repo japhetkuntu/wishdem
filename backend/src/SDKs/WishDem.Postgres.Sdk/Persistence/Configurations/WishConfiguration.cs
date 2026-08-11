@@ -15,6 +15,7 @@ public class WishConfiguration : IEntityTypeConfiguration<Wish>
         builder.Property(x => x.RecipientRelationship).HasMaxLength(100).IsRequired();
         builder.Property(x => x.RecipientTimezone).HasMaxLength(100).IsRequired();
         builder.Property(x => x.RecipientPhoneNumber).HasMaxLength(32);
+        builder.Property(x => x.OccasionLabel).HasMaxLength(60);
         builder.Property(x => x.Message).HasMaxLength(4000);
         builder.Property(x => x.ThemeId).HasMaxLength(64);
         builder.Property(x => x.PriceLabel).HasMaxLength(32);
@@ -22,6 +23,7 @@ public class WishConfiguration : IEntityTypeConfiguration<Wish>
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
         builder.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
         builder.Property(x => x.AttachmentKind).HasConversion<string>().HasMaxLength(32);
+        builder.Property(x => x.Occasion).HasConversion<string>().HasMaxLength(32);
 
         builder.HasIndex(x => x.CustomerUserId);
         builder.HasIndex(x => x.Status);

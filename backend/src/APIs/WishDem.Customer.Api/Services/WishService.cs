@@ -474,7 +474,9 @@ public class WishService(
         wish.FromName = request.FromName;
         wish.RecipientName = request.RecipientName;
         wish.RecipientRelationship = request.RecipientRelationship;
-        wish.RecipientBirthday = request.RecipientBirthday;
+        wish.Occasion = request.Occasion;
+        wish.OccasionLabel = request.OccasionLabel;
+        wish.RecipientOccasionDate = request.RecipientOccasionDate;
         wish.DeliveryTime = request.DeliveryTime;
         wish.RecipientTimezone = request.RecipientTimezone;
         wish.RecipientPhoneNumber = request.RecipientPhoneNumber;
@@ -494,7 +496,9 @@ public class WishService(
         w.FromName,
         w.RecipientName,
         w.RecipientRelationship,
-        w.RecipientBirthday,
+        w.Occasion,
+        w.OccasionLabel,
+        w.RecipientOccasionDate,
         w.DeliveryTime,
         w.RecipientTimezone,
         w.RecipientPhoneNumber,
@@ -519,13 +523,14 @@ public class WishService(
             var sender = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);
             if (sender is null || string.IsNullOrWhiteSpace(sender.Email)) return;
 
+            var wishPhrase = wish.Occasion.WishPhrase(wish.OccasionLabel);
             var subject = $"{wish.RecipientName} just opened your wish";
-            var textBody = $"Good news — {wish.RecipientName} just opened the birthday wish you sent them on WishDem.";
+            var textBody = $"Good news — {wish.RecipientName} just opened the {wishPhrase} you sent them on WishDem.";
             var dashboardUrl = $"{_delivery.FrontendBaseUrl.TrimEnd('/')}/dashboard";
             var htmlBody = EmailTemplate.Shell(subject, $"""
                 {EmailTemplate.Eyebrow("Delivered & opened")}
                 <h1 style="margin:0 0 14px;font-family:Georgia,'Playfair Display',serif;font-size:28px;font-weight:700;color:#2A1629;line-height:1.15;">{EmailTemplate.Encode(wish.RecipientName)} just opened your wish</h1>
-                <p style="margin:0;">The birthday wish you wrote is in their hands now — they opened it moments ago. That feeling you kept safe until today just landed exactly where it was meant to.</p>
+                <p style="margin:0;">The {EmailTemplate.Encode(wishPhrase)} you wrote is in their hands now — they opened it moments ago. That feeling you kept safe until today just landed exactly where it was meant to.</p>
                 {EmailTemplate.Button("See it on your dashboard", dashboardUrl)}
                 """);
 

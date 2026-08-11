@@ -6,7 +6,7 @@ import { ShareLinks } from "@/components/ShareLinks";
 import { ShareImageActions } from "@/components/ShareImageActions";
 import { SmoothImage } from "@/components/SmoothImage";
 import { useWizardStore } from "@/store/wizardStore";
-import { daysUntil, formatWeekdayDate } from "@/lib/date";
+import { daysUntilOccasion, formatWeekdayDate } from "@/lib/date";
 import { getThemeImage } from "@/lib/themeImages";
 
 export default function CreateScheduledPage() {
@@ -20,7 +20,9 @@ export default function CreateScheduledPage() {
 
   if (!recipient) return null;
 
-  const days = daysUntil(recipient.birthdayISO);
+  // Clamped for display — a one-time occasion's date can be today or already past
+  // (delivered as soon as possible), which shouldn't read as a negative day count.
+  const days = Math.max(0, daysUntilOccasion(recipient.occasion, recipient.occasionDateISO));
   const channelLabel = channel === "sms" ? "SMS notification" : "private link";
 
   function handleDashboard() {
@@ -32,7 +34,7 @@ export default function CreateScheduledPage() {
     <main className="grid min-h-screen items-center gap-6 bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-6 py-12 sm:grid-cols-2 sm:gap-16 sm:px-[8%]">
       <Seo
         title={`${recipient.name}'s Wish Is Sealed — WishDem`}
-        description={`${recipient.name}'s private birthday wish has been sealed and scheduled for delivery on WishDem.`}
+        description={`${recipient.name}'s private wish has been sealed and scheduled for delivery on WishDem.`}
         path="/create/scheduled"
         noindex
       />
@@ -47,7 +49,7 @@ export default function CreateScheduledPage() {
         </h1>
         <p className="max-w-[460px] leading-[1.7] text-porcelain/75">
           Held beautifully for {days} days. It will arrive privately on{" "}
-          {formatWeekdayDate(recipient.birthdayISO)} at {recipient.deliveryTime} — and
+          {formatWeekdayDate(recipient.occasionDateISO)} at {recipient.deliveryTime} — and
           we'll let you know when {recipient.name} opens it.
         </p>
         <Button type="button" onClick={handleDashboard} className="mt-6">
@@ -87,7 +89,7 @@ export default function CreateScheduledPage() {
             variant="teaser"
             recipientName={recipient.name}
             fromName="You"
-            dateLabel={formatWeekdayDate(recipient.birthdayISO)}
+            dateLabel={formatWeekdayDate(recipient.occasionDateISO)}
             imageSrc={vesselImage.src}
             filename={`wishdem-${recipient.name.toLowerCase().replace(/\s+/g, "-")}`}
             tone="dark"

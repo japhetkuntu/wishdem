@@ -1,8 +1,9 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Days from now until the next occurrence of the given yyyy-mm-dd birthday. */
-export function daysUntil(birthdayISO: string, from: Date = new Date()): number {
-  const [, month, day] = birthdayISO.split("-").map(Number);
+/** Days from now until the next yearly occurrence of the given yyyy-mm-dd month/day —
+ * used for anything that recurs annually (birthdays, anniversaries). */
+export function daysUntil(dateISO: string, from: Date = new Date()): number {
+  const [, month, day] = dateISO.split("-").map(Number);
   const today = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   let next = new Date(from.getFullYear(), month - 1, day);
   if (next.getTime() < today.getTime()) {
@@ -43,6 +44,15 @@ export function daysUntilDate(iso: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / DAY_MS);
+}
+
+const RECURRING_OCCASIONS = new Set(["birthday", "anniversary"]);
+
+/** Days until a recipient's occasion arrives — recurring occasions (birthday,
+ * anniversary) roll forward to their next yearly occurrence; everything else targets
+ * the exact date that was picked, whether it's ahead or already passed. */
+export function daysUntilOccasion(occasion: string, occasionDateISO: string): number {
+  return RECURRING_OCCASIONS.has(occasion) ? daysUntil(occasionDateISO) : daysUntilDate(occasionDateISO);
 }
 
 export interface MonthGridCell {

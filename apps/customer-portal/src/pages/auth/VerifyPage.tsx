@@ -6,7 +6,7 @@ import { OtpInput } from "@/components/OtpInput";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useWishes } from "@/hooks/useWishes";
 import { requestOtp, verifyOtp } from "@/lib/api";
-import { daysUntil } from "@/lib/date";
+import { daysUntilOccasion } from "@/lib/date";
 import { formatCountdown } from "@/lib/format";
 import { resumeAfterAuth } from "@/lib/resumeGuestDraft";
 
@@ -50,7 +50,8 @@ export default function VerifyPage() {
     const sealed = (wishes ?? []).filter((w) => w.status === "sealed");
     if (sealed.length === 0) return null;
     return sealed.reduce((soonest, w) =>
-      daysUntil(w.recipient.birthdayISO) < daysUntil(soonest.recipient.birthdayISO)
+      daysUntilOccasion(w.recipient.occasion, w.recipient.occasionDateISO) <
+      daysUntilOccasion(soonest.recipient.occasion, soonest.recipient.occasionDateISO)
         ? w
         : soonest,
     );
@@ -97,7 +98,7 @@ export default function VerifyPage() {
               YOUR FIRST PRIVATE DESK
             </span>
             <h1 className="my-[7px] font-display text-[42px] leading-[1.08] tracking-[-1px]">
-              A thoughtful birthday starts long before the date.
+              A thoughtful moment starts long before the date.
             </h1>
             <p className="max-w-[350px] text-[12px] leading-[1.6] text-porcelain/68">
               Write it while the feeling is here. WishDem will keep your message safely
@@ -131,7 +132,7 @@ export default function VerifyPage() {
                   NEXT TO BLOOM
                 </span>
                 <b className="mt-1 block text-[13px]">
-                  A wish in {daysUntil(nextToBloom.recipient.birthdayISO)} days
+                  A wish in {daysUntilOccasion(nextToBloom.recipient.occasion, nextToBloom.recipient.occasionDateISO)} days
                 </b>
                 <small className="text-[10px] text-porcelain/70">
                   Scheduled privately · delivery details available after verification

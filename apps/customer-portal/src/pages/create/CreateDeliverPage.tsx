@@ -72,7 +72,7 @@ export default function CreateDeliverPage() {
     <CreateLayout activeIndex={3}>
       <Seo
         title="Choose Delivery — WishDem"
-        description="Choose how your private birthday wish will be delivered to its recipient."
+        description="Choose how your private wish will be delivered to its recipient."
         path="/create/deliver"
         noindex
       />
@@ -144,7 +144,7 @@ export default function CreateDeliverPage() {
       {previewing && (
         <WishPreviewModal
           recipientName={recipient?.name ?? ""}
-          birthdayISO={recipient?.birthdayISO ?? ""}
+          occasionDateISO={recipient?.occasionDateISO ?? ""}
           fromName={fromName}
           message={message}
           attachment={attachment}

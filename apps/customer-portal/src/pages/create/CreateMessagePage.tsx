@@ -25,7 +25,7 @@ export default function CreateMessagePage() {
     <CreateLayout activeIndex={0}>
       <Seo
         title="Write Your Message — WishDem"
-        description="Write the private birthday message you want to hold for someone, delivered exactly when it matters."
+        description="Write the private message you want to hold for someone, delivered exactly when it matters."
         path="/create/message"
         noindex
       />

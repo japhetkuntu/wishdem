@@ -9,8 +9,8 @@ export default function HomePage() {
   return (
     <div className="w-full overflow-hidden">
       <Seo
-        title="WishDem — Write a Birthday Message Today, Delivered on Their Day"
-        description="Write a birthday message now, and let WishDem deliver it privately on the day it matters — weeks, months, or years from now. Free to use, no app required."
+        title="WishDem — Write a Message Today, Delivered on the Day That Matters"
+        description="Write a message now for any occasion — birthday, anniversary, congratulations, or just because — and let WishDem deliver it privately on the day it matters. Free to use, no app required."
         path="/"
       />
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
@@ -28,7 +28,7 @@ export default function HomePage() {
             </h1>
             <p className="mb-[30px] max-w-[520px] text-[15px] leading-[1.65] text-porcelain/70 sm:text-[17px]">
               The words are here now. Make them a gift for later—WishDem holds your
-              birthday message safely, then sends it at exactly the right moment.
+              message safely, then sends it at exactly the right moment.
             </p>
             <div className="flex flex-wrap items-center gap-[13px]">
               <Link to="/create/message">

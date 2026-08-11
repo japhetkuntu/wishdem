@@ -8,8 +8,8 @@ import { useWizardStore } from "@/store/wizardStore";
 import { useAuth } from "@/hooks/useAuth";
 import { getDailyWishLimit, getWish, saveGuestWhoDraft, saveWhoStep, type DailyWishLimit } from "@/lib/api";
 import { ApiError, hasSession } from "@/lib/httpClient";
-import { daysUntil } from "@/lib/date";
-import type { Relationship } from "@/types";
+import { daysUntilOccasion, todayIso } from "@/lib/date";
+import { OCCASION_OPTIONS, type OccasionType, type Relationship } from "@/types";
 
 const RELATIONSHIPS: Relationship[] = [
   "Best friend",
@@ -57,7 +57,9 @@ export default function CreateWhoPage() {
   const [relationship, setRelationship] = useState<Relationship>(
     recipient?.relationship ?? "Best friend",
   );
-  const [birthdayISO, setBirthdayISO] = useState(recipient?.birthdayISO ?? "");
+  const [occasion, setOccasion] = useState<OccasionType>(recipient?.occasion ?? "birthday");
+  const [occasionLabel, setOccasionLabel] = useState(recipient?.occasionLabel ?? "");
+  const [occasionDateISO, setOccasionDateISO] = useState(recipient?.occasionDateISO ?? "");
   const [deliveryTime, setDeliveryTime] = useState(recipient?.deliveryTime ?? "09:00");
   const [yourName, setYourName] = useState(wizardFromName !== "You" ? wizardFromName : "");
   const [saving, setSaving] = useState(false);
@@ -90,7 +92,9 @@ export default function CreateWhoPage() {
         hydrateFromWish(wish);
         setName(wish.recipient.name);
         setRelationship(wish.recipient.relationship);
-        setBirthdayISO(wish.recipient.birthdayISO);
+        setOccasion(wish.recipient.occasion);
+        setOccasionLabel(wish.recipient.occasionLabel ?? "");
+        setOccasionDateISO(wish.recipient.occasionDateISO);
         setDeliveryTime(wish.recipient.deliveryTime);
         if (wish.fromName !== "You") setYourName(wish.fromName);
       });
@@ -104,18 +108,46 @@ export default function CreateWhoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isNewWish]);
 
-  const days = birthdayISO ? daysUntil(birthdayISO) : null;
+  const days = occasionDateISO ? daysUntilOccasion(occasion, occasionDateISO) : null;
   const atDailyLimit = isNewWish && dailyLimit !== null && dailyLimit.remaining <= 0;
+  const needsCustomLabel = occasion === "other";
+
+  // Birthday/Anniversary recur every year, so the date people pick is usually a real
+  // birth/wedding date in the past (only the month/day matters — see daysUntilOccasion).
+  // Every other occasion is a one-shot delivery on an actual future date, so past dates
+  // (and, for today, already-passed times) genuinely can't be selected there.
+  const isRecurringOccasion = occasion === "birthday" || occasion === "anniversary";
+  const todayISO = todayIso();
+  const dateMin = isRecurringOccasion ? undefined : todayISO;
+  const timeMin =
+    !isRecurringOccasion && occasionDateISO === todayISO
+      ? new Date().toTimeString().slice(0, 5)
+      : undefined;
+
+  // If someone picked a past date while on a recurring occasion, then switches to a
+  // one-shot one, that date is now invalid — clear it instead of leaving a silently
+  // stuck field the browser will just refuse to submit with no visible explanation.
+  useEffect(() => {
+    if (!isRecurringOccasion && occasionDateISO && occasionDateISO < todayISO) {
+      setOccasionDateISO("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecurringOccasion]);
 
   async function handleContinue(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !yourName.trim() || !birthdayISO || atDailyLimit) return;
+    if (!name.trim() || !yourName.trim() || !occasionDateISO || atDailyLimit) return;
+    if (needsCustomLabel && !occasionLabel.trim()) return;
+    if (dateMin && occasionDateISO < dateMin) return;
+    if (timeMin && deliveryTime < timeMin) return;
     setSaving(true);
     setError(null);
     const rec = {
       name: name.trim(),
       relationship,
-      birthdayISO,
+      occasion,
+      occasionLabel: needsCustomLabel ? occasionLabel.trim() : undefined,
+      occasionDateISO,
       deliveryTime,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
@@ -154,7 +186,7 @@ export default function CreateWhoPage() {
     <CreateLayout activeIndex={1}>
       <Seo
         title="Who Is This Wish For — WishDem"
-        description="Start creating a private birthday wish by choosing who it's for and when it will arrive."
+        description="Start creating a private wish by choosing who it's for, what it's for, and when it will arrive."
         path="/create/who"
         noindex
       />
@@ -206,7 +238,7 @@ export default function CreateWhoPage() {
             <div className="overflow-hidden rounded-lg border border-porcelain/[0.14] bg-porcelain/[0.04]">
               <header className="flex items-center justify-between border-b border-porcelain/10 px-[18px] py-[14px]">
                 <h2 className="font-display text-[21px]">
-                  {name ? `${name}'s birthday` : "Their birthday"}
+                  {name ? `${name}'s moment` : "Their moment"}
                 </h2>
                 <span className="text-[10px] font-extrabold tracking-[0.09em] text-champagne">
                   RECIPIENT DETAILS
@@ -235,20 +267,51 @@ export default function CreateWhoPage() {
                     ))}
                   </select>
                 </Field>
-                <Field label="BIRTHDAY">
+                <Field label="WHAT'S THE OCCASION?">
+                  <select
+                    value={occasion}
+                    onChange={(e) => setOccasion(e.target.value as OccasionType)}
+                    className={inputClass}
+                  >
+                    {OCCASION_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value} className="bg-plum text-[#F6F0E8]">
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {needsCustomLabel && (
+                  <Field label="NAME THE OCCASION">
+                    <input
+                      value={occasionLabel}
+                      onChange={(e) => setOccasionLabel(e.target.value)}
+                      required
+                      placeholder="e.g. Graduation, New job, Get well soon"
+                      className={inputClass}
+                    />
+                  </Field>
+                )}
+                <Field label={occasion === "birthday" ? "BIRTHDAY" : occasion === "anniversary" ? "ANNIVERSARY DATE" : "DATE"}>
                   <input
                     type="date"
-                    value={birthdayISO}
-                    onChange={(e) => setBirthdayISO(e.target.value)}
+                    value={occasionDateISO}
+                    onChange={(e) => setOccasionDateISO(e.target.value)}
+                    min={dateMin}
                     required
                     className={inputClass}
                   />
+                  {!isRecurringOccasion && (
+                    <p className="mt-1 text-[10px] leading-[1.4] text-porcelain/45">
+                      Today or later — this one doesn't repeat, so it needs a real date ahead.
+                    </p>
+                  )}
                 </Field>
                 <Field label="DELIVERY TIME">
                   <input
                     type="time"
                     value={deliveryTime}
                     onChange={(e) => setDeliveryTime(e.target.value)}
+                    min={timeMin}
                     required
                     className={inputClass}
                   />
@@ -282,11 +345,11 @@ export default function CreateWhoPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
-                  {name ? `${name.toUpperCase()}'S NEXT BIRTHDAY` : "NEXT BIRTHDAY"}
+                  {name ? `${name.toUpperCase()}'S ${OCCASION_OPTIONS.find((o) => o.value === occasion)?.label.toUpperCase()}` : "THE MOMENT"}
                 </span>
                 <h2 className="font-display text-[28px] leading-[1.06]">
-                  {birthdayISO
-                    ? new Date(2000, Number(birthdayISO.split("-")[1]) - 1, Number(birthdayISO.split("-")[2])).toLocaleDateString(
+                  {occasionDateISO
+                    ? new Date(2000, Number(occasionDateISO.split("-")[1]) - 1, Number(occasionDateISO.split("-")[2])).toLocaleDateString(
                         "en-GB",
                         { day: "numeric", month: "long" },
                       )
@@ -295,9 +358,9 @@ export default function CreateWhoPage() {
               </div>
               {days !== null && (
                 <div className="text-right font-display text-[34px] leading-none text-mulberry">
-                  {days}
+                  {Math.abs(days)}
                   <small className="mt-1 block font-sans text-[9px] font-extrabold tracking-[0.1em] text-ink">
-                    DAYS AWAY
+                    {days >= 0 ? "DAYS AWAY" : "DAYS AGO"}
                   </small>
                 </div>
               )}
@@ -313,7 +376,7 @@ export default function CreateWhoPage() {
               DELIVERY CONFIDENCE
             </span>
             <b className="my-1 block text-[12px]">
-              Their birthday, their timezone, your private wish.
+              Their moment, their timezone, your private wish.
             </b>
             <p className="text-[11px] leading-[1.5] text-porcelain/65">
               You will choose the delivery channel and preview the unopened

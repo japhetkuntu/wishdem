@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WishDem.Messaging.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5021fc87280823f35e87dd3c4b3cc86039188ac3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+46e81ae8766bda99ba98cc964cb22d6ff196d6ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("WishDem.Messaging.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WishDem.Messaging.Sdk.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

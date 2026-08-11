@@ -6,7 +6,7 @@ export default function TermsPage() {
     <>
       <Seo
         title="Terms of Service — WishDem"
-        description="The terms that govern using WishDem to create and deliver private birthday wishes."
+        description="The terms that govern using WishDem to create and deliver private wishes."
         path="/terms"
       />
       <LegalLayout
@@ -17,7 +17,7 @@ export default function TermsPage() {
           {
             heading: "What WishDem is",
             body: (
-              <p>WishDem lets you write a private birthday message today and have it delivered to someone on their birthday, at a time you choose. Every feature is currently free to use — there's no payment involved.</p>
+              <p>WishDem lets you write a private message today — for a birthday, anniversary, or any other occasion — and have it delivered to someone on the day that matters, at a time you choose. Every feature is currently free to use — there's no payment involved.</p>
             ),
           },
           {
@@ -33,7 +33,7 @@ export default function TermsPage() {
             heading: "What you send",
             body: (
               <>
-                <p>You're responsible for what you write and attach to a wish, and for making sure the recipient's contact details are accurate — WishDem delivers what you give it, and can't verify a birthday, phone number, or relationship on your behalf.</p>
+                <p>You're responsible for what you write and attach to a wish, and for making sure the recipient's contact details are accurate — WishDem delivers what you give it, and can't verify an occasion date, phone number, or relationship on your behalf.</p>
                 <p>Don't use WishDem to send anything illegal, threatening, harassing, or intended to deceive or harm the recipient. We review reported content and may remove a wish or suspend an account that violates this.</p>
               </>
             ),

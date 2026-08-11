@@ -53,7 +53,7 @@ public static class EmailTemplate
                               <td align="right" style="font-size:11px;line-height:1.6;color:rgba(36,29,36,0.5);">© {{DateTime.UtcNow.Year}} WishDem</td>
                             </tr>
                           </table>
-                          <p style="margin:10px 0 0;font-size:11px;line-height:1.6;color:rgba(36,29,36,0.5);">A private birthday wish, held until it matters. This is a one-time transactional email — you're receiving it because someone used this address on WishDem.</p>
+                          <p style="margin:10px 0 0;font-size:11px;line-height:1.6;color:rgba(36,29,36,0.5);">A private wish, held until it matters. This is a one-time transactional email — you're receiving it because someone used this address on WishDem.</p>
                         </td></tr>
                       </table>
                     </td></tr>

@@ -5,7 +5,7 @@ using WishDem.Customer.Api.Interfaces;
 namespace WishDem.Customer.Api.Workers;
 
 /// <summary>Polls for due sealed wishes and dispatches them — the core promise of the
-/// product (wishes actually arrive on the recipient's birthday) has no other trigger.
+/// product (wishes actually arrive on the recipient's occasion) has no other trigger.
 /// Runs the actual dispatch logic in a fresh DI scope each pass since IRepository/DbContext
 /// are scoped, but this hosted service itself is a singleton. Dispatch itself just hands
 /// each due wish to the delivery actor pool and returns immediately — the workers deliver

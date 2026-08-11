@@ -606,6 +606,15 @@ namespace WishDem.Postgres.Sdk.Migrations
                     b.Property<DateTime?>("NextDeliveryAttemptAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Occasion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("OccasionLabel")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<DateTime?>("OpenedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -614,13 +623,13 @@ namespace WishDem.Postgres.Sdk.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
-                    b.Property<DateOnly>("RecipientBirthday")
-                        .HasColumnType("date");
-
                     b.Property<string>("RecipientName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("RecipientOccasionDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("RecipientPhoneNumber")
                         .HasMaxLength(32)

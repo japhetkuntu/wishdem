@@ -9,6 +9,31 @@ export type Relationship =
 
 export type DeliveryChannel = "sms" | "link";
 
+/** Birthday/Anniversary recur every year automatically; every other occasion is a
+ * one-time delivery on the exact date chosen. Values match the backend's camelCase
+ * JsonStringEnumConverter output for OccasionType — keep them in sync. */
+export type OccasionType =
+  | "birthday"
+  | "anniversary"
+  | "congratulations"
+  | "thankYou"
+  | "justBecause"
+  | "other";
+
+export interface OccasionOption {
+  value: OccasionType;
+  label: string;
+}
+
+export const OCCASION_OPTIONS: OccasionOption[] = [
+  { value: "birthday", label: "Birthday" },
+  { value: "anniversary", label: "Anniversary" },
+  { value: "congratulations", label: "Congratulations" },
+  { value: "thankYou", label: "Thank You" },
+  { value: "justBecause", label: "Just Because" },
+  { value: "other", label: "Something else" },
+];
+
 export type ThemeId =
   | "velvet-night"
   | "garden-letter"
@@ -38,7 +63,10 @@ export type WishStatus = "draft" | "sealed" | "delivered" | "opened";
 export interface Recipient {
   name: string;
   relationship: Relationship;
-  birthdayISO: string; // yyyy-mm-dd
+  occasion: OccasionType;
+  /** Custom occasion name — only meaningful (and shown) when occasion is "other". */
+  occasionLabel?: string;
+  occasionDateISO: string; // yyyy-mm-dd
   deliveryTime: string; // HH:mm
   timezone: string;
   /** Required for sms delivery — the recipient never has a WishDem account,

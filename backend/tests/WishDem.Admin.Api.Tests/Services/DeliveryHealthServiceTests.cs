@@ -55,7 +55,7 @@ public class DeliveryHealthServiceTests
     {
         var pastBirthday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
         var sealedDue = NewWish(WishStatus.Sealed);
-        sealedDue.RecipientBirthday = pastBirthday;
+        sealedDue.RecipientOccasionDate = pastBirthday;
         sealedDue.DeliveryTime = new TimeOnly(0, 0);
         // Sealed well before the birthday, so the target occurrence is this year's — and
         // "yesterday" is already behind it.

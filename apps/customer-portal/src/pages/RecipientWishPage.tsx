@@ -10,6 +10,7 @@ import { ShareImageActions } from "@/components/ShareImageActions";
 import { usePublicWish } from "@/hooks/useWishes";
 import { markOpened } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
+import { occasionPhrase } from "@/lib/occasion";
 import { getThemeImage } from "@/lib/themeImages";
 
 export default function RecipientWishPage() {
@@ -22,7 +23,7 @@ export default function RecipientWishPage() {
       <main>
         <Seo
           title="Your Wish — WishDem"
-          description="A private birthday wish held for you on WishDem."
+          description="A private wish held for you on WishDem."
           path="/w/:id"
           noindex
         />
@@ -61,17 +62,18 @@ export default function RecipientWishPage() {
   }
 
   if (!isOpened) {
+    const phrase = occasionPhrase(wish.recipient.occasion, wish.recipient.occasionLabel);
     return (
       <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-5 py-10 text-center">
         <Seo
-          title={`A Birthday Wish for ${wish.recipient.name} — WishDem`}
-          description={`Someone saved a private birthday wish for ${wish.recipient.name} on WishDem.`}
+          title={`A ${phrase[0].toUpperCase()}${phrase.slice(1)} for ${wish.recipient.name} — WishDem`}
+          description={`Someone saved a private ${phrase} for ${wish.recipient.name} on WishDem.`}
           path="/w/:id"
           noindex
         />
         <section>
           <span className="text-[10px] font-extrabold tracking-[0.15em] text-champagne">
-            A BIRTHDAY WISH FOR {wish.recipient.name.toUpperCase()}
+            A {phrase.toUpperCase()} FOR {wish.recipient.name.toUpperCase()}
           </span>
           <h1 className="my-4 font-display text-[clamp(38px,6vw,76px)] leading-[.98]">
             Someone saved
@@ -79,7 +81,7 @@ export default function RecipientWishPage() {
             this for <i className="text-rose italic">today.</i>
           </h1>
           <p className="text-[14px] opacity-70">
-            From {wish.fromName} · Held for {formatWeekdayDate(wish.recipient.birthdayISO)}
+            From {wish.fromName} · Held for {formatWeekdayDate(wish.recipient.occasionDateISO)}
           </p>
 
           <div className="mt-9">
@@ -99,16 +101,17 @@ export default function RecipientWishPage() {
     );
   }
 
+  const openedPhrase = occasionPhrase(wish.recipient.occasion, wish.recipient.occasionLabel);
   return (
     <main className="mx-auto w-full max-w-[1250px] px-4 pb-10 pt-6 sm:px-10">
       <Seo
-        title={`${wish.recipient.name}'s Birthday Wish — WishDem`}
-        description={`An opened birthday wish from ${wish.fromName} to ${wish.recipient.name} on WishDem.`}
+        title={`${wish.recipient.name}'s ${openedPhrase[0].toUpperCase()}${openedPhrase.slice(1)} — WishDem`}
+        description={`An opened ${openedPhrase} from ${wish.fromName} to ${wish.recipient.name} on WishDem.`}
         path="/w/:id"
         noindex
       />
       <header className="mb-7 flex flex-wrap justify-between gap-2 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
-        <span>FOR {wish.recipient.name.toUpperCase()}, ON YOUR BIRTHDAY</span>
+        <span>FOR {wish.recipient.name.toUpperCase()}</span>
         <span>FROM {wish.fromName.toUpperCase()}</span>
       </header>
 
@@ -118,7 +121,7 @@ export default function RecipientWishPage() {
             className={clsx("text-[10px] font-extrabold tracking-[0.14em] text-mulberry", revealed && "animate-wd-reveal-rise")}
             style={revealed ? { animationDelay: "80ms" } : undefined}
           >
-            {formatWeekdayDate(wish.recipient.birthdayISO).toUpperCase()}
+            {formatWeekdayDate(wish.recipient.occasionDateISO).toUpperCase()}
           </span>
           <h1
             className={clsx("my-[22px] font-display text-[36px] sm:text-[44px]", revealed && "animate-wd-reveal-rise")}
@@ -164,7 +167,7 @@ export default function RecipientWishPage() {
                 variant="opened"
                 recipientName={wish.recipient.name}
                 fromName={wish.fromName}
-                dateLabel={formatWeekdayDate(wish.recipient.birthdayISO)}
+                dateLabel={formatWeekdayDate(wish.recipient.occasionDateISO)}
                 quote={wish.message}
                 imageSrc={vesselImage.src}
                 filename={`wishdem-${wish.recipient.name.toLowerCase().replace(/\s+/g, "-")}`}
@@ -188,7 +191,7 @@ export default function RecipientWishPage() {
               A GOOD FEELING IS WORTH SENDING FORWARD
             </span>
             <h2 className="my-3 font-display text-[26px] leading-[1.1]">
-              Hold a future birthday wish for someone you love.
+              Hold a future wish for someone you love.
             </h2>
             <p className="mb-4 text-[13px] leading-[1.6] text-porcelain/80">
               Write it while the feeling is here. We'll deliver it when it matters.

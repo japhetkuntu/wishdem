@@ -1,3 +1,4 @@
+using WishDem.Common.Sdk.Enums;
 using WishDem.Postgres.Sdk.Entities;
 
 namespace WishDem.Postgres.Sdk.Delivery;
@@ -7,26 +8,34 @@ namespace WishDem.Postgres.Sdk.Delivery;
 /// the Admin API's delivery-health view (to report the same due/not-due bucket), so the
 /// two never disagree with each other.
 ///
-/// A wish is a one-shot delivery, not a recurring reminder, so "due" isn't "has the most
-/// recent birthday passed" (that's true for almost every wish, almost always) — it's "has
-/// the FIRST birthday+delivery-time occurrence on or after this wish was sealed arrived
-/// yet", evaluated in the recipient's own timezone.</summary>
+/// Birthday/Anniversary wishes recur every year, so "due" isn't "has the stored date
+/// already passed" (true for almost every wish, almost always) — it's "has the FIRST
+/// month+day+delivery-time occurrence on or after this wish was sealed arrived yet",
+/// evaluated in the recipient's own timezone. Every other occasion type is a genuine
+/// one-shot: the customer picked an actual future date, so we target that exact date —
+/// no re-projecting it into next year if it's already passed.</summary>
 public static class WishDeliveryTiming
 {
+    private static bool RecursAnnually(OccasionType occasion) =>
+        occasion is OccasionType.Birthday or OccasionType.Anniversary;
+
     public static bool IsDue(Wish wish, DateTime utcNow) =>
         TargetOccurrenceUtc(wish) is { } occurrence && occurrence <= utcNow;
 
-    /// <summary>The specific delivery instant (UTC) this wish is scheduled for — the first
-    /// recipient-birthday + delivery-time occurrence on or after the wish was sealed (or
-    /// created, if never sealed). Returns null if RecipientBirthday was never set, or falls
-    /// back to treating RecipientTimezone as UTC if it isn't a recognized IANA zone (rather
-    /// than throwing and taking a whole delivery pass down with it).</summary>
+    /// <summary>The specific delivery instant (UTC) this wish is scheduled for. Returns
+    /// null if RecipientOccasionDate was never set, or falls back to treating
+    /// RecipientTimezone as UTC if it isn't a recognized IANA zone (rather than throwing
+    /// and taking a whole delivery pass down with it).</summary>
     public static DateTime? TargetOccurrenceUtc(Wish wish)
     {
-        if (wish.RecipientBirthday == default) return null;
+        if (wish.RecipientOccasionDate == default) return null;
+
+        var timeZone = ResolveTimeZone(wish.RecipientTimezone);
+
+        if (!RecursAnnually(wish.Occasion))
+            return OccurrenceInYearUtc(wish, wish.RecipientOccasionDate.Year, timeZone);
 
         var anchorUtc = wish.SealedAtUtc ?? wish.CreatedAtUtc;
-        var timeZone = ResolveTimeZone(wish.RecipientTimezone);
         var localAnchor = TimeZoneInfo.ConvertTimeFromUtc(anchorUtc, timeZone);
 
         var candidateUtc = OccurrenceInYearUtc(wish, localAnchor.Year, timeZone);
@@ -36,9 +45,11 @@ public static class WishDeliveryTiming
 
     private static DateTime OccurrenceInYearUtc(Wish wish, int year, TimeZoneInfo timeZone)
     {
-        var day = wish.RecipientBirthday.Day == 29 && !DateTime.IsLeapYear(year) ? 28 : wish.RecipientBirthday.Day;
+        var day = wish.RecipientOccasionDate.Day == 29 && !DateTime.IsLeapYear(year)
+            ? 28
+            : wish.RecipientOccasionDate.Day;
         var candidateLocal = new DateTime(
-            year, wish.RecipientBirthday.Month, day,
+            year, wish.RecipientOccasionDate.Month, day,
             wish.DeliveryTime.Hour, wish.DeliveryTime.Minute, wish.DeliveryTime.Second,
             DateTimeKind.Unspecified);
         return TimeZoneInfo.ConvertTimeToUtc(candidateLocal, timeZone);

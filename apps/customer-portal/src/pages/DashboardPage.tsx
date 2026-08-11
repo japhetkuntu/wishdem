@@ -6,7 +6,7 @@ import { WishCard } from "@/components/WishCard";
 import { EmptyState } from "@/components/EmptyState";
 import { CountdownInline } from "@/components/Countdown";
 import { useWishes } from "@/hooks/useWishes";
-import { daysUntil, formatWeekdayDate } from "@/lib/date";
+import { daysUntilOccasion, formatWeekdayDate } from "@/lib/date";
 
 export default function DashboardPage() {
   const { wishes, loading, refresh } = useWishes();
@@ -20,7 +20,7 @@ export default function DashboardPage() {
       <main>
         <Seo
           title="Your Wishes — WishDem"
-          description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+          description="Your private dashboard of wishes in progress and scheduled for delivery."
           path="/dashboard"
           noindex
         />
@@ -36,7 +36,7 @@ export default function DashboardPage() {
       <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
         <Seo
           title="Your Wishes — WishDem"
-          description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+          description="Your private dashboard of wishes in progress and scheduled for delivery."
           path="/dashboard"
           noindex
         />
@@ -45,7 +45,7 @@ export default function DashboardPage() {
           <EmptyState
             badge={"for\nlater"}
             eyebrow="NO WISHES ARE WAITING YET"
-            title="Some of the best birthday words arrive before you know you'll need them."
+            title="Some of the best words arrive before you know you'll need them."
             description="Start with one person. Write while the feeling is here, and let WishDem hold it for their day."
             chips={["For a best friend", "For Mum", "For someone far away", "For next year"]}
             action={
@@ -63,23 +63,29 @@ export default function DashboardPage() {
   const sealedUpcoming = list
     .filter((w) => w.status === "sealed")
     .sort(
-      (a, b) => daysUntil(a.recipient.birthdayISO) - daysUntil(b.recipient.birthdayISO),
+      (a, b) => daysUntilOccasion(a.recipient.occasion, a.recipient.occasionDateISO) - daysUntilOccasion(b.recipient.occasion, b.recipient.occasionDateISO),
     );
   const next = sealedUpcoming[0];
   const drafts = list.filter((w) => w.status === "draft" && w.message);
   const delivered = list.filter((w) => w.status === "delivered" || w.status === "opened");
   const recentDelivery = delivered[0];
 
+  // Kept = anything past draft — a real, sealed promise to someone, whether it has
+  // arrived yet or not. Counting this (instead of just "delivered") is what makes the
+  // number climb the moment you seal a wish, not months later when it finally lands.
+  const keptCount = list.filter((w) => w.status !== "draft").length;
+  const uniqueRecipients = new Set(list.filter((w) => w.status !== "draft").map((w) => w.recipient.name)).size;
+
   const counts = [7, 30, 90].map((horizon) => ({
     horizon,
-    count: list.filter((w) => daysUntil(w.recipient.birthdayISO) <= horizon).length,
+    count: list.filter((w) => daysUntilOccasion(w.recipient.occasion, w.recipient.occasionDateISO) <= horizon).length,
   }));
 
   return (
     <main className="mx-auto w-full max-w-[1320px] px-4 pb-[104px] pt-6 sm:px-8 sm:pb-9">
       <Seo
         title="Your Wishes — WishDem"
-        description="Your private dashboard of birthday wishes in progress and scheduled for delivery."
+        description="Your private dashboard of wishes in progress and scheduled for delivery."
         path="/dashboard"
         noindex
       />
@@ -96,11 +102,25 @@ export default function DashboardPage() {
           {next && (
             <p className="mt-2 max-w-[480px] text-[13px] leading-[1.55] text-porcelain/70">
               {list.length} moment{list.length === 1 ? "" : "s"} already in motion. The
-              next one is ready for {next.recipient.name}'s birthday in{" "}
-              {daysUntil(next.recipient.birthdayISO)} days.
+              next one is ready for {next.recipient.name} in{" "}
+              {daysUntilOccasion(next.recipient.occasion, next.recipient.occasionDateISO)} days.
             </p>
           )}
         </div>
+        {keptCount > 0 && (
+          <Link
+            to="/create/message"
+            className="flex flex-none items-center gap-3 rounded-lg border border-champagne/35 bg-porcelain/[0.04] px-4 py-3 transition-colors hover:border-champagne/60 hover:bg-porcelain/[0.07]"
+          >
+            <div className="text-right">
+              <b className="block font-display text-[26px] leading-none text-champagne">{keptCount}</b>
+              <small className="text-[9px] font-extrabold tracking-[0.08em] text-porcelain/60">
+                MOMENT{keptCount === 1 ? "" : "S"} KEPT{uniqueRecipients > 1 ? ` · ${uniqueRecipients} PEOPLE` : ""}
+              </small>
+            </div>
+            <span className="text-[11px] font-extrabold text-champagne">Keep it going →</span>
+          </Link>
+        )}
       </section>
 
       <section className="grid items-start gap-[14px] sm:grid-cols-[minmax(0,1.58fr)_minmax(285px,.72fr)] sm:gap-5">
@@ -124,7 +144,7 @@ export default function DashboardPage() {
                   OPENED RECENTLY
                 </span>
                 <h3 className="mb-[6px] font-display text-[23px] leading-[1.1]">
-                  {recentDelivery.recipient.name} received your birthday wish.
+                  {recentDelivery.recipient.name} received your wish.
                 </h3>
                 <p className="text-[12px] leading-[1.5] text-ink/70">
                   The letter you sealed is now in their hands.
@@ -145,7 +165,7 @@ export default function DashboardPage() {
               </h3>
               <p className="mb-[11px] text-[12px] leading-[1.5] text-porcelain/70">
                 {drafts.length > 0
-                  ? `${drafts[0].recipient.name}'s birthday letter is saved with your message ready to finish.`
+                  ? `${drafts[0].recipient.name}'s letter is saved with your message ready to finish.`
                   : "Every letter you start gets saved automatically as a draft."}
               </p>
               {drafts.length > 0 && (
@@ -167,15 +187,15 @@ export default function DashboardPage() {
                 NEXT DELIVERY
               </span>
               <h3 className="my-[5px] font-display text-[21px]">
-                {next.recipient.name}'s birthday wish
+                {next.recipient.name}'s wish
               </h3>
               <div className="flex items-center justify-between gap-3 border-y border-porcelain/[0.16] py-[10px] text-[12px]">
                 <span>
-                  {formatWeekdayDate(next.recipient.birthdayISO)}
+                  {formatWeekdayDate(next.recipient.occasionDateISO)}
                   <br />
                   <small className="opacity-70">{next.recipient.timezone} · {next.channel}</small>
                 </span>
-                <CountdownInline days={daysUntil(next.recipient.birthdayISO)} />
+                <CountdownInline days={daysUntilOccasion(next.recipient.occasion, next.recipient.occasionDateISO)} />
               </div>
               <p className="mt-[11px] text-[11px] leading-[1.5] text-porcelain/72">
                 Sealed and scheduled. You can edit it any time before delivery.
@@ -185,7 +205,7 @@ export default function DashboardPage() {
 
           <section className="rounded-lg bg-porcelain/[0.055] p-[18px]">
             <span className="mb-1 block text-[10px] font-extrabold tracking-[0.14em] text-champagne">
-              BIRTHDAY HORIZON
+              WHAT'S AHEAD
             </span>
             <h3 className="my-[5px] mb-[10px] font-display text-[21px]">Moments ahead</h3>
             <div className="grid grid-cols-3 gap-2">

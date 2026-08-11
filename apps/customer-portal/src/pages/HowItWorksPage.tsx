@@ -18,7 +18,7 @@ const STEPS = [
   {
     num: "03",
     title: "Choose the moment and seal it",
-    body: "Select their birthday, local delivery time, and channel — completely free.",
+    body: "Select the occasion, local delivery time, and channel — completely free.",
   },
   {
     num: "04",
@@ -53,7 +53,7 @@ const REASSURANCES = [
   },
   {
     title: "Clear timing",
-    body: "We distinguish your recipient's birthday and local delivery time so there is no guesswork.",
+    body: "We distinguish your recipient's occasion date and local delivery time so there is no guesswork.",
   },
   {
     title: "Support when it counts",
@@ -72,7 +72,7 @@ const FAQS = [
   },
   {
     q: "How will I know the wish is on track?",
-    a: "Your portal shows the scheduled date, delivery updates, and any action needed from you before the birthday.",
+    a: "Your portal shows the scheduled date, delivery updates, and any action needed from you before it arrives.",
   },
 ];
 
@@ -88,8 +88,8 @@ export default function HowItWorksPage() {
   return (
     <div className="w-full">
       <Seo
-        title="How It Works — Schedule a Future Birthday Message | WishDem"
-        description="See exactly how WishDem works: write a birthday message today, choose their birthday and delivery time, and we deliver it privately — free, with no app to install."
+        title="How It Works — Schedule a Future Message | WishDem"
+        description="See exactly how WishDem works: write a message today for any occasion, choose the date and delivery time, and we deliver it privately — free, with no app to install."
         path="/how-it-works"
       />
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
@@ -106,12 +106,12 @@ export default function HowItWorksPage() {
               Let it arrive <i className="text-rose not-italic italic">when it matters.</i>
             </h1>
             <p className="mb-5 max-w-[520px] text-[13px] leading-[1.65] text-porcelain/70 sm:text-[15px]">
-              WishDem gives your birthday message a safe place to wait, then sends it
+              WishDem gives your message a safe place to wait, then sends it
               privately in the recipient's local time—so care arrives exactly when you
               intended.
             </p>
             <Link to="/create/message">
-              <Button>Create a birthday wish</Button>
+              <Button>Create a wish</Button>
             </Link>
             <div className="mt-4 flex flex-wrap gap-2">
               {["Private by design", "Edit before sealing", "Clear delivery updates"].map(

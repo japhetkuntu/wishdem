@@ -2,8 +2,8 @@ using WishDem.Common.Sdk.Enums;
 
 namespace WishDem.Postgres.Sdk.Entities;
 
-/// <summary>A single scheduled birthday wish. Both the Customer API (the sender's own
-/// wizard) and the Admin API (operations oversight) read and write this same table.</summary>
+/// <summary>A single scheduled wish, for any occasion. Both the Customer API (the sender's
+/// own wizard) and the Admin API (operations oversight) read and write this same table.</summary>
 public class Wish : BaseEntity
 {
     public Guid CustomerUserId { get; set; }
@@ -14,7 +14,10 @@ public class Wish : BaseEntity
     // Recipient
     public required string RecipientName { get; set; }
     public required string RecipientRelationship { get; set; }
-    public DateOnly RecipientBirthday { get; set; }
+    public OccasionType Occasion { get; set; } = OccasionType.Birthday;
+    /// <summary>Custom occasion name — only meaningful (and shown) when Occasion is Other.</summary>
+    public string? OccasionLabel { get; set; }
+    public DateOnly RecipientOccasionDate { get; set; }
     public TimeOnly DeliveryTime { get; set; }
     public required string RecipientTimezone { get; set; }
 

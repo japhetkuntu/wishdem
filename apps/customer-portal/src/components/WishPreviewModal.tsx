@@ -5,7 +5,7 @@ import type { Attachment } from "@/types";
 
 export interface WishPreviewModalProps {
   recipientName: string;
-  birthdayISO: string;
+  occasionDateISO: string;
   fromName: string;
   message: string;
   attachment: Attachment | null;
@@ -19,7 +19,7 @@ export interface WishPreviewModalProps {
  */
 export function WishPreviewModal({
   recipientName,
-  birthdayISO,
+  occasionDateISO,
   fromName,
   message,
   attachment,
@@ -60,7 +60,7 @@ export function WishPreviewModal({
         </div>
 
         <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
-          {birthdayISO ? formatWeekdayDate(birthdayISO).toUpperCase() : "DELIVERY DAY"}
+          {occasionDateISO ? formatWeekdayDate(occasionDateISO).toUpperCase() : "DELIVERY DAY"}
         </span>
         <h1 className="my-[22px] font-display text-[32px] sm:text-[38px]">
           Dear {recipientName || "them"},
@@ -79,7 +79,7 @@ export function WishPreviewModal({
         {attachment && <AttachmentDisplay attachment={attachment} fromName={fromName} />}
 
         <div className="mt-[22px] border-t border-ink/10 pt-[14px] text-[11px] text-ink/50">
-          From {fromName || "you"} — sealed until {birthdayISO ? formatWeekdayDate(birthdayISO) : "delivery day"}.
+          From {fromName || "you"} — sealed until {occasionDateISO ? formatWeekdayDate(occasionDateISO) : "delivery day"}.
         </div>
       </div>
     </div>

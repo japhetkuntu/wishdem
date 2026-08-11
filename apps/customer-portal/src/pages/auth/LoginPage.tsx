@@ -42,7 +42,7 @@ export default function LoginPage() {
     <main className="mx-auto grid w-full max-w-[1180px] gap-7 px-5 py-6 sm:grid-cols-[1.03fr_.97fr] sm:items-center sm:gap-8 sm:px-8 sm:py-8">
       <Seo
         title="Sign In to WishDem — Continue to Your Wishes"
-        description="Sign in to WishDem to write, schedule, and manage the future birthday wishes you're keeping for the people you love."
+        description="Sign in to WishDem to write, schedule, and manage the future wishes you're keeping for the people you love."
         path="/login"
       />
       <section className="flex min-h-0 flex-col justify-between sm:min-h-[610px]">
@@ -71,7 +71,7 @@ export default function LoginPage() {
               </small>
               <h3 className="my-[6px] font-display text-[22px]">Maya's September 14</h3>
               <p className="text-[10px] leading-[1.5] text-porcelain/85">
-                A note, a voice memory, and a birthday moment held with care.
+                A note, a voice memory, and a moment held with care.
               </p>
               <div className="mt-[10px] border-t border-porcelain/[0.13] pt-[9px] text-[10px] text-porcelain/85">
                 Your future wishes stay private, until their day to bloom.

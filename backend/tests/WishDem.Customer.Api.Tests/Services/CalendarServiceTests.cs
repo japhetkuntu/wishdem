@@ -35,7 +35,7 @@ public class CalendarServiceTests
             RecipientName = "Kojo",
             RecipientRelationship = "Brother",
             RecipientTimezone = "Africa/Accra",
-            RecipientBirthday = new DateOnly(2000, 2, 1),
+            RecipientOccasionDate = new DateOnly(2000, 2, 1),
             Status = WishStatus.Sealed,
         };
         var person = new CirclePerson
