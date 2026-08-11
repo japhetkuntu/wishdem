@@ -146,6 +146,7 @@ public class WishOversightService(
         w.FromName,
         w.RecipientName,
         w.RecipientRelationship,
+        w.RecipientPhoneNumber,
         w.Occasion,
         w.OccasionLabel,
         w.RecipientOccasionDate,

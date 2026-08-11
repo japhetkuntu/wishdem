@@ -49,6 +49,7 @@ interface AdminWishResponseDto {
   fromName: string;
   recipientName: string;
   recipientRelationship: string;
+  recipientPhoneNumber: string | null;
   occasion: string;
   occasionLabel: string | null;
   recipientOccasionDate: string | null;
@@ -324,6 +325,7 @@ function mapWish(dto: AdminWishResponseDto): AdminWish {
     channel: channelLabel,
     senderName: dto.fromName || dto.customerName,
     recipientName: dto.recipientName,
+    recipientPhoneNumber: dto.recipientPhoneNumber,
     scheduleLabel: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "—",
     timezoneLabel: "GMT / Accra",
     deliveryStatus,
@@ -343,6 +345,9 @@ function mapWish(dto: AdminWishResponseDto): AdminWish {
         { label: "Status", value: statusBadge },
         { label: "Channel", value: channelLabel },
         { label: "Recipient", value: `${dto.recipientName} (${dto.recipientRelationship})` },
+        // Recipient's phone as entered by the customer — surfaced so an admin can spot a
+        // malformed/wrong number when a customer reports a delivery that never arrived.
+        { label: "Recipient phone", value: dto.recipientPhoneNumber ?? "Not provided" },
         { label: "Sealed", value: dto.sealedAtUtc ? formatDateLabel(dto.sealedAtUtc) : "Not sealed" },
       ],
       timeline: [

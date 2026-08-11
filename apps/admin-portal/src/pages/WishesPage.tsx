@@ -37,7 +37,8 @@ export default function WishesPage() {
         (w) =>
           w.id.toLowerCase().includes(query) ||
           w.senderName.toLowerCase().includes(query) ||
-          w.recipientName.toLowerCase().includes(query),
+          w.recipientName.toLowerCase().includes(query) ||
+          (w.recipientPhoneNumber?.toLowerCase().includes(query) ?? false),
       );
     }
     return list;
@@ -146,6 +147,11 @@ export default function WishesPage() {
                 <div>
                   <b className="block">{wish.senderName}</b>
                   <span className="mt-[2px] block text-[9px] text-ink/50">→ {wish.recipientName}</span>
+                  {/* Visible at a glance, not just in the detail panel — this is the
+                      number customers most often report typos in. */}
+                  <span className="mt-[2px] block text-[9px] text-ink/50">
+                    {wish.recipientPhoneNumber ?? "No phone on file"}
+                  </span>
                 </div>
                 <div className="hidden lg:block">
                   {wish.scheduleLabel}

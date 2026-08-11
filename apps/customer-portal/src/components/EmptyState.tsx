@@ -20,7 +20,13 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <section className="grid min-h-[520px] place-items-center rounded-lg bg-[radial-gradient(circle_at_50%_40%,#4A203D,transparent_40%)] px-5 py-10 text-center sm:min-h-[700px] sm:px-8">
+    // Fixed dark backdrop (not just a radial glow fading to transparent) — in light mode
+    // the fade-out edges used to reveal the light page canvas underneath, while the text
+    // stayed the light "porcelain" color meant for a dark background, so it went nearly
+    // invisible wherever the gradient had faded out. Forcing a solid bg-plum base plus the
+    // ink-on-canvas override makes this a proper "dark island" like the rest of the app's
+    // fixed-dark surfaces, so contrast holds regardless of the site theme.
+    <section className="grid min-h-[520px] place-items-center rounded-lg bg-plum bg-[radial-gradient(circle_at_50%_40%,#4A203D,transparent_70%)] px-5 py-10 text-center text-porcelain [--wd-ink-on-canvas-rgb:246_240_232] sm:min-h-[700px] sm:px-8">
       <div className="mx-auto max-w-[720px]">
         <div className="mx-auto grid h-[112px] w-[112px] place-items-center rounded-full bg-champagne text-center font-display text-[25px] text-plum">
           {badge}

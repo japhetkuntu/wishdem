@@ -29,6 +29,7 @@ public class WishOversightServiceTests
         RecipientName = "Kojo",
         RecipientRelationship = "Brother",
         RecipientTimezone = "Africa/Accra",
+        RecipientPhoneNumber = "0244123456",
     };
 
     [Fact]
@@ -51,6 +52,9 @@ public class WishOversightServiceTests
 
         response.Code.Should().Be(200);
         response.Data!.Items.Should().ContainSingle(w => w.CustomerName == "Kojo");
+        // Admins need this to spot a wrong/malformed number when a customer reports a
+        // delivery that never arrived — it must round-trip from the entity untouched.
+        response.Data.Items.Single().RecipientPhoneNumber.Should().Be("0244123456");
     }
 
     [Fact]

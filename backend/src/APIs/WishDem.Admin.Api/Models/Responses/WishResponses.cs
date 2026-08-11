@@ -10,6 +10,7 @@ public record AdminWishResponse(
     string FromName,
     string RecipientName,
     string RecipientRelationship,
+    string? RecipientPhoneNumber,
     OccasionType Occasion,
     string? OccasionLabel,
     DateOnly RecipientOccasionDate,

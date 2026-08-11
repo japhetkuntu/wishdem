@@ -62,6 +62,7 @@ export interface AdminWish {
   channel: string;
   senderName: string;
   recipientName: string;
+  recipientPhoneNumber: string | null;
   scheduleLabel: string;
   timezoneLabel: string;
   deliveryStatus: DeliveryStatus;
