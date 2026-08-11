@@ -36,7 +36,9 @@ export function SiteNav() {
 
   return (
     <nav className="flex items-center justify-between border-b border-porcelain/[0.14] py-[17px]">
-      <Link to="/" className="text-[20px] font-extrabold tracking-[-1.5px]">
+      {/* Once signed in, "home" means the dashboard, not the marketing landing page —
+          clicking the brand mark used to always land here regardless of auth state. */}
+      <Link to={user ? "/dashboard" : "/"} className="text-[20px] font-extrabold tracking-[-1.5px]">
         Wish
         <i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
         Dem

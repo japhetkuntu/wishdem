@@ -7,6 +7,7 @@ import { SealButton } from "@/components/SealButton";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 import { ShareLinks } from "@/components/ShareLinks";
 import { ShareImageActions } from "@/components/ShareImageActions";
+import { useAuth } from "@/hooks/useAuth";
 import { usePublicWish } from "@/hooks/useWishes";
 import { markOpened } from "@/lib/api";
 import { formatWeekdayDate } from "@/lib/date";
@@ -16,11 +17,13 @@ import { getThemeImage } from "@/lib/themeImages";
 /** This page is reached either from an outside link (SMS/share, no in-app history to
  * go back to) or from a sender's own dashboard ("View details") — either way, there
  * was previously no way out except the browser's own back button. A link to home
- * covers both cases without needing to know which one brought them here. */
-function BackHome({ className }: { className?: string }) {
+ * covers both cases without needing to know which one brought them here. When the
+ * sender is the one viewing (logged in), "home" means their dashboard, not the
+ * marketing landing page they'd otherwise land on. */
+function BackHome({ className, loggedIn }: { className?: string; loggedIn: boolean }) {
   return (
     <Link
-      to="/"
+      to={loggedIn ? "/dashboard" : "/"}
       className={clsx(
         "inline-flex items-center gap-1 text-[11px] font-extrabold tracking-[0.08em] text-champagne/80 transition-colors hover:text-champagne",
         className,
@@ -34,6 +37,7 @@ function BackHome({ className }: { className?: string }) {
 export default function RecipientWishPage() {
   const { id } = useParams<{ id: string }>();
   const { wish, loading, setWish } = usePublicWish(id);
+  const { user } = useAuth();
   const [revealed, setRevealed] = useState(false);
 
   if (loading) {
@@ -61,7 +65,7 @@ export default function RecipientWishPage() {
         />
         <div>
           <h1 className="mb-3 font-display text-[32px]">This wish could not be found.</h1>
-          <Link to="/" className="text-champagne">Return home →</Link>
+          <Link to={user ? "/dashboard" : "/"} className="text-champagne">Return home →</Link>
         </div>
       </main>
     );
@@ -103,7 +107,7 @@ export default function RecipientWishPage() {
           path="/w/:id"
           noindex
         />
-        <BackHome className="absolute left-5 top-5" />
+        <BackHome className="absolute left-5 top-5" loggedIn={!!user} />
         <section>
           <span className="text-[10px] font-extrabold tracking-[0.15em] text-champagne">
             A {phrase.toUpperCase()} FOR {wish.recipient.name.toUpperCase()}
@@ -159,7 +163,7 @@ export default function RecipientWishPage() {
         path="/w/:id"
         noindex
       />
-      <BackHome className="mb-5" />
+      <BackHome className="mb-5" loggedIn={!!user} />
       <header className="mb-7 flex flex-wrap justify-between gap-2 text-[10px] font-extrabold tracking-[0.13em] text-champagne">
         <span>FOR {wish.recipient.name.toUpperCase()}</span>
         <span>FROM {wish.fromName.toUpperCase()}</span>

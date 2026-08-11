@@ -1,11 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import { Loading } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
+import { useAuth } from "@/hooks/useAuth";
 import { useBirthdayBloom } from "@/hooks/useBirthdayBloom";
 
 export default function BloomCoverPage() {
   const { id } = useParams<{ id: string }>();
   const { bloom, loading } = useBirthdayBloom(id);
+  const { user } = useAuth();
 
   if (loading) {
     return (
@@ -31,7 +33,7 @@ export default function BloomCoverPage() {
           noindex
         />
         <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
-          <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
+          <Link to={user ? "/dashboard" : "/"} className="text-[21px] font-extrabold tracking-[-1.4px]">
             Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
             Dem
           </Link>
@@ -58,7 +60,7 @@ export default function BloomCoverPage() {
         noindex
       />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
-        <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
+        <Link to={user ? "/dashboard" : "/"} className="text-[21px] font-extrabold tracking-[-1.4px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
           Dem
         </Link>

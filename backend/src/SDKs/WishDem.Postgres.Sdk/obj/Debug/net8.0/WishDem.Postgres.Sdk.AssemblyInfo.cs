@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WishDem.Postgres.Sdk")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+651f67de3d968d39e72537577a1668224cca52c7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6412ff8279d1acd08dd3598db5a6fccd91e8173d")]
 [assembly: System.Reflection.AssemblyProductAttribute("WishDem.Postgres.Sdk")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WishDem.Postgres.Sdk")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

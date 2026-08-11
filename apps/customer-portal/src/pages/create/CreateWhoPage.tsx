@@ -221,7 +221,7 @@ export default function CreateWhoPage() {
               }
             >
               {atDailyLimit
-                ? "You've used all 3 of today's wishes. Come back tomorrow to write another."
+                ? `You've used all ${dailyLimit.max} of today's wishes. Come back tomorrow to write another.`
                 : `${dailyLimit.used} of ${dailyLimit.max} wishes used today`}
             </p>
           )}

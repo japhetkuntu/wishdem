@@ -19,9 +19,18 @@ interface WishesState {
 }
 
 function load(set: (partial: Partial<WishesState>) => void) {
-  const promise = listWishes().then((data) => {
-    set({ wishes: data, loading: false, fetchPromise: null });
-  });
+  const promise = listWishes()
+    .then((data) => {
+      set({ wishes: data, loading: false, fetchPromise: null });
+    })
+    .catch(() => {
+      // VerifyPage calls useWishes() before the user is actually authenticated (to preview
+      // "next to bloom" once they're in) — that fetch always 401s. Without clearing
+      // fetchPromise here too, ensureLoaded()'s guard would see it as still in-flight
+      // forever and never retry, leaving DashboardPage's real post-login fetch permanently
+      // blocked — stuck on "Gathering your wishes" until a full page reload.
+      set({ loading: false, fetchPromise: null });
+    });
   set({ loading: true, fetchPromise: promise });
 }
 

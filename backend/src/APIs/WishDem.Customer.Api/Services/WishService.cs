@@ -33,7 +33,7 @@ public class WishService(
     // Scarcity, not a technical limit: a free product with no cap invites spam/abuse of
     // the SMS/WhatsApp delivery pipeline. Measured in UTC calendar days for simplicity —
     // good enough for a soft daily cap, not trying to be precise per sender timezone.
-    private const int MaxWishesPerDay = 3;
+    private const int MaxWishesPerDay = 15;
 
     private static readonly Dictionary<string, AttachmentKind> ContentTypeKinds = new(StringComparer.OrdinalIgnoreCase)
     {

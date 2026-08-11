@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
 import { Loading } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
+import { useAuth } from "@/hooks/useAuth";
 import { useBirthdayBloom } from "@/hooks/useBirthdayBloom";
 import type { BloomWish } from "@/types";
 
@@ -99,6 +100,7 @@ export default function BloomGalleryPage() {
   const { id } = useParams<{ id: string }>();
   const [params] = useSearchParams();
   const { bloom, loading, markOpened, toggleFavorite } = useBirthdayBloom(id);
+  const { user } = useAuth();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [thanked, setThanked] = useState(false);
@@ -186,7 +188,7 @@ export default function BloomGalleryPage() {
         noindex
       />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
-        <Link to="/" className="text-[21px] font-extrabold tracking-[-1.3px]">
+        <Link to={user ? "/dashboard" : "/"} className="text-[21px] font-extrabold tracking-[-1.3px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
           Dem
         </Link>

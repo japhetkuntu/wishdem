@@ -156,7 +156,7 @@ public class WishServiceTests
     public async Task CreateAsync_WhenAtDailyLimit_ReturnsTooManyRequests()
     {
         var customerUserId = Guid.NewGuid();
-        var alreadyCreatedToday = Enumerable.Range(0, 3)
+        var alreadyCreatedToday = Enumerable.Range(0, 15)
             .Select(_ => new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" })
             .ToList();
         _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
@@ -182,8 +182,8 @@ public class WishServiceTests
 
         response.Code.Should().Be(200);
         response.Data!.Used.Should().Be(2);
-        response.Data.Max.Should().Be(3);
-        response.Data.Remaining.Should().Be(1);
+        response.Data.Max.Should().Be(15);
+        response.Data.Remaining.Should().Be(13);
     }
 
     [Fact]

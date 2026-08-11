@@ -130,7 +130,9 @@ export default function ProfilePage() {
         noindex
       />
       <nav className="flex min-h-[68px] items-center border-b border-porcelain/[0.15]">
-        <Link to="/" className="text-[21px] font-extrabold tracking-[-1.4px]">
+        {/* This page is always behind RequireAuth, so "home" is unconditionally the
+            dashboard here — no anonymous visitor ever reaches this brand mark. */}
+        <Link to="/dashboard" className="text-[21px] font-extrabold tracking-[-1.4px]">
           Wish<i className="mx-[2px] mb-[7px] inline-block h-[6px] w-[6px] rounded-full bg-champagne align-middle" />
           Dem
         </Link>
