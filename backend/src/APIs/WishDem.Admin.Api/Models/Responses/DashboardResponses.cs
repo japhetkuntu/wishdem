@@ -6,4 +6,5 @@ public record DashboardOverviewResponse(
     int OpenedTodayCount,
     int OpenModerationCasesCount,
     decimal TotalRevenue,
-    int TotalCustomers);
+    int TotalCustomers,
+    int CustomersWithWishCount);

@@ -38,13 +38,18 @@ public class DashboardService(
 
             var totalCustomers = customerUsers.GetQueryable().Count();
 
+            // "Signed up" and "actually used it" are different questions — this is the
+            // count of distinct customers who own at least one wish, not just an account.
+            var customersWithWishCount = wishes.GetQueryable().Select(w => w.CustomerUserId).Distinct().Count();
+
             var result = new DashboardOverviewResponse(
                 totalWishes,
                 sealedTodayCount,
                 openedTodayCount,
                 openModerationCasesCount,
                 totalRevenue,
-                totalCustomers);
+                totalCustomers,
+                customersWithWishCount);
 
             return Task.FromResult(result.ToOkApiResponse("Dashboard overview retrieved successfully."));
         }

@@ -5,6 +5,7 @@ using WishDem.Common.Sdk.Enums;
 using WishDem.Messaging.Sdk;
 using WishDem.Messaging.Sdk.Abstractions;
 using WishDem.Messaging.Sdk.Templates;
+using WishDem.Postgres.Sdk.Delivery;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -21,9 +22,13 @@ public class WishDeliveryProcessor(
     IOptions<DeliverySettings> options,
     ILogger<WishDeliveryProcessor> logger) : IWishDeliveryProcessor
 {
-    // After this many failed attempts we stop retrying entirely — a permanently bad
-    // number or provider outage shouldn't hammer the SMS provider forever.
-    private const int MaxDeliveryAttempts = 8;
+    // After this many failed attempts we stop retrying at the fast exponential-backoff
+    // cadence and fall back to a slow daily check instead — a permanently bad number or
+    // provider outage shouldn't hammer the SMS provider every few minutes forever, but a
+    // schedule that's come due should never require a human to manually click retry just
+    // because the provider was down or a queued backoff window was missed.
+    private const int MaxDeliveryAttempts = WishDeliveryTiming.StruggledDeliveryAttempts;
+    private static readonly TimeSpan SlowRetryInterval = TimeSpan.FromHours(24);
 
     private readonly DeliverySettings _settings = options.Value;
 
@@ -57,14 +62,19 @@ public class WishDeliveryProcessor(
         wish.DeliveryAttemptCount++;
         if (wish.DeliveryAttemptCount >= MaxDeliveryAttempts)
         {
-            // Give up — leave it undelivered but stop scheduling further attempts so it
-            // doesn't retry every poll cycle forever. Surfaces loudly so an admin notices —
-            // and, just as importantly, tells the sender directly (see NotifySenderOfFailureAsync).
-            wish.NextDeliveryAttemptAtUtc = DateTime.MaxValue;
-            logger.LogCritical(
-                "[DeliverAsync] Wish {WishId} failed delivery {Attempts} times — giving up, needs manual attention.",
-                wishId, wish.DeliveryAttemptCount);
-            await NotifySenderOfFailureAsync(wish, ct);
+            // Past the fast-retry budget — slow down to once a day instead of giving up
+            // outright, so a temporary provider outage or a stale phone number that later
+            // gets fixed on the wish still delivers on its own, with nobody needing to press
+            // a "retry" button. Only notify the sender the first time we cross this line —
+            // every attempt after would otherwise re-send the same "we're still trying" email.
+            wish.NextDeliveryAttemptAtUtc = DateTime.UtcNow.Add(SlowRetryInterval);
+            if (wish.DeliveryAttemptCount == MaxDeliveryAttempts)
+            {
+                logger.LogCritical(
+                    "[DeliverAsync] Wish {WishId} failed delivery {Attempts} times — slowing to a daily retry and notifying the sender.",
+                    wishId, wish.DeliveryAttemptCount);
+                await NotifySenderOfFailureAsync(wish, ct);
+            }
         }
         else
         {
@@ -119,8 +129,12 @@ public class WishDeliveryProcessor(
         }
     }
 
+    // This SMS lands directly on the recipient's own phone — referring to them by name in
+    // the third person ("X sent Y a wish") reads like a notification about someone else's
+    // business, when it's actually addressed to them. Speaking to them directly ("sent
+    // you") is the more natural, personal phrasing for a message they're the one reading.
     private static string BuildMessage(Wish wish, string link) =>
-        $"{wish.FromName} sent {wish.RecipientName} a {wish.Occasion.WishPhrase(wish.OccasionLabel)} on WishDem! Open it here: {link}";
+        $"Hi {wish.RecipientName}! {wish.FromName} sent you a {wish.Occasion.WishPhrase(wish.OccasionLabel)} on WishDem. Open it here: {link}";
 
     private async Task NotifySenderOfFailureAsync(Wish wish, CancellationToken ct)
     {

@@ -248,6 +248,7 @@ interface DashboardOverviewDto {
   openModerationCasesCount: number;
   totalRevenue: number;
   totalCustomers: number;
+  customersWithWishCount: number;
 }
 
 export async function getOverview(): Promise<OverviewData> {
@@ -281,7 +282,8 @@ export async function getOverview(): Promise<OverviewData> {
     // No activity-feed/audit-log entity exists server-side.
     activity: [],
     signals: [
-      { value: String(dto.totalCustomers), label: "Total customers" },
+      { value: String(dto.totalCustomers), label: "Signed up" },
+      { value: String(dto.customersWithWishCount), label: "Created a wish" },
       { value: String(dto.openModerationCasesCount), label: "Open moderation cases" },
     ],
   };

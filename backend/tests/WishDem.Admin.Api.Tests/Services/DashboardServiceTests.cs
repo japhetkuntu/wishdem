@@ -34,11 +34,15 @@ public class DashboardServiceTests
     public async Task GetOverviewAsync_AggregatesCountsAndRevenue()
     {
         var today = DateTime.UtcNow;
+        var customerA = Guid.NewGuid();
         var sealedToday = NewWish(WishStatus.Sealed);
         sealedToday.SealedAtUtc = today;
+        sealedToday.CustomerUserId = customerA;
         var openedToday = NewWish(WishStatus.Opened);
         openedToday.OpenedAtUtc = today;
+        openedToday.CustomerUserId = customerA; // same customer as sealedToday — should not double-count
         var draft = NewWish();
+        draft.CustomerUserId = Guid.NewGuid();
 
         _wishes.Setup(r => r.GetQueryable()).Returns(new[] { sealedToday, openedToday, draft }.AsQueryable());
         _moderationCases.Setup(r => r.GetQueryable()).Returns(new[]
@@ -68,6 +72,10 @@ public class DashboardServiceTests
         // excluded from the sum — RefundAmount isn't subtracted again on top of that.
         response.Data.TotalRevenue.Should().Be(10m);
         response.Data.TotalCustomers.Should().Be(2);
+        // Two wishes share customerA, one belongs to a second customer — 2 distinct
+        // customers actually have a wish, not 3 (wish count) or 2 (signup count, which
+        // happens to coincide here but measures something different).
+        response.Data.CustomersWithWishCount.Should().Be(2);
     }
 
     [Fact]

@@ -495,8 +495,13 @@ public class WishService(
         wish.Channel = request.Channel;
     }
 
+    // The worker never permanently gives up anymore — past the fast-retry budget it just
+    // slows to a daily check (see WishDeliveryProcessor) so a resolved outage or fixed
+    // phone number still delivers on its own. "Failed" here means "struggling and past
+    // that threshold," not "will never be attempted again."
     private static bool IsDeliveryFailed(Wish w) =>
-        w.Status == WishStatus.Sealed && w.DeliveredAtUtc is null && w.NextDeliveryAttemptAtUtc == DateTime.MaxValue;
+        w.Status == WishStatus.Sealed && w.DeliveredAtUtc is null
+        && w.DeliveryAttemptCount >= WishDeliveryTiming.StruggledDeliveryAttempts;
 
     private static WishResponse ToResponse(Wish w) => new(
         w.Id,

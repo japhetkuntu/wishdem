@@ -63,10 +63,20 @@ export default function CreateThemePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  // The theme grid used to sit permanently at the top of this step, pushing the actual
+  // decisions (attachment, delivery, seal) below a wall of photos — most people don't
+  // have a strong opinion on the envelope colour and just want to move on. Now a sensible
+  // default is picked automatically and the picker only opens if someone actually wants
+  // to change it, keeping the main flow to what genuinely needs a decision.
+  const [pickingTheme, setPickingTheme] = useState(false);
 
   useEffect(() => {
     if (!wishId) navigate("/create/who", { replace: true });
   }, [wishId, navigate]);
+
+  useEffect(() => {
+    if (!selectedTheme && themes.length > 0) setSelectedTheme(themes[0].id);
+  }, [selectedTheme, themes]);
 
   const selectedThemeObj = themes.find((t) => t.id === selectedTheme);
   const needsPhoneNumber = selectedChannel !== null && NEEDS_PHONE_NUMBER.includes(selectedChannel);
@@ -115,19 +125,20 @@ export default function CreateThemePage() {
         noindex
       />
       <h1 className="font-display text-[clamp(32px,5vw,54px)] leading-[1.03]">
-        Choose the vessel
+        Almost there —
         <br />
-        for {recipient?.name ? `${recipient.name}'s` : "their"} letter.
+        how should it arrive?
       </h1>
       <p className="mb-6 mt-2 text-porcelain/70">
-        The words stay the same. Pick how it looks and how it arrives, then seal it.
+        We've already picked a look for {recipient?.name ?? "their"} letter. Choose how it
+        reaches them, and seal it.
       </p>
 
       <section className="grid gap-4 sm:grid-cols-[1.45fr_.75fr]">
-        {/* order-first + sticky: on mobile this section runs long (theme grid, attachment
-            picker, delivery choice), so without this the preview/seal action would sit
-            below the fold — see StickyMobileAction and CreateWhoPage's near-identical
-            reasoning for the same pattern. */}
+        {/* order-first + sticky: on mobile this section runs long (attachment picker,
+            delivery choice), so without this the preview/seal action would sit below the
+            fold — see StickyMobileAction and CreateWhoPage's near-identical reasoning for
+            the same pattern. */}
         <div className="order-first sm:order-2 sm:sticky sm:top-6 sm:self-start">
           <ThemePreviewPanel
             theme={selectedThemeObj}
@@ -147,21 +158,35 @@ export default function CreateThemePage() {
               </StickyMobileAction>
             }
           />
+          {/* The theme grid used to live permanently in the main flow — most senders don't
+              have a strong opinion on it, so it's tucked behind this toggle instead and
+              only expands if someone actually wants a different look. */}
+          <button
+            type="button"
+            onClick={() => setPickingTheme((v) => !v)}
+            className="mt-3 text-[11px] font-extrabold text-champagne"
+          >
+            {pickingTheme ? "Hide looks ↑" : "Not this look? Change it →"}
+          </button>
+          {pickingTheme && (
+            <div className="mt-3 grid grid-cols-2 gap-[10px]">
+              {themes.map((theme) => (
+                <ThemeCard
+                  key={theme.id}
+                  theme={theme}
+                  selected={selectedTheme === theme.id}
+                  onSelect={() => {
+                    setSelectedTheme(theme.id);
+                    setPickingTheme(false);
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="order-last sm:order-1">
-          <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2 sm:gap-[15px]">
-            {themes.map((theme) => (
-              <ThemeCard
-                key={theme.id}
-                theme={theme}
-                selected={selectedTheme === theme.id}
-                onSelect={() => setSelectedTheme(theme.id)}
-              />
-            ))}
-          </div>
-
-          <p className="mt-5 text-[13px]">
+          <p className="text-[13px]">
             <b className="font-extrabold">Add one memory, if you'd like.</b> One
             optional attachment per wish.
           </p>

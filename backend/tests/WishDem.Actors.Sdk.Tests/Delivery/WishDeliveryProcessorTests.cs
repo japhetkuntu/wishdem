@@ -125,7 +125,7 @@ public class WishDeliveryProcessorTests
     }
 
     [Fact]
-    public async Task DeliverAsync_AfterMaxAttempts_GivesUpAndStopsSchedulingRetries()
+    public async Task DeliverAsync_AfterMaxAttempts_SlowsToDailyRetryInsteadOfGivingUp()
     {
         var wish = NewDueSealedWish(DeliveryChannel.Sms, phoneNumber: null);
         wish.DeliveryAttemptCount = 7; // one below the cap
@@ -136,7 +136,27 @@ public class WishDeliveryProcessorTests
 
         delivered.Should().BeFalse();
         wish.DeliveryAttemptCount.Should().Be(8);
-        wish.NextDeliveryAttemptAtUtc.Should().Be(DateTime.MaxValue);
+        // Still automatically retried later — not DateTime.MaxValue (which would mean
+        // "never again, needs a human to click retry").
+        wish.NextDeliveryAttemptAtUtc.Should().BeCloseTo(DateTime.UtcNow.AddHours(24), TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
+    public async Task DeliverAsync_WellPastMaxAttempts_KeepsRetryingWithoutRenotifying()
+    {
+        var customerUserId = Guid.NewGuid();
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, phoneNumber: null);
+        wish.CustomerUserId = customerUserId;
+        wish.DeliveryAttemptCount = 20; // long past the cap — should still be retried, not abandoned
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var delivered = await _sut.DeliverAsync(wish.Id);
+
+        delivered.Should().BeFalse();
+        wish.DeliveryAttemptCount.Should().Be(21);
+        wish.NextDeliveryAttemptAtUtc.Should().BeCloseTo(DateTime.UtcNow.AddHours(24), TimeSpan.FromMinutes(1));
+        _emailSender.Verify(e => e.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

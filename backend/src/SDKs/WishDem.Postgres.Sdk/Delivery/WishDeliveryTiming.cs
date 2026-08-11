@@ -16,6 +16,12 @@ namespace WishDem.Postgres.Sdk.Delivery;
 /// no re-projecting it into next year if it's already passed.</summary>
 public static class WishDeliveryTiming
 {
+    /// <summary>Attempt count at which the delivery worker slows from fast exponential
+    /// backoff to a once-a-day retry — shared with the Customer API so its "delivery
+    /// struggling" flag (surfaced to the sender and to Admin) lines up with the same
+    /// threshold the worker itself uses, instead of the two silently drifting apart.</summary>
+    public const int StruggledDeliveryAttempts = 8;
+
     private static bool RecursAnnually(OccasionType occasion) =>
         occasion is OccasionType.Birthday or OccasionType.Anniversary;
 
