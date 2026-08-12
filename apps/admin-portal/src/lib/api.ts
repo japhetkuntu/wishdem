@@ -60,7 +60,7 @@ function toPaginated<TDto, T>(page: PagedResult<TDto>, map: (dto: TDto) => T): P
   };
 }
 
-export const DEFAULT_PAGE_SIZE = 8;
+export const DEFAULT_PAGE_SIZE = 7;
 
 /** Every list screen's filtering/search happens server-side — this just turns whatever
  * params a screen has into a query string, skipping anything unset so defaults on the
