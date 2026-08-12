@@ -112,12 +112,19 @@ public class WishOversightService(
     {
         try
         {
-            // Placeholder action: no real delivery queue exists yet, so this simply resets
-            // delivery/opened state so the wish re-enters the "due" bucket in the derived
-            // delivery-health view. It does NOT trigger any real message being sent.
+            // The dispatch worker's query only ever picks up wishes with Status == Sealed
+            // (see WishDeliveryDispatchService) — once a wish reaches Delivered or Opened,
+            // clearing DeliveredAtUtc/OpenedAtUtc alone left it permanently invisible to
+            // that query, so this used to silently no-op for any wish that had actually
+            // gone out. Resetting Status back to Sealed, and clearing the backoff fields so
+            // no stale delay is left over, puts it back in front of the worker for real —
+            // it goes out on the very next poll instead of requiring a real-time queue.
             var wish = await GetWishAsync(wishId, ct);
+            wish.Status = WishStatus.Sealed;
             wish.DeliveredAtUtc = null;
             wish.OpenedAtUtc = null;
+            wish.NextDeliveryAttemptAtUtc = null;
+            wish.DeliveryAttemptCount = 0;
             await wishes.UpdateAsync(wish, ct);
 
             var customer = await customerUsers.GetByIdAsync(wish.CustomerUserId, ct);

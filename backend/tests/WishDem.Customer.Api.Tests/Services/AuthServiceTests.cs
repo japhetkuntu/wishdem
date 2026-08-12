@@ -99,6 +99,18 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task VerifyOtpAsync_AfterMaxFailedAttempts_InvalidatesCodeEvenIfLaterCorrect()
+    {
+        _cache.Setup(c => c.GetAsync<string>(It.IsAny<string>())).ReturnsAsync("123456");
+        _cache.Setup(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<TimeSpan?>())).ReturnsAsync(5);
+
+        var response = await _sut.VerifyOtpAsync("test@example.com", "wrong-code", null);
+
+        response.Code.Should().Be(401);
+        _cache.Verify(c => c.RemoveAsync(It.Is<string>(k => k.StartsWith("customer:otp:") && !k.Contains("attempts"))), Times.Once);
+    }
+
+    [Fact]
     public async Task VerifyOtpAsync_WhenRepositoryThrows_ReturnsInternalError()
     {
         _cache.Setup(c => c.GetAsync<string>(It.IsAny<string>())).ThrowsAsync(new InvalidOperationException("db down"));

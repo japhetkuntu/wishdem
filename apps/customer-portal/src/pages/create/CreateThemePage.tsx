@@ -24,13 +24,13 @@ const ROUTES: {
     id: "sms",
     index: "01",
     title: "Send by text",
-    description: "A simple SMS brings them to their private opening link.",
+    description: "The simplest way — we text them a link straight to their private opening moment.",
   },
   {
     id: "link",
     index: "02",
-    title: "Give me the link",
-    description: "You share the private opening link yourself.",
+    title: "Just give me the link",
+    description: "For when you'd rather see it first yourself, or send it to someone else to pass along — most people prefer text.",
   },
 ];
 
@@ -77,6 +77,14 @@ export default function CreateThemePage() {
   useEffect(() => {
     if (!selectedTheme && themes.length > 0) setSelectedTheme(themes[0].id);
   }, [selectedTheme, themes]);
+
+  // Testers reported that a bare "here's a link" delivery feels like spam — most people
+  // won't tap a random link from an unknown number. Text message is the default now;
+  // the link stays available for the minority who want to preview it themselves first
+  // or forward it on, but nobody has to actively choose SMS to get the safer default.
+  useEffect(() => {
+    if (!selectedChannel) setSelectedChannel("sms");
+  }, [selectedChannel]);
 
   const selectedThemeObj = themes.find((t) => t.id === selectedTheme);
   const needsPhoneNumber = selectedChannel !== null && NEEDS_PHONE_NUMBER.includes(selectedChannel);

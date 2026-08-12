@@ -39,6 +39,9 @@ public class AuthService(
             var code = GenerateCode();
             await cache.SetAsync(OtpKey(normalizedEmail), code, TimeSpan.FromSeconds(_otp.ExpirySeconds));
             await cache.SetAsync(cooldownKey, true, TimeSpan.FromSeconds(_otp.ResendCooldownSeconds));
+            // A fresh code shouldn't inherit whatever attempt count was left over from a
+            // previous one that expired or was abandoned.
+            await cache.RemoveAsync(AttemptsKey(normalizedEmail));
 
             var isNewCustomer = !await customerUsers.ExistsAsync(u => u.Email == normalizedEmail, ct);
 
@@ -76,10 +79,25 @@ public class AuthService(
             var normalizedEmail = email.Trim().ToLowerInvariant();
             var storedCode = await cache.GetAsync<string>(OtpKey(normalizedEmail));
 
-            if (storedCode is null || storedCode != code.Trim())
+            if (storedCode is null)
                 return ApiResponseFactory.Unauthorized<AuthTokenResponse>("That code is invalid or has expired.");
 
+            if (storedCode != code.Trim())
+            {
+                // A code is only 6 digits (1M combinations) and the request endpoint's rate
+                // limit doesn't protect this verify endpoint from unlimited guesses against
+                // one already-issued code — so wrong guesses count against a cap, and once
+                // it's hit the code itself is invalidated rather than left guessable for the
+                // rest of its expiry window.
+                var attempts = await cache.IncrementAsync(AttemptsKey(normalizedEmail), TimeSpan.FromSeconds(_otp.ExpirySeconds));
+                if (attempts >= _otp.MaxAttempts)
+                    await cache.RemoveAsync(OtpKey(normalizedEmail));
+
+                return ApiResponseFactory.Unauthorized<AuthTokenResponse>("That code is invalid or has expired.");
+            }
+
             await cache.RemoveAsync(OtpKey(normalizedEmail));
+            await cache.RemoveAsync(AttemptsKey(normalizedEmail));
 
             var user = await customerUsers.FindAsync(u => u.Email == normalizedEmail, ct);
             if (user is null)
@@ -218,4 +236,6 @@ public class AuthService(
     private static string OtpKey(string email) => $"customer:otp:{email}";
 
     private static string CooldownKey(string email) => $"customer:otp:cooldown:{email}";
+
+    private static string AttemptsKey(string email) => $"customer:otp:attempts:{email}";
 }

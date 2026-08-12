@@ -55,6 +55,13 @@ public class WishDeliveryProcessor(
         {
             wish.DeliveredAtUtc = DateTime.UtcNow;
             wish.NextDeliveryAttemptAtUtc = null;
+            // WishStatus.Delivered existed but nothing ever set it — the frontend's
+            // "is this due yet" check is `wish.status !== "sealed"`, so without this the
+            // seal button/reveal never appeared even long after the due date and a
+            // successful send: Status stayed Sealed forever until MarkOpenedAsync jumped
+            // it straight to Opened, which a recipient can only trigger by clicking a seal
+            // button that never rendered in the first place.
+            if (wish.Status == WishStatus.Sealed) wish.Status = WishStatus.Delivered;
             await wishes.UpdateAsync(wish, ct);
             return true;
         }

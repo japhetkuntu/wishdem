@@ -165,6 +165,29 @@ public class WishOversightServiceTests
     }
 
     [Fact]
+    public async Task RedeliverAsync_ResetsStatusAndBackoffSoTheWorkerPicksItUpAgain()
+    {
+        // The dispatch worker only ever selects wishes with Status == Sealed — a wish that
+        // already reached Delivered/Opened, or that's sitting mid-backoff, would otherwise
+        // stay invisible to it even after this endpoint "succeeds".
+        var wish = NewWish(Guid.NewGuid());
+        wish.Status = WishStatus.Delivered;
+        wish.DeliveredAtUtc = DateTime.UtcNow.AddDays(-1);
+        wish.NextDeliveryAttemptAtUtc = DateTime.UtcNow.AddHours(20);
+        wish.DeliveryAttemptCount = 3;
+        _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
+        _wishes.Setup(r => r.UpdateAsync(It.IsAny<Wish>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _customerUsers.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((CustomerUser?)null);
+
+        var response = await _sut.RedeliverAsync(Guid.NewGuid(), wish.Id);
+
+        response.Code.Should().Be(200);
+        wish.Status.Should().Be(WishStatus.Sealed);
+        wish.NextDeliveryAttemptAtUtc.Should().BeNull();
+        wish.DeliveryAttemptCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task RedeliverAsync_WhenWishDoesNotExist_ReturnsNotFound()
     {
         _wishes.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Wish?)null);

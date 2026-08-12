@@ -23,8 +23,12 @@ public class CalendarService(
         {
             var events = new List<CalendarEventResponse>();
 
+            // Delivered-but-not-yet-opened wishes still belong here — for a recurring
+            // birthday/anniversary wish, "Delivered" is permanent once the worker sets it
+            // (see WishDeliveryProcessor), so excluding it would drop next year's
+            // occurrence off the calendar forever, not just today's.
             var myWishes = await wishes.FindManyAsync(
-                w => w.CustomerUserId == customerUserId && w.Status == WishStatus.Sealed, ct);
+                w => w.CustomerUserId == customerUserId && (w.Status == WishStatus.Sealed || w.Status == WishStatus.Delivered), ct);
             foreach (var wish in myWishes)
             {
                 // Birthday/Anniversary wishes recur yearly, so show the next upcoming

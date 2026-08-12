@@ -28,7 +28,7 @@ export function AttachmentPicker({ value, onChange, wishId }: PickerProps) {
 // The <input accept="image/*"> hint is a UI convenience only — a user can still pick
 // "All Files" and choose anything, so we re-check type and cap size before upload.
 // Matches the backend's real cap (WishService.MaxAttachmentBytes) exactly.
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024;
 
 const HEIC_PATTERN = /\.(heic|heif)$/i;
 

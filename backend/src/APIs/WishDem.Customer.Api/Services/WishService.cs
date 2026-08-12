@@ -28,7 +28,7 @@ public class WishService(
 {
     private readonly DeliverySettings _delivery = deliverySettings.Value;
 
-    private const long MaxAttachmentBytes = 10 * 1024 * 1024;
+    private const long MaxAttachmentBytes = 30 * 1024 * 1024;
 
     // Scarcity, not a technical limit: a free product with no cap invites spam/abuse of
     // the SMS/WhatsApp delivery pipeline. Measured in UTC calendar days for simplicity —
@@ -432,7 +432,7 @@ public class WishService(
                 return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("Please choose a file to upload.");
 
             if (file.Length > MaxAttachmentBytes)
-                return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file is too large. The maximum size is 10MB.");
+                return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file is too large. The maximum size is 30MB.");
 
             if (!ContentTypeKinds.TryGetValue(file.ContentType, out var kind))
                 return ApiResponseFactory.BadRequest<AttachmentUploadResponse>("That file type isn't supported.");

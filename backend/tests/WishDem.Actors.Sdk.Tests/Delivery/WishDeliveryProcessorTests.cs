@@ -58,6 +58,10 @@ public class WishDeliveryProcessorTests
 
         delivered.Should().BeTrue();
         wish.DeliveredAtUtc.Should().NotBeNull();
+        // Frontend's "is this due yet" check is `status !== "sealed"` — Status must
+        // actually move off Sealed on a successful send, or the recipient's seal button
+        // never appears even though the message went out.
+        wish.Status.Should().Be(WishStatus.Delivered);
         _smsSender.Verify(s => s.SendAsync("0244123456", It.Is<string>(m => m.Contains("Kojo") && m.Contains("/w/" + wish.Id)), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -87,6 +91,7 @@ public class WishDeliveryProcessorTests
 
         delivered.Should().BeTrue();
         wish.DeliveredAtUtc.Should().NotBeNull();
+        wish.Status.Should().Be(WishStatus.Delivered);
         _smsSender.Verify(s => s.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

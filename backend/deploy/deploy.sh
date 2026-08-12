@@ -27,6 +27,23 @@ echo "== pulling latest source =="
 cd "$SRC_DIR"
 git pull
 
+# install.sh only renders nginx.conf once, at first provisioning — a later change to
+# the template (e.g. raising client_max_body_size) never reached already-provisioned
+# droplets, because deploy.sh never re-applied it and re-rendering the whole file here
+# would destroy the HTTPS blocks certbot edits directly into it (see the warning at the
+# top of nginx.conf). Instead, just keep this one directive in sync in place: patch the
+# live file's client_max_body_size to match the repo's template, leaving every other
+# certbot-managed line untouched.
+NGINX_SITE=/etc/nginx/sites-available/wishdem
+if [[ -f "$NGINX_SITE" ]]; then
+  DESIRED_LIMIT=$(grep -o 'client_max_body_size [^;]*;' "$SRC_DIR/backend/deploy/nginx.conf" | head -1)
+  if [[ -n "$DESIRED_LIMIT" ]] && ! grep -qF "$DESIRED_LIMIT" "$NGINX_SITE"; then
+    echo "== syncing nginx client_max_body_size =="
+    sed -i.bak -E "s/client_max_body_size [^;]*;/${DESIRED_LIMIT}/" "$NGINX_SITE"
+    nginx -t && systemctl reload nginx
+  fi
+fi
+
 echo "== publishing customer-api =="
 dotnet publish "$SRC_DIR/backend/src/APIs/WishDem.Customer.Api/WishDem.Customer.Api.csproj" \
   -c Release -o "$CUSTOMER_OUT"

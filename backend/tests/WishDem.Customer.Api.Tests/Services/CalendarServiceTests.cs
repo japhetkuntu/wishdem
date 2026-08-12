@@ -73,6 +73,39 @@ public class CalendarServiceTests
     }
 
     [Fact]
+    public async Task GetUpcomingAsync_IncludesDeliveredButUnopenedWishes()
+    {
+        // A recurring birthday/anniversary wish moves to Delivered permanently once the
+        // worker sends it (see WishDeliveryProcessor) — excluding Delivered here would
+        // drop next year's occurrence off the calendar forever, not just today's.
+        var customerUserId = Guid.NewGuid();
+        var from = new DateOnly(2026, 1, 1);
+        var to = from.AddDays(90);
+
+        var wish = new Wish
+        {
+            CustomerUserId = customerUserId,
+            RecipientName = "Kojo",
+            RecipientRelationship = "Brother",
+            RecipientTimezone = "Africa/Accra",
+            RecipientOccasionDate = new DateOnly(2000, 2, 1),
+            Status = WishStatus.Delivered,
+        };
+
+        _wishes.Setup(r => r.FindManyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([wish]);
+        _circlePeople.Setup(r => r.FindManyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<CirclePerson, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _groupWishes.Setup(r => r.FindManyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<GroupWish, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var response = await _sut.GetUpcomingAsync(customerUserId, from, to);
+
+        response.Code.Should().Be(200);
+        response.Data.Should().ContainSingle(e => e.Kind == CalendarEventKind.WishDelivery);
+    }
+
+    [Fact]
     public async Task GetUpcomingAsync_WhenRepositoryThrows_ReturnsInternalError()
     {
         _wishes.Setup(r => r.FindManyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>()))

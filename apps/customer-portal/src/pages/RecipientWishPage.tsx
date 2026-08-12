@@ -99,8 +99,13 @@ export default function RecipientWishPage() {
 
   if (!isOpened) {
     const phrase = occasionPhrase(wish.recipient.occasion, wish.recipient.occasionLabel);
+    // Fixed-dark page by design (the "someone saved this for you" ceremony), same as
+    // the sealed-confirmation screen — a gradient fading to transparent used to reveal
+    // the light page canvas at the edges in light mode while the text stayed the light
+    // "porcelain" color, going nearly invisible there. bg-plum + the ink-on-canvas
+    // override keep it a real dark island regardless of site theme.
     return (
-      <main className="relative grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-5 py-10 text-center">
+      <main className="relative grid min-h-screen place-items-center bg-plum bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_70%)] px-5 py-10 text-center text-porcelain [--wd-ink-on-canvas-rgb:246_240_232]">
         <Seo
           title={`A ${phrase[0].toUpperCase()}${phrase.slice(1)} for ${wish.recipient.name} — WishDem`}
           description={`Someone saved a private ${phrase} for ${wish.recipient.name} on WishDem.`}

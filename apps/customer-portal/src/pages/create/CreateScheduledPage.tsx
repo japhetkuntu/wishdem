@@ -31,7 +31,11 @@ export default function CreateScheduledPage() {
   }
 
   return (
-    <main className="grid min-h-screen items-center gap-6 bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_42%)] px-6 py-12 sm:grid-cols-2 sm:gap-16 sm:px-[8%]">
+    // Same fixed-dark-island treatment as RecipientWishPage's ceremony screen — this is
+    // a celebratory confirmation by design, not meant to flip light in light mode, and
+    // the old transparent-edged gradient made the porcelain-colored text unreadable
+    // wherever it faded out to the page canvas.
+    <main className="grid min-h-screen items-center gap-6 bg-plum bg-[radial-gradient(circle_at_50%_48%,#4A203D,transparent_70%)] px-6 py-12 text-porcelain [--wd-ink-on-canvas-rgb:246_240_232] sm:grid-cols-2 sm:gap-16 sm:px-[8%]">
       <Seo
         title={`${recipient.name}'s Wish Is Sealed — WishDem`}
         description={`${recipient.name}'s private wish has been sealed and scheduled for delivery on WishDem.`}

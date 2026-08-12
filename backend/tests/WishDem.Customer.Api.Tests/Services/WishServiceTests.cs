@@ -670,7 +670,7 @@ public class WishServiceTests
         var wish = new Wish { CustomerUserId = customerUserId, RecipientName = "Kojo", RecipientRelationship = "Brother", RecipientTimezone = "Africa/Accra" };
         _wishes.Setup(r => r.GetByIdAsync(wish.Id, It.IsAny<CancellationToken>())).ReturnsAsync(wish);
 
-        var oversized = new byte[26 * 1024 * 1024];
+        var oversized = new byte[31 * 1024 * 1024];
         var file = MakeFormFile("video.mp4", "video/mp4", oversized);
 
         var response = await _sut.UploadAttachmentAsync(customerUserId, wish.Id, file);
