@@ -8,9 +8,11 @@ import type { OccasionType } from "@/types";
 
 // Testers reported thinking WishDem was a birthday-only tool — the wizard has supported
 // six occasion types for a while, but nothing on the landing page ever said so out loud.
-// One example in the hero ("Amina's birthday") reads as the whole premise if nothing
-// nearby says otherwise, so this makes the range impossible to miss at a glance. Copy
-// mirrors OCCASION_OPTIONS in @/types so the picker and the pitch never drift apart.
+// A single example in the hero ("Amina's birthday") read as the whole premise if nothing
+// nearby said otherwise, so the hero now shows a spread of occasions (see the date cards
+// tucked into its corners below) and this section makes the range impossible to miss at
+// a glance either way. Copy mirrors OCCASION_OPTIONS in @/types so the picker and the
+// pitch never drift apart.
 const OCCASION_SHOWCASE: { value: OccasionType; label: string; body: string; recurring?: boolean }[] = [
   {
     value: "birthday",
@@ -106,6 +108,21 @@ export default function HomePage() {
             <div className="absolute bottom-[14px] left-0 rounded-md bg-paper px-[19px] py-4 text-[12px] text-ink shadow-card sm:bottom-[30px] sm:left-[-35px]">
               <strong className="mb-[3px] block font-display text-[22px]">14 Oct</strong>
               Amina's birthday
+            </div>
+            {/* Two more occasions, tucked into the hero's free corners (top-left, opposite
+                the "kept for you" badge; bottom-right, opposite the birthday card) — on
+                every viewport, not just desktop, so the "not just birthdays" message
+                lands before anyone even scrolls. Smaller and tighter on mobile, where
+                there's less room to spare, then grow into their full desktop size/position
+                from sm up. Same paper-card format as the birthday example so it reads as
+                "more of these," not a different kind of thing. */}
+            <div className="absolute left-[2px] top-[6px] -rotate-[3deg] rounded-md bg-paper px-3 py-2 text-[10px] text-ink shadow-card sm:left-[-40px] sm:top-[55px] sm:px-4 sm:py-3 sm:text-[11px]">
+              <strong className="mb-[1px] block font-display text-[15px] sm:mb-[2px] sm:text-[18px]">2 Dec</strong>
+              Kwame's anniversary
+            </div>
+            <div className="absolute bottom-[6px] right-[2px] rotate-[3deg] rounded-md bg-paper px-3 py-2 text-[10px] text-ink shadow-card sm:bottom-[115px] sm:right-[-30px] sm:px-4 sm:py-3 sm:text-[11px]">
+              <strong className="mb-[1px] block font-display text-[15px] sm:mb-[2px] sm:text-[18px]">20 Nov</strong>
+              Ama's congratulations
             </div>
           </div>
         </section>

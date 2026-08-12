@@ -45,6 +45,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <!-- The homepage hero photo is the largest above-the-fold image on the site's main
+         entry point, loaded eagerly — starting the fetch here, before the JS bundle even
+         parses, is what actually gets it painted sooner on a cold visit. It's a small
+         (~90KB) same-origin file, so preloading it on every route is a cheap trade for
+         that first-visit win, and after the first load the browser's HTTP cache (plus
+         SmoothImage's cache-aware fade) makes every later hit instant regardless. -->
+    <link rel="preload" as="image" href="/themes/home-hero.webp" />
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

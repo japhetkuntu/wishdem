@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 
 export interface SmoothImageProps {
@@ -26,12 +26,23 @@ export function SmoothImage({
   crossOrigin,
   ariaHidden,
 }: SmoothImageProps) {
+  const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+
+  // On refresh/revisit the browser often already has this image cached — if so,
+  // `img.complete` is already true the instant this mounts. Checking that in a layout
+  // effect (which runs before the browser paints) lets us skip straight to the loaded
+  // state so there's no pulse-then-fade flash for an image the user already has; a
+  // genuinely uncached image still falls through to the normal onLoad + fade below.
+  useLayoutEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) setLoaded(true);
+  }, []);
 
   return (
     <div className={clsx("relative overflow-hidden bg-porcelain/[0.06]", className)}>
       {!loaded && <div className="absolute inset-0 animate-pulse bg-porcelain/[0.05]" />}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         aria-hidden={ariaHidden}
