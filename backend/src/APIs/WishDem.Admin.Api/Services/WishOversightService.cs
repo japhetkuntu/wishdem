@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Responses;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Exceptions;
 using WishDem.Common.Sdk.Responses;
+using WishDem.Postgres.Sdk.Delivery;
 using WishDem.Postgres.Sdk.Entities;
 using WishDem.Postgres.Sdk.Repositories;
 
@@ -14,27 +16,59 @@ public class WishOversightService(
     IAuditLogService auditLog,
     ILogger<WishOversightService> logger) : IWishOversightService
 {
-    public async Task<IApiResponse<PagedResult<AdminWishResponse>>> GetAllAsync(int pageIndex, int pageSize, WishStatus? status, CancellationToken ct = default)
+    public async Task<IApiResponse<PagedResult<AdminWishResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, WishStatus? status, string? search, bool? struggling, CancellationToken ct = default)
     {
         try
         {
-            var page = await wishes.GetPagedAsync(
-                pageIndex,
-                pageSize,
-                filter: status.HasValue ? w => w.Status == status.Value : null,
-                orderBy: q => q.OrderByDescending(w => w.CreatedAtUtc),
-                ct: ct);
+            // All filtering happens here, against the database — the admin UI only ever
+            // renders whatever page this returns, never trims or searches a fetched batch
+            // client-side (that silently hides results past whatever page size was fetched).
+            var query = wishes.GetQueryable();
 
-            var customerIds = page.Items.Select(w => w.CustomerUserId).Distinct().ToList();
+            if (status.HasValue) query = query.Where(w => w.Status == status.Value);
+
+            if (struggling == true)
+                query = query.Where(w => w.DeliveryAttemptCount >= WishDeliveryTiming.StruggledDeliveryAttempts);
+
+            var trimmedSearch = search?.Trim();
+            if (!string.IsNullOrEmpty(trimmedSearch))
+            {
+                // A wish ID search only makes sense as an exact match (Guids don't
+                // substring-search meaningfully) — free text falls back to the human fields.
+                if (Guid.TryParse(trimmedSearch, out var searchId))
+                {
+                    query = query.Where(w => w.Id == searchId);
+                }
+                else
+                {
+                    query = query.Where(w =>
+                        EF.Functions.ILike(w.FromName, $"%{trimmedSearch}%") ||
+                        EF.Functions.ILike(w.RecipientName, $"%{trimmedSearch}%") ||
+                        (w.RecipientPhoneNumber != null && EF.Functions.ILike(w.RecipientPhoneNumber, $"%{trimmedSearch}%")));
+                }
+            }
+
+            // GetQueryable()-composed queries execute synchronously in this codebase (see
+            // DashboardService) so the same predicate works whether it's backed by a real
+            // DbSet or, in tests, a plain in-memory List<T>.AsQueryable().
+            var totalCount = query.Count();
+            var items = query
+                .OrderByDescending(w => w.CreatedAtUtc)
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var customerIds = items.Select(w => w.CustomerUserId).Distinct().ToList();
             var customers = await customerUsers.FindManyAsync(u => customerIds.Contains(u.Id), ct);
             var customersById = customers.ToDictionary(u => u.Id);
 
             var result = new PagedResult<AdminWishResponse>
             {
-                Items = page.Items.Select(w => ToResponse(w, customersById.GetValueOrDefault(w.CustomerUserId))).ToList(),
-                PageIndex = page.PageIndex,
-                PageSize = page.PageSize,
-                TotalCount = page.TotalCount,
+                Items = items.Select(w => ToResponse(w, customersById.GetValueOrDefault(w.CustomerUserId))).ToList(),
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount,
             };
 
             return result.ToOkApiResponse("Wishes retrieved successfully.");
@@ -163,5 +197,6 @@ public class WishOversightService(
         w.SealedAtUtc,
         w.DeliveredAtUtc,
         w.OpenedAtUtc,
-        w.CreatedAtUtc);
+        w.CreatedAtUtc,
+        w.DeliveryAttemptCount >= WishDeliveryTiming.StruggledDeliveryAttempts);
 }

@@ -39,16 +39,11 @@ public class PaymentOversightServiceTests
     {
         var wishId = Guid.NewGuid();
         var payment = NewPayment(wishId);
-        _payments.Setup(r => r.GetPagedAsync(
-                0, 20,
-                It.IsAny<Expression<Func<Payment, bool>>>(),
-                It.IsAny<Func<IQueryable<Payment>, IOrderedQueryable<Payment>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PagedResult<Payment> { Items = [payment], PageIndex = 0, PageSize = 20, TotalCount = 1 });
+        _payments.Setup(r => r.GetQueryable()).Returns(new List<Payment> { payment }.AsQueryable());
         _wishes.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<Wish, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _customerUsers.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<CustomerUser, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var response = await _sut.GetAllAsync(0, 20, null);
+        var response = await _sut.GetAllAsync(0, 20, null, null);
 
         response.Code.Should().Be(200);
         response.Data!.TotalCount.Should().Be(1);
@@ -57,14 +52,9 @@ public class PaymentOversightServiceTests
     [Fact]
     public async Task GetAllAsync_WhenRepositoryThrows_ReturnsInternalError()
     {
-        _payments.Setup(r => r.GetPagedAsync(
-                It.IsAny<int>(), It.IsAny<int>(),
-                It.IsAny<Expression<Func<Payment, bool>>>(),
-                It.IsAny<Func<IQueryable<Payment>, IOrderedQueryable<Payment>>>(),
-                It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("db down"));
+        _payments.Setup(r => r.GetQueryable()).Throws(new InvalidOperationException("db down"));
 
-        var response = await _sut.GetAllAsync(0, 20, null);
+        var response = await _sut.GetAllAsync(0, 20, null, null);
 
         response.Code.Should().Be(500);
     }

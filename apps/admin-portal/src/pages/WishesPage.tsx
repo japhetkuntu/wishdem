@@ -1,10 +1,21 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
+import { Pagination } from "@wishdem/design-system";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useAdminWishes } from "@/hooks/useAdminData";
+import { DEFAULT_PAGE_SIZE } from "@/lib/api";
+import type { WishListFilters } from "@/lib/api";
 import type { AdminWish } from "@/types";
 
-type FilterKey = "all" | "failed" | "scheduled" | "paymentPending" | "voiceNote" | "dueToday";
+type FilterKey = "all" | "struggling" | "sealed" | "delivered" | "draft";
+
+const FILTER_PARAMS: Record<FilterKey, WishListFilters> = {
+  all: {},
+  struggling: { struggling: true },
+  sealed: { status: "sealed" },
+  delivered: { status: "delivered" },
+  draft: { status: "draft" },
+};
 
 const DELIVERY_BADGE: Record<AdminWish["deliveryStatus"], string> = {
   FAILED: "bg-rose/30 text-mulberry",
@@ -18,33 +29,23 @@ const PAYMENT_BADGE: Record<AdminWish["paymentStatus"], string> = {
 };
 
 export default function WishesPage() {
-  const { wishes, loading, retry, cancel } = useAdminWishes();
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [search, setSearch] = useState("");
+  const { wishes, loading, retry, cancel, pageIndex, setPageIndex, totalPages, totalCount, filters, setFilters } =
+    useAdminWishes();
+  const [filterKey, setFilterKey] = useState<FilterKey>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = wishes;
-    if (filter === "failed") list = list.filter((w) => w.deliveryStatus === "FAILED");
-    if (filter === "scheduled") list = list.filter((w) => w.deliveryStatus === "SCHEDULED");
-    if (filter === "paymentPending") list = list.filter((w) => w.paymentStatus === "REVERSED");
-    if (filter === "voiceNote") list = list.filter((w) => w.type === "Voice note");
-    const query = search.trim().toLowerCase();
-    if (query) {
-      list = list.filter(
-        (w) =>
-          w.id.toLowerCase().includes(query) ||
-          w.senderName.toLowerCase().includes(query) ||
-          w.recipientName.toLowerCase().includes(query) ||
-          (w.recipientPhoneNumber?.toLowerCase().includes(query) ?? false),
-      );
-    }
-    return list;
-  }, [wishes, filter, search]);
+  const selected = wishes.find((w) => w.id === selectedId) ?? wishes[0];
 
-  const selected = wishes.find((w) => w.id === selectedId) ?? filtered[0] ?? wishes[0];
+  function handleFilterClick(key: FilterKey) {
+    setFilterKey(key);
+    setFilters({ ...FILTER_PARAMS[key], search: filters.search });
+  }
+
+  function handleSearchChange(value: string) {
+    setFilters({ ...FILTER_PARAMS[filterKey], search: value });
+  }
 
   async function handleRetry() {
     if (!selected) return;
@@ -72,8 +73,8 @@ export default function WishesPage() {
     <AdminLayout active="wishes">
       <div className="mb-1 text-[11px] text-porcelain/60">Operations / Wishes</div>
       <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        value={filters.search ?? ""}
+        onChange={(e) => handleSearchChange(e.target.value)}
         placeholder="Search Wish ID, sender, recipient or phone"
         className="mb-5 min-w-[280px] rounded-pill border border-plum/[0.16] px-[14px] py-[10px] text-[11px] outline-none sm:w-[430px]"
       />
@@ -82,7 +83,7 @@ export default function WishesPage() {
         <div>
           <h1 className="font-display text-[34px]">Wishes oversight</h1>
           <p className="mt-1 text-[11px] text-porcelain/60">
-            {wishes.length} total wishes · all dates shown in recipient timezone
+            {totalCount} total wishes · all dates shown in recipient timezone
           </p>
         </div>
         <button type="button" className="rounded-pill bg-plum px-[13px] py-[11px] text-[11px] font-extrabold text-[#F6F0E8]">
@@ -93,21 +94,20 @@ export default function WishesPage() {
       <div className="mb-3 flex flex-wrap gap-[8px]">
         {(
           [
-            { key: "all", label: `All · ${wishes.length}` },
-            { key: "failed", label: `Failed delivery · ${wishes.filter((w) => w.deliveryStatus === "FAILED").length}` },
-            { key: "scheduled", label: `Scheduled · ${wishes.filter((w) => w.deliveryStatus === "SCHEDULED").length}` },
-            { key: "paymentPending", label: "Payment reversed" },
-            { key: "voiceNote", label: "Voice note" },
-            { key: "dueToday", label: "Due today" },
+            { key: "all", label: "All" },
+            { key: "struggling", label: "Struggling delivery" },
+            { key: "sealed", label: "Sealed" },
+            { key: "delivered", label: "Delivered" },
+            { key: "draft", label: "Draft" },
           ] as { key: FilterKey; label: string }[]
         ).map((chip) => (
           <button
             key={chip.key}
             type="button"
-            onClick={() => setFilter(chip.key)}
+            onClick={() => handleFilterClick(chip.key)}
             className={clsx(
               "whitespace-nowrap rounded-pill border border-plum/[0.15] px-[10px] py-[7px] text-[10px] font-bold",
-              filter === chip.key ? "bg-champagne/50 border-champagne" : "bg-white text-ink/70",
+              filterKey === chip.key ? "bg-champagne/50 border-champagne" : "bg-white text-ink/70",
             )}
           >
             {chip.label}
@@ -127,10 +127,10 @@ export default function WishesPage() {
           </div>
           {loading ? (
             <p className="py-10 text-center text-[12px] text-ink/50">Loading…</p>
-          ) : filtered.length === 0 ? (
+          ) : wishes.length === 0 ? (
             <p className="py-10 text-center text-[12px] text-ink/50">No wishes match that filter.</p>
           ) : (
-            filtered.map((wish) => (
+            wishes.map((wish) => (
               <button
                 key={wish.id}
                 type="button"
@@ -172,6 +172,14 @@ export default function WishesPage() {
               </button>
             ))
           )}
+          <Pagination
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={DEFAULT_PAGE_SIZE}
+            onPageChange={setPageIndex}
+            className="px-[13px] pb-[11px]"
+          />
         </div>
 
         {selected && (

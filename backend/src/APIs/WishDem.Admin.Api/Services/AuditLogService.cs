@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Responses;
 using WishDem.Common.Sdk.Enums;
@@ -12,23 +13,34 @@ public class AuditLogService(
     IRepository<AdminUser> adminUsers,
     ILogger<AuditLogService> logger) : IAuditLogService
 {
-    public async Task<IApiResponse<PagedResult<AuditEventResponse>>> GetAllAsync(int pageIndex, int pageSize, CancellationToken ct = default)
+    public async Task<IApiResponse<PagedResult<AuditEventResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, Guid? adminUserId, AuditTag[]? tags, string? search, CancellationToken ct = default)
     {
         try
         {
-            var page = await events.GetPagedAsync(
-                pageIndex,
-                pageSize,
-                orderBy: q => q.OrderByDescending(e => e.CreatedAtUtc),
-                ct: ct);
+            var query = events.GetQueryable();
 
-            var adminIds = page.Items.Select(e => e.AdminUserId).Distinct().ToList();
+            if (adminUserId.HasValue) query = query.Where(e => e.AdminUserId == adminUserId.Value);
+            if (tags is { Length: > 0 }) query = query.Where(e => tags.Contains(e.Tag));
+
+            var trimmedSearch = search?.Trim();
+            if (!string.IsNullOrEmpty(trimmedSearch))
+                query = query.Where(e => EF.Functions.ILike(e.Summary, $"%{trimmedSearch}%"));
+
+            var totalCount = query.Count();
+            var items = query
+                .OrderByDescending(e => e.CreatedAtUtc)
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var adminIds = items.Select(e => e.AdminUserId).Distinct().ToList();
             var admins = await adminUsers.FindManyAsync(a => adminIds.Contains(a.Id), ct);
             var adminsById = admins.ToDictionary(a => a.Id);
 
             var result = new PagedResult<AuditEventResponse>
             {
-                Items = page.Items
+                Items = items
                     .Select(e => new AuditEventResponse(
                         e.Id,
                         adminsById.GetValueOrDefault(e.AdminUserId)?.FullName ?? "Unknown admin",
@@ -39,9 +51,9 @@ public class AuditLogService(
                         e.Tag,
                         e.CreatedAtUtc))
                     .ToList(),
-                PageIndex = page.PageIndex,
-                PageSize = page.PageSize,
-                TotalCount = page.TotalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount,
             };
 
             return result.ToOkApiResponse("Audit events retrieved successfully.");

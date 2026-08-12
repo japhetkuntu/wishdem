@@ -39,16 +39,11 @@ public class WishOversightServiceTests
         var wish = NewWish(customerUserId);
         var customer = new CustomerUser { Id = customerUserId, Email = "kojo@wishdem.com", Name = "Kojo" };
 
-        _wishes.Setup(r => r.GetPagedAsync(
-                0, 20,
-                It.IsAny<Expression<Func<Wish, bool>>>(),
-                It.IsAny<Func<IQueryable<Wish>, IOrderedQueryable<Wish>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PagedResult<Wish> { Items = [wish], PageIndex = 0, PageSize = 20, TotalCount = 1 });
+        _wishes.Setup(r => r.GetQueryable()).Returns(new List<Wish> { wish }.AsQueryable());
         _customerUsers.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<CustomerUser, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([customer]);
 
-        var response = await _sut.GetAllAsync(0, 20, null);
+        var response = await _sut.GetAllAsync(0, 20, null, null, null);
 
         response.Code.Should().Be(200);
         response.Data!.Items.Should().ContainSingle(w => w.CustomerName == "Kojo");
@@ -60,14 +55,9 @@ public class WishOversightServiceTests
     [Fact]
     public async Task GetAllAsync_WhenRepositoryThrows_ReturnsInternalError()
     {
-        _wishes.Setup(r => r.GetPagedAsync(
-                It.IsAny<int>(), It.IsAny<int>(),
-                It.IsAny<Expression<Func<Wish, bool>>>(),
-                It.IsAny<Func<IQueryable<Wish>, IOrderedQueryable<Wish>>>(),
-                It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("db down"));
+        _wishes.Setup(r => r.GetQueryable()).Throws(new InvalidOperationException("db down"));
 
-        var response = await _sut.GetAllAsync(0, 20, null);
+        var response = await _sut.GetAllAsync(0, 20, null, null, null);
 
         response.Code.Should().Be(500);
     }

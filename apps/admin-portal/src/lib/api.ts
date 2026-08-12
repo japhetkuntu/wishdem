@@ -39,6 +39,46 @@ interface PagedResult<T> {
   totalPages: number;
 }
 
+/** What every paginated list function returns to the UI — enough for a
+ * Pagination control to render page numbers and a "showing X-Y of Z" line
+ * without the caller needing to know the raw backend DTO shape. */
+export interface Paginated<T> {
+  items: T[];
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+}
+
+function toPaginated<TDto, T>(page: PagedResult<TDto>, map: (dto: TDto) => T): Paginated<T> {
+  return {
+    items: page.items.map(map),
+    pageIndex: page.pageIndex,
+    pageSize: page.pageSize,
+    totalPages: page.totalPages,
+    totalCount: page.totalCount,
+  };
+}
+
+export const DEFAULT_PAGE_SIZE = 10;
+
+/** Every list screen's filtering/search happens server-side — this just turns whatever
+ * params a screen has into a query string, skipping anything unset so defaults on the
+ * backend apply normally. */
+function buildQuery(params: Record<string, string | number | boolean | string[] | undefined>): string {
+  const usp = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === "") continue;
+    if (Array.isArray(value)) {
+      for (const v of value) usp.append(key, v);
+    } else {
+      usp.set(key, String(value));
+    }
+  }
+  const qs = usp.toString();
+  return qs ? `?${qs}` : "";
+}
+
 type BackendWishStatus = "draft" | "sealed" | "delivered" | "opened";
 
 interface AdminWishResponseDto {
@@ -61,6 +101,7 @@ interface AdminWishResponseDto {
   deliveredAtUtc: string | null;
   openedAtUtc: string | null;
   createdAtUtc: string;
+  isStruggling: boolean;
 }
 
 type BackendPaymentStatus = "pending" | "succeeded" | "failed" | "reversed" | "refundPending";
@@ -305,8 +346,11 @@ function formatDateLabel(iso: string | null): string {
   );
 }
 
-function mapWishDeliveryStatus(status: BackendWishStatus, deliveredAtUtc: string | null): DeliveryStatus {
+function mapWishDeliveryStatus(status: BackendWishStatus, deliveredAtUtc: string | null, isStruggling: boolean): DeliveryStatus {
   if (status === "delivered" || status === "opened" || deliveredAtUtc) return "DELIVERED";
+  // Backed by the same DeliveryAttemptCount threshold the delivery worker itself uses to
+  // decide it's struggling — not a status that's merely displayed but never set.
+  if (isStruggling) return "FAILED";
   if (status === "sealed") return "SCHEDULED";
   // "draft" has no real delivery-status equivalent in the mock's enum; the
   // closest honest mapping is SCHEDULED (not yet attempted, not failed).
@@ -314,7 +358,7 @@ function mapWishDeliveryStatus(status: BackendWishStatus, deliveredAtUtc: string
 }
 
 function mapWish(dto: AdminWishResponseDto): AdminWish {
-  const deliveryStatus = mapWishDeliveryStatus(dto.status, dto.deliveredAtUtc);
+  const deliveryStatus = mapWishDeliveryStatus(dto.status, dto.deliveredAtUtc, dto.isStruggling);
   const statusBadge = dto.status.toUpperCase();
   // Draft wishes haven't reached the deliver step yet, so the backend sends no channel.
   const channelLabel = dto.channel ?? "Not chosen yet";
@@ -360,9 +404,21 @@ function mapWish(dto: AdminWishResponseDto): AdminWish {
   };
 }
 
-export async function listWishes(): Promise<AdminWish[]> {
-  const page = await apiRequest<PagedResult<AdminWishResponseDto>>("/api/wishes?pageIndex=0&pageSize=100");
-  return page.items.map(mapWish);
+export interface WishListFilters {
+  status?: BackendWishStatus;
+  search?: string;
+  /** Only wishes that have crossed the "struggling" delivery-attempt threshold. */
+  struggling?: boolean;
+}
+
+export async function listWishes(
+  pageIndex = 0,
+  pageSize = DEFAULT_PAGE_SIZE,
+  filters: WishListFilters = {},
+): Promise<Paginated<AdminWish>> {
+  const query = buildQuery({ pageIndex, pageSize, ...filters });
+  const page = await apiRequest<PagedResult<AdminWishResponseDto>>(`/api/wishes${query}`);
+  return toPaginated(page, mapWish);
 }
 
 export async function retryWishDelivery(wishId: string): Promise<AdminWish | null> {
@@ -423,9 +479,14 @@ function mapPayment(dto: AdminPaymentResponseDto): MoMoTransaction {
   };
 }
 
-export async function listMoMoTransactions(): Promise<MoMoTransaction[]> {
-  const page = await apiRequest<PagedResult<AdminPaymentResponseDto>>("/api/payments?pageIndex=0&pageSize=100");
-  return page.items.map(mapPayment);
+export async function listMoMoTransactions(
+  pageIndex = 0,
+  pageSize = DEFAULT_PAGE_SIZE,
+  search?: string,
+): Promise<Paginated<MoMoTransaction>> {
+  const query = buildQuery({ pageIndex, pageSize, search });
+  const page = await apiRequest<PagedResult<AdminPaymentResponseDto>>(`/api/payments${query}`);
+  return toPaginated(page, mapPayment);
 }
 
 /** Only a SUCCESSFUL payment can be refunded — the backend rejects any other status. */
@@ -544,9 +605,31 @@ function mapModerationCaseToAttentionCase(dto: ModerationCaseResponseDto): Atten
   };
 }
 
-export async function listAttentionCases(): Promise<AttentionCase[]> {
-  const cases = await fetchModerationCases();
-  return cases.filter((c) => c.status === "underReview").map(mapModerationCaseToAttentionCase);
+export interface AttentionCaseFilters {
+  /** "Now" bucket maps to these two backend severities. */
+  severity?: BackendSeverity[];
+  assignedAdminUserId?: string;
+  search?: string;
+}
+
+export async function listAttentionCases(
+  pageIndex = 0,
+  pageSize = DEFAULT_PAGE_SIZE,
+  filters: AttentionCaseFilters = {},
+): Promise<Paginated<AttentionCase>> {
+  // Filters server-side rather than reusing fetchModerationCases' page-0-of-100 cache —
+  // that cache exists for "find any one under-review case" (getModerationCase), which
+  // isn't the same thing as a real, page-able queue of them.
+  const query = buildQuery({
+    pageIndex,
+    pageSize,
+    status: "UnderReview",
+    severity: filters.severity,
+    assignedAdminUserId: filters.assignedAdminUserId,
+    search: filters.search,
+  });
+  const page = await apiRequest<PagedResult<ModerationCaseResponseDto>>(`/api/moderation${query}`);
+  return toPaginated(page, mapModerationCaseToAttentionCase);
 }
 
 /** Assigns the moderation case to the calling admin (self-assign — the backend
@@ -577,14 +660,17 @@ export async function listDeliveryStats(): Promise<DeliveryStat[]> {
 
 const DELIVERY_ATTEMPT_STATUS: DeliveryAttemptStatus = "QUEUED";
 
-export async function listDeliveryAttempts(): Promise<DeliveryAttempt[]> {
+export async function listDeliveryAttempts(
+  pageIndex = 0,
+  pageSize = DEFAULT_PAGE_SIZE,
+  search?: string,
+): Promise<Paginated<DeliveryAttempt>> {
   // There's no per-attempt entity server-side. The best real proxy is the
   // set of wishes that are sealed (i.e. "due"/stuck awaiting delivery),
   // shown here as synthetic QUEUED rows rather than invented failure detail.
-  const page = await apiRequest<PagedResult<AdminWishResponseDto>>(
-    "/api/wishes?pageIndex=0&pageSize=100&status=sealed",
-  );
-  return page.items.map((dto) => ({
+  const query = buildQuery({ pageIndex, pageSize, status: "Sealed", search });
+  const page = await apiRequest<PagedResult<AdminWishResponseDto>>(`/api/wishes${query}`);
+  return toPaginated(page, (dto) => ({
     id: dto.id,
     wishId: dto.id,
     status: DELIVERY_ATTEMPT_STATUS,
@@ -773,7 +859,27 @@ function mapAuditEvent(dto: AuditEventResponseDto): AuditEvent {
   };
 }
 
-export async function listAuditEvents(): Promise<AuditEvent[]> {
-  const page = await apiRequest<PagedResult<AuditEventResponseDto>>("/api/audit-log?pageIndex=0&pageSize=100");
-  return page.items.map(mapAuditEvent);
+export interface AuditLogFilters {
+  /** "My actions" — filters to events performed by this admin, matched by ID rather than
+   * a display-name text search. */
+  adminUserId?: string;
+  /** "Content access" chip — CONTENT_ACCESS and SENSITIVE_ACCESS together. */
+  tags?: AuditEventResponseDto["tag"][];
+  search?: string;
+}
+
+export async function listAuditEvents(
+  pageIndex = 0,
+  pageSize = DEFAULT_PAGE_SIZE,
+  filters: AuditLogFilters = {},
+): Promise<Paginated<AuditEvent>> {
+  const query = buildQuery({
+    pageIndex,
+    pageSize,
+    adminUserId: filters.adminUserId,
+    tags: filters.tags,
+    search: filters.search,
+  });
+  const page = await apiRequest<PagedResult<AuditEventResponseDto>>(`/api/audit-log${query}`);
+  return toPaginated(page, mapAuditEvent);
 }

@@ -19,6 +19,13 @@ Log.Logger = new LoggerConfiguration()
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
+// Kestrel's own default request body cap (30,000,000 bytes, i.e. ~28.6MiB) sits just under
+// WishService.MaxAttachmentBytes (30MiB) — without raising it, uploads between the two
+// thresholds get rejected by Kestrel itself with a raw framework error before WishService's
+// friendly "that file is too large" message ever runs. A small margin above the app's own
+// cap keeps that check the one that actually fires.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 33 * 1024 * 1024);
+
 const string CorsPolicyName = "WishDemDefault";
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? throw new InvalidOperationException("Missing configuration 'Cors:AllowedOrigins'.");

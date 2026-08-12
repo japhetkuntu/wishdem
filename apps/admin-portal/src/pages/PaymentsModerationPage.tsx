@@ -1,7 +1,9 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { Pagination } from "@wishdem/design-system";
 import { AdminLayout } from "@/components/AdminLayout";
 import { usePaymentsModeration } from "@/hooks/useAdminData";
+import { DEFAULT_PAGE_SIZE } from "@/lib/api";
 import type { MoMoTransaction } from "@/types";
 
 const MOMO_BADGE: Record<MoMoTransaction["status"], string> = {
@@ -12,7 +14,8 @@ const MOMO_BADGE: Record<MoMoTransaction["status"], string> = {
 };
 
 export default function PaymentsModerationPage() {
-  const { transactions, moderationCase, loading, decide, refund } = usePaymentsModeration();
+  const { transactions, moderationCase, loading, decide, refund, pageIndex, setPageIndex, totalPages, totalCount, search, setSearch } =
+    usePaymentsModeration();
   const [deciding, setDeciding] = useState(false);
   const [refundingId, setRefundingId] = useState<string | null>(null);
 
@@ -50,7 +53,9 @@ export default function PaymentsModerationPage() {
           </b>
         </div>
         <input
-          placeholder="Search transaction, case, wish or phone"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by wish ID or phone number"
           className="min-w-[240px] flex-1 rounded-sm border border-plum/[0.14] px-[11px] py-[9px] text-[11px] outline-none sm:flex-none sm:w-[280px]"
         />
       </div>
@@ -67,7 +72,7 @@ export default function PaymentsModerationPage() {
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-plum/[0.09] p-4">
             <h2 className="font-display text-[20px]">Mobile Money transactions</h2>
             <div className="flex flex-wrap gap-[6px]">
-              <span className="rounded-pill bg-champagne/45 px-[7px] py-[5px] text-[9px] font-extrabold">All {transactions.length}</span>
+              <span className="rounded-pill bg-champagne/45 px-[7px] py-[5px] text-[9px] font-extrabold">All {totalCount}</span>
               <span className="rounded-pill bg-plum/[0.05] px-[7px] py-[5px] text-[9px] font-extrabold">
                 Pending {transactions.filter((t) => t.status === "PENDING").length}
               </span>
@@ -115,6 +120,13 @@ export default function PaymentsModerationPage() {
                 </div>
               ))
             )}
+            <Pagination
+              pageIndex={pageIndex}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={DEFAULT_PAGE_SIZE}
+              onPageChange={setPageIndex}
+            />
           </div>
           <div className="m-4 rounded-r-sm border-l-[3px] border-champagne bg-champagne/10 p-[10px] text-[10px] leading-[1.45]">
             <b>Refund safeguard:</b> issuing a refund requires an amount, reason, destination

@@ -20,4 +20,8 @@ public record AdminWishResponse(
     DateTime? SealedAtUtc,
     DateTime? DeliveredAtUtc,
     DateTime? OpenedAtUtc,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    /// <summary>True once delivery attempts have crossed the "struggling" threshold (see
+    /// WishDeliveryTiming.StruggledDeliveryAttempts) — the real backing for what the admin
+    /// UI shows as a "failed delivery" badge, instead of a status that never actually fires.</summary>
+    bool IsStruggling);

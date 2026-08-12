@@ -18,7 +18,7 @@ const STEPS = [
   {
     num: "03",
     title: "Choose the moment and seal it",
-    body: "Select the occasion, local delivery time, and channel — completely free.",
+    body: "Birthday, anniversary, congratulations, thank you, or just because — pick the occasion, local delivery time, and channel, completely free.",
   },
   {
     num: "04",
@@ -105,10 +105,14 @@ export default function HowItWorksPage() {
               <br />
               Let it arrive <i className="text-rose not-italic italic">when it matters.</i>
             </h1>
-            <p className="mb-5 max-w-[520px] text-[13px] leading-[1.65] text-porcelain/70 sm:text-[15px]">
+            <p className="mb-2 max-w-[520px] text-[13px] leading-[1.65] text-porcelain/70 sm:text-[15px]">
               WishDem gives your message a safe place to wait, then sends it
               privately in the recipient's local time—so care arrives exactly when you
               intended.
+            </p>
+            <p className="mb-5 max-w-[520px] text-[12px] leading-[1.55] text-porcelain/55">
+              Birthdays are just the start — anniversaries, congratulations, thank-yous,
+              and just-because notes all work the same way.
             </p>
             <Link to="/create/message">
               <Button>Create a wish</Button>
@@ -136,7 +140,7 @@ export default function HowItWorksPage() {
                 <span className="text-[10px] font-extrabold tracking-[0.14em] text-mulberry">
                   YOUR FUTURE DELIVERY
                 </span>
-                <h2 className="my-1 font-display text-[27px]">For Maya's 28th</h2>
+                <h2 className="my-1 font-display text-[27px]">For Maya's big day</h2>
               </div>
               <div className="grid h-[49px] w-[49px] flex-none place-items-center rounded-full bg-champagne text-center font-display text-[10px] leading-[1.1] text-plum">
                 kept

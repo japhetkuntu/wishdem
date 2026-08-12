@@ -5,6 +5,7 @@ using WishDem.Cache.Sdk.Services;
 using WishDem.Common.Sdk.Enums;
 using WishDem.Common.Sdk.Exceptions;
 using WishDem.Common.Sdk.Responses;
+using WishDem.Common.Sdk.Utilities;
 using WishDem.Customer.Api.Interfaces;
 using WishDem.Customer.Api.Models.Requests;
 using WishDem.Customer.Api.Models.Responses;
@@ -307,7 +308,7 @@ public class WishService(
             if (!IsDeliveryFailed(wish))
                 return ApiResponseFactory.Conflict<WishResponse>("This wish isn't in a failed-delivery state.");
 
-            wish.RecipientPhoneNumber = request.RecipientPhoneNumber;
+            wish.RecipientPhoneNumber = PhoneNumberFormatter.Normalize(request.RecipientPhoneNumber);
             wish.DeliveryAttemptCount = 0;
             wish.NextDeliveryAttemptAtUtc = DateTime.UtcNow;
             await wishes.UpdateAsync(wish, ct);
@@ -486,7 +487,7 @@ public class WishService(
         wish.RecipientOccasionDate = request.RecipientOccasionDate;
         wish.DeliveryTime = request.DeliveryTime;
         wish.RecipientTimezone = request.RecipientTimezone;
-        wish.RecipientPhoneNumber = request.RecipientPhoneNumber;
+        wish.RecipientPhoneNumber = PhoneNumberFormatter.Normalize(request.RecipientPhoneNumber);
         wish.Message = request.Message;
         wish.AttachmentKind = request.AttachmentKind;
         wish.AttachmentUrl = request.AttachmentUrl;

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WishDem.Actors.Sdk.Configuration;
 using WishDem.Common.Sdk.Enums;
+using WishDem.Common.Sdk.Utilities;
 using WishDem.Messaging.Sdk;
 using WishDem.Messaging.Sdk.Abstractions;
 using WishDem.Messaging.Sdk.Templates;
@@ -113,13 +114,20 @@ public class WishDeliveryProcessor(
                     return false;
                 }
 
+                // Numbers are normalized on save now, but plenty of wishes were sealed before
+                // that existed — re-normalizing here (and persisting the result) means those
+                // legacy rows self-heal the moment they're next due, instead of needing a
+                // one-off backfill script.
+                var normalizedPhone = PhoneNumberFormatter.Normalize(wish.RecipientPhoneNumber);
+                if (normalizedPhone != wish.RecipientPhoneNumber) wish.RecipientPhoneNumber = normalizedPhone;
+
                 // No WhatsApp provider is wired up — WhatsApp-channel wishes are also sent
                 // via SMS for now, deliberately, not silently dropped. See MessagingSdk
                 // README/comments for why (compliance/ops tradeoffs of the WhatsApp options).
                 var message = BuildMessage(wish, link);
                 try
                 {
-                    await smsSender.SendAsync(wish.RecipientPhoneNumber, message, ct);
+                    await smsSender.SendAsync(wish.RecipientPhoneNumber!, message, ct);
                     return true;
                 }
                 catch (MessagingException e)

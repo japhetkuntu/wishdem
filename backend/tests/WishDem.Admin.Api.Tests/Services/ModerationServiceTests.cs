@@ -34,16 +34,11 @@ public class ModerationServiceTests
     public async Task GetAllAsync_ReturnsPagedResult()
     {
         var moderationCase = NewCase(Guid.NewGuid());
-        _cases.Setup(r => r.GetPagedAsync(
-                0, 20,
-                It.IsAny<Expression<Func<ModerationCase, bool>>>(),
-                It.IsAny<Func<IQueryable<ModerationCase>, IOrderedQueryable<ModerationCase>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PagedResult<ModerationCase> { Items = [moderationCase], PageIndex = 0, PageSize = 20, TotalCount = 1 });
+        _cases.Setup(r => r.GetQueryable()).Returns(new List<ModerationCase> { moderationCase }.AsQueryable());
         _adminUsers.Setup(r => r.FindManyAsync(It.IsAny<Expression<Func<AdminUser, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        var response = await _sut.GetAllAsync(0, 20, null);
+        var response = await _sut.GetAllAsync(0, 20, null, null, null, null);
 
         response.Code.Should().Be(200);
         response.Data!.TotalCount.Should().Be(1);

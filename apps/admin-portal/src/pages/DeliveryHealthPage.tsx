@@ -1,7 +1,9 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { Pagination } from "@wishdem/design-system";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useDeliveryHealth, useAuditLog } from "@/hooks/useAdminData";
+import { DEFAULT_PAGE_SIZE } from "@/lib/api";
 import type { DeliveryAttempt } from "@/types";
 
 const ATTEMPT_BADGE: Record<DeliveryAttempt["status"], string> = {
@@ -11,7 +13,8 @@ const ATTEMPT_BADGE: Record<DeliveryAttempt["status"], string> = {
 };
 
 export default function DeliveryHealthPage() {
-  const { stats, attempts, loading, retry } = useDeliveryHealth();
+  const { stats, attempts, loading, retry, pageIndex, setPageIndex, totalPages, totalCount, search, setSearch } =
+    useDeliveryHealth();
   const { events, loading: eventsLoading } = useAuditLog();
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const recentEvents = events.slice(0, 6);
@@ -38,7 +41,9 @@ export default function DeliveryHealthPage() {
           </p>
         </div>
         <input
-          placeholder="Search delivery or wish ID"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search wish ID, sender, recipient or phone"
           className="w-full rounded-sm border border-plum/[0.16] px-3 py-[10px] text-[11px] outline-none sm:w-[270px]"
         />
       </header>
@@ -67,6 +72,7 @@ export default function DeliveryHealthPage() {
         <article className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-[21px]">Delivery attempts</h2>
+            <span className="text-[10px] text-ink/50">{totalCount} sealed and due</span>
           </div>
           {loading ? (
             <p className="py-10 text-center text-[12px] text-ink/50">Loading…</p>
@@ -94,6 +100,13 @@ export default function DeliveryHealthPage() {
               </div>
             ))
           )}
+          <Pagination
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={DEFAULT_PAGE_SIZE}
+            onPageChange={setPageIndex}
+          />
         </article>
       </section>
 

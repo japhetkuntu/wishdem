@@ -17,9 +17,10 @@ public class PaymentsController(IPaymentOversightService paymentOversightService
         [FromQuery] int pageIndex = 0,
         [FromQuery] int pageSize = 20,
         [FromQuery] PaymentStatus? status = null,
+        [FromQuery] string? search = null,
         CancellationToken ct = default)
     {
-        var response = await paymentOversightService.GetAllAsync(pageIndex, pageSize, status, ct);
+        var response = await paymentOversightService.GetAllAsync(pageIndex, pageSize, status, search, ct);
         return StatusCode(response.Code, response);
     }
 

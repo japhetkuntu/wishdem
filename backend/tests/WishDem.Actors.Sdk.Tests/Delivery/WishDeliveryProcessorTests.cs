@@ -62,7 +62,8 @@ public class WishDeliveryProcessorTests
         // actually move off Sealed on a successful send, or the recipient's seal button
         // never appears even though the message went out.
         wish.Status.Should().Be(WishStatus.Delivered);
-        _smsSender.Verify(s => s.SendAsync("0244123456", It.Is<string>(m => m.Contains("Kojo") && m.Contains("/w/" + wish.Id)), It.IsAny<CancellationToken>()), Times.Once);
+        // Normalized to E.164 before sending — see PhoneNumberFormatter.
+        _smsSender.Verify(s => s.SendAsync("+233244123456", It.Is<string>(m => m.Contains("Kojo") && m.Contains("/w/" + wish.Id)), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -77,7 +78,7 @@ public class WishDeliveryProcessorTests
         var delivered = await _sut.DeliverAsync(wish.Id);
 
         delivered.Should().BeTrue();
-        _smsSender.Verify(s => s.SendAsync("0244123456", It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _smsSender.Verify(s => s.SendAsync("+233244123456", It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -117,7 +118,7 @@ public class WishDeliveryProcessorTests
         var wish = NewDueSealedWish(DeliveryChannel.Sms, "0244000000");
         SetupWish(wish);
         _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        _smsSender.Setup(s => s.SendAsync("0244000000", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _smsSender.Setup(s => s.SendAsync("+233244000000", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new MessagingException("Insufficient balance"));
 
         var delivered = await _sut.DeliverAsync(wish.Id);

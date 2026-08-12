@@ -17,9 +17,11 @@ public class WishesController(IWishOversightService wishOversightService) : Cont
         [FromQuery] int pageIndex = 0,
         [FromQuery] int pageSize = 20,
         [FromQuery] WishStatus? status = null,
+        [FromQuery] string? search = null,
+        [FromQuery] bool? struggling = null,
         CancellationToken ct = default)
     {
-        var response = await wishOversightService.GetAllAsync(pageIndex, pageSize, status, ct);
+        var response = await wishOversightService.GetAllAsync(pageIndex, pageSize, status, search, struggling, ct);
         return StatusCode(response.Code, response);
     }
 

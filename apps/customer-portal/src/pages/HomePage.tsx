@@ -4,6 +4,47 @@ import { SiteNav } from "@/components/SiteNav";
 import { Seo } from "@/components/Seo";
 import { SmoothImage } from "@/components/SmoothImage";
 import { ASSETS } from "@/lib/assets";
+import type { OccasionType } from "@/types";
+
+// Testers reported thinking WishDem was a birthday-only tool — the wizard has supported
+// six occasion types for a while, but nothing on the landing page ever said so out loud.
+// One example in the hero ("Amina's birthday") reads as the whole premise if nothing
+// nearby says otherwise, so this makes the range impossible to miss at a glance. Copy
+// mirrors OCCASION_OPTIONS in @/types so the picker and the pitch never drift apart.
+const OCCASION_SHOWCASE: { value: OccasionType; label: string; body: string; recurring?: boolean }[] = [
+  {
+    value: "birthday",
+    label: "Birthday",
+    body: "Say it your way, and we'll remember the date even if you forget to check the calendar.",
+    recurring: true,
+  },
+  {
+    value: "anniversary",
+    label: "Anniversary",
+    body: "Mark the milestone once — it arrives again on its own every year after.",
+    recurring: true,
+  },
+  {
+    value: "congratulations",
+    label: "Congratulations",
+    body: "Have your words ready for the moment they get the good news.",
+  },
+  {
+    value: "thankYou",
+    label: "Thank You",
+    body: "Some thanks deserve better than a text sent in passing.",
+  },
+  {
+    value: "justBecause",
+    label: "Just Because",
+    body: "No occasion required. Just a feeling worth keeping until you're ready to share it.",
+  },
+  {
+    value: "other",
+    label: "Anything else",
+    body: "However you'd name the moment, WishDem holds it until it's time.",
+  },
+];
 
 export default function HomePage() {
   return (
@@ -66,6 +107,39 @@ export default function HomePage() {
               <strong className="mb-[3px] block font-display text-[22px]">14 Oct</strong>
               Amina's birthday
             </div>
+          </div>
+        </section>
+
+        <section className="border-t border-porcelain/10 py-12 sm:py-16">
+          <div className="mb-8 max-w-[560px] sm:mb-10">
+            <div className="text-[11px] font-extrabold uppercase tracking-[1.4px] text-champagne">
+              More than birthdays
+            </div>
+            <h2 className="my-[10px] font-display text-[clamp(28px,3.6vw,42px)] leading-[1.05] tracking-[-1px]">
+              For every moment worth keeping.
+            </h2>
+            <p className="text-[14px] leading-[1.65] text-porcelain/70">
+              Anniversaries, congratulations, thank-yous, or simply because you were
+              thinking of them — if it is worth saying, it is worth scheduling.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-3">
+            {OCCASION_SHOWCASE.map((occasion) => (
+              <div
+                key={occasion.value}
+                className="rounded-md border border-porcelain/[0.14] bg-porcelain/[0.04] p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <b className="font-display text-[19px]">{occasion.label}</b>
+                  {occasion.recurring && (
+                    <span className="whitespace-nowrap rounded-pill bg-champagne/20 px-[7px] py-[3px] text-[8px] font-extrabold uppercase tracking-[0.06em] text-champagne">
+                      Repeats yearly
+                    </span>
+                  )}
+                </div>
+                <p className="mt-[6px] text-[12px] leading-[1.55] text-porcelain/65">{occasion.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 

@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
+import { Pagination } from "@wishdem/design-system";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useAttentionQueue } from "@/hooks/useAdminData";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { DEFAULT_PAGE_SIZE } from "@/lib/api";
+import type { AttentionCaseFilters } from "@/lib/api";
 import type { AttentionUrgency } from "@/types";
 
 type ChipKey = "open" | "now" | "assignedToMe";
@@ -21,17 +24,27 @@ const TODAY_LABEL = new Intl.DateTimeFormat("en-GB", {
 
 export default function AttentionPage() {
   const { user } = useAdminAuth();
-  const { cases, loading, assignToMe } = useAttentionQueue();
+  const { cases, loading, assignToMe, pageIndex, setPageIndex, totalPages, totalCount, filters, setFilters } =
+    useAttentionQueue();
   const [chip, setChip] = useState<ChipKey>("open");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    if (chip === "now") return cases.filter((c) => c.urgency === "now");
-    if (chip === "assignedToMe") return cases.filter((c) => c.detail.owner !== "Unassigned");
-    return cases;
-  }, [cases, chip]);
+  const selected = cases.find((c) => c.id === selectedId) ?? cases[0];
 
-  const selected = cases.find((c) => c.id === selectedId) ?? filtered[0] ?? cases[0];
+  function handleChipClick(key: ChipKey) {
+    setChip(key);
+    const chipFilters: AttentionCaseFilters =
+      key === "now"
+        ? { severity: ["high", "critical"] }
+        : key === "assignedToMe" && user
+          ? { assignedAdminUserId: user.id }
+          : {};
+    setFilters({ ...chipFilters, search: filters.search });
+  }
+
+  function handleSearchChange(value: string) {
+    setFilters({ ...filters, search: value });
+  }
 
   async function handleAssign() {
     if (!selected) return;
@@ -42,7 +55,9 @@ export default function AttentionPage() {
     <AdminLayout active="attention">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <input
-          placeholder="Search case, person, wish or delivery ID"
+          value={filters.search ?? ""}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search case title or description"
           className="min-w-[260px] flex-1 rounded-pill border border-plum/[0.16] px-[13px] py-[10px] text-[11px] outline-none sm:flex-none sm:w-[380px]"
         />
         <span className="text-[10px] text-porcelain/60">
@@ -60,11 +75,13 @@ export default function AttentionPage() {
         </p>
       </section>
 
+      {/* These pulse counts only reflect the current page of results — an aggregate
+          count-by-urgency across the whole queue would need a dedicated endpoint. */}
       <section className="grid grid-cols-1 gap-[9px] sm:grid-cols-3">
         {[
-          { value: cases.filter((c) => c.urgency === "now").length, label: "NEEDS ATTENTION NOW", alert: true },
-          { value: cases.filter((c) => c.urgency === "today").length, label: "DUE TODAY" },
-          { value: cases.filter((c) => c.urgency === "soon").length, label: "COMING UP SOON" },
+          { value: cases.filter((c) => c.urgency === "now").length, label: "NEEDS ATTENTION NOW (THIS PAGE)", alert: true },
+          { value: cases.filter((c) => c.urgency === "today").length, label: "DUE TODAY (THIS PAGE)" },
+          { value: cases.filter((c) => c.urgency === "soon").length, label: "COMING UP SOON (THIS PAGE)" },
         ].map((pulse) => (
           <div key={pulse.label} className={clsx("rounded-md border bg-white p-[13px] text-ink", pulse.alert ? "border-rose" : "border-plum/[0.11]")}>
             <b className={clsx("block font-display text-[26px]", pulse.alert && "text-mulberry")}>{pulse.value}</b>
@@ -81,7 +98,7 @@ export default function AttentionPage() {
           <div className="my-3 flex flex-wrap gap-[6px]">
             {(
               [
-                { key: "open", label: `Open · ${cases.length}` },
+                { key: "open", label: `Open · ${totalCount}` },
                 { key: "now", label: "Now" },
                 { key: "assignedToMe", label: "Assigned to me" },
               ] as { key: ChipKey; label: string }[]
@@ -89,7 +106,7 @@ export default function AttentionPage() {
               <button
                 key={c.key}
                 type="button"
-                onClick={() => setChip(c.key)}
+                onClick={() => handleChipClick(c.key)}
                 className={clsx(
                   "rounded-pill px-[8px] py-[6px] text-[9px] font-extrabold",
                   chip === c.key ? "bg-champagne/50" : "bg-plum/[0.05] text-ink/70",
@@ -101,8 +118,10 @@ export default function AttentionPage() {
           </div>
           {loading ? (
             <p className="py-10 text-center text-[12px] text-ink/50">Loading…</p>
+          ) : cases.length === 0 ? (
+            <p className="py-10 text-center text-[12px] text-ink/50">Nothing needs attention here.</p>
           ) : (
-            filtered.map((item) => (
+            cases.map((item) => (
               <div key={item.id} className="grid grid-cols-[82px_1fr] items-center gap-[10px] border-t border-plum/[0.08] py-3 sm:grid-cols-[82px_1fr_auto]">
                 <span className={clsx("w-max whitespace-nowrap rounded-pill px-[6px] py-1 text-[8px] font-extrabold", URGENCY_BADGE[item.urgency])}>
                   {item.urgencyLabel}
@@ -121,6 +140,13 @@ export default function AttentionPage() {
               </div>
             ))
           )}
+          <Pagination
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={DEFAULT_PAGE_SIZE}
+            onPageChange={setPageIndex}
+          />
         </article>
 
         {selected && (

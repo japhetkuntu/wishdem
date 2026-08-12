@@ -6,7 +6,12 @@ namespace WishDem.Admin.Api.Interfaces;
 
 public interface IAuditLogService
 {
-    Task<IApiResponse<PagedResult<AuditEventResponse>>> GetAllAsync(int pageIndex, int pageSize, CancellationToken ct = default);
+    /// <param name="adminUserId">Restricts to events performed by this admin — backs the
+    /// "my actions" view without the caller filtering a fetched batch itself.</param>
+    /// <param name="tags">Restricts to events carrying any of these tags.</param>
+    /// <param name="search">Case-insensitive match against the event summary.</param>
+    Task<IApiResponse<PagedResult<AuditEventResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, Guid? adminUserId, AuditTag[]? tags, string? search, CancellationToken ct = default);
 
     /// <summary>Fire-and-record: called by other admin services right after they complete an
     /// action worth being accountable for. Swallows its own failures (logged, not thrown) so a

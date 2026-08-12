@@ -133,7 +133,9 @@ public class WishServiceTests
         response.Code.Should().Be(201);
         response.Data!.Status.Should().Be(WishStatus.Draft);
         response.Data.RecipientName.Should().Be("Kojo");
-        response.Data.RecipientPhoneNumber.Should().Be("0244123456");
+        // Saved in local Ghanaian format but normalized to E.164 for the SMS provider —
+        // see PhoneNumberFormatter.
+        response.Data.RecipientPhoneNumber.Should().Be("+233244123456");
     }
 
     [Fact]
@@ -607,7 +609,7 @@ public class WishServiceTests
         var response = await _sut.RetryDeliveryAsync(customerUserId, wish.Id, new RetryDeliveryRequest("0244123456"));
 
         response.Code.Should().Be(200);
-        wish.RecipientPhoneNumber.Should().Be("0244123456");
+        wish.RecipientPhoneNumber.Should().Be("+233244123456");
         wish.DeliveryAttemptCount.Should().Be(0);
         wish.NextDeliveryAttemptAtUtc.Should().NotBe(DateTime.MaxValue);
         response.Data!.DeliveryFailed.Should().BeFalse();

@@ -38,11 +38,12 @@ export function Sidebar({ active }: { active: SidebarKey }) {
     let cancelled = false;
 
     listAttentionCases()
-      .then((cases) => {
+      .then((page) => {
         if (cancelled) return;
         // Attention and Payments & Moderation both surface the same
-        // underlying open-moderation-case count from /api/moderation.
-        setCounts((prev) => ({ ...prev, attention: cases.length, payments: cases.length }));
+        // underlying open-moderation-case count from /api/moderation — the
+        // sidebar badge needs the real total, not just this page's size.
+        setCounts((prev) => ({ ...prev, attention: page.totalCount, payments: page.totalCount }));
       })
       .catch(() => {
         // Leave the badge hidden rather than showing a wrong count.

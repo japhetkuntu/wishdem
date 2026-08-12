@@ -7,7 +7,12 @@ namespace WishDem.Admin.Api.Interfaces;
 
 public interface IModerationService
 {
-    Task<IApiResponse<PagedResult<ModerationCaseResponse>>> GetAllAsync(int pageIndex, int pageSize, ModerationStatus? status, CancellationToken ct = default);
+    /// <param name="search">Case-insensitive match against the case title or description.</param>
+    /// <param name="assignedAdminUserId">Restricts to cases assigned to this admin — backs
+    /// the "assigned to me" view without the caller filtering a fetched batch itself.</param>
+    Task<IApiResponse<PagedResult<ModerationCaseResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, ModerationStatus? status, ModerationSeverity[]? severity,
+        Guid? assignedAdminUserId, string? search, CancellationToken ct = default);
 
     Task<IApiResponse<ModerationCaseResponse>> GetByIdAsync(Guid caseId, CancellationToken ct = default);
 

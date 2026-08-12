@@ -17,9 +17,12 @@ public class ModerationController(IModerationService moderationService) : Contro
         [FromQuery] int pageIndex = 0,
         [FromQuery] int pageSize = 20,
         [FromQuery] ModerationStatus? status = null,
+        [FromQuery] ModerationSeverity[]? severity = null,
+        [FromQuery] Guid? assignedAdminUserId = null,
+        [FromQuery] string? search = null,
         CancellationToken ct = default)
     {
-        var response = await moderationService.GetAllAsync(pageIndex, pageSize, status, ct);
+        var response = await moderationService.GetAllAsync(pageIndex, pageSize, status, severity, assignedAdminUserId, search, ct);
         return StatusCode(response.Code, response);
     }
 

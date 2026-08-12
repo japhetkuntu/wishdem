@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
+import { Pagination } from "@wishdem/design-system";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useAuditLog } from "@/hooks/useAdminData";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { DEFAULT_PAGE_SIZE } from "@/lib/api";
+import type { AuditLogFilters } from "@/lib/api";
 import type { AuditTag } from "@/types";
 
 type ChipKey = "all" | "myActions" | "contentAccess";
@@ -26,23 +29,26 @@ const RESOURCE_ROUTE: Record<string, string> = {
 export default function ActivityLogPage() {
   const navigate = useNavigate();
   const { user } = useAdminAuth();
-  const { events, loading } = useAuditLog();
+  const { events, loading, pageIndex, setPageIndex, totalPages, totalCount, filters, setFilters } = useAuditLog();
   const [chip, setChip] = useState<ChipKey>("all");
-  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    let list = events;
-    if (chip === "myActions" && user) list = list.filter((e) => e.actor === user.name);
-    if (chip === "contentAccess") list = list.filter((e) => e.tag === "CONTENT_ACCESS" || e.tag === "SENSITIVE_ACCESS");
-    const query = search.trim().toLowerCase();
-    if (query) {
-      list = list.filter((e) => e.actor.toLowerCase().includes(query) || e.message.toLowerCase().includes(query));
-    }
-    return list;
-  }, [events, chip, search, user]);
+  const selected = events.find((e) => e.id === selectedId) ?? events[0];
 
-  const selected = events.find((e) => e.id === selectedId) ?? filtered[0] ?? events[0];
+  function handleChipClick(key: ChipKey) {
+    setChip(key);
+    const chipFilters: AuditLogFilters =
+      key === "myActions" && user
+        ? { adminUserId: user.id }
+        : key === "contentAccess"
+          ? { tags: ["contentAccess", "sensitiveAccess"] }
+          : {};
+    setFilters({ ...chipFilters, search: filters.search });
+  }
+
+  function handleSearchChange(value: string) {
+    setFilters({ ...filters, search: value });
+  }
 
   return (
     <AdminLayout active="activity">
@@ -59,9 +65,9 @@ export default function ActivityLogPage() {
 
       <div className="my-4 flex flex-wrap items-center gap-[8px]">
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by actor or action"
+          value={filters.search ?? ""}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search by action summary"
           className="min-w-[280px] flex-1 rounded-sm border border-plum/[0.16] px-[11px] py-[9px] text-[10px] outline-none"
         />
         {(
@@ -74,7 +80,7 @@ export default function ActivityLogPage() {
           <button
             key={c.key}
             type="button"
-            onClick={() => setChip(c.key)}
+            onClick={() => handleChipClick(c.key)}
             className={clsx(
               "whitespace-nowrap rounded-sm border px-[11px] py-[9px] text-[10px] font-bold",
               chip === c.key ? "border-champagne bg-champagne/50" : "border-plum/[0.16] bg-white text-ink",
@@ -89,14 +95,14 @@ export default function ActivityLogPage() {
         <article className="rounded-md border border-plum/[0.11] bg-white p-4 text-ink">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-display text-[21px]">Chronological record</h2>
-            <span className="text-[10px] text-ink/50">{filtered.length} events matching this view · UTC</span>
+            <span className="text-[10px] text-ink/50">{totalCount} total events · UTC</span>
           </div>
           {loading ? (
             <p className="py-10 text-center text-[12px] text-ink/50">Loading…</p>
-          ) : filtered.length === 0 ? (
+          ) : events.length === 0 ? (
             <p className="py-10 text-center text-[12px] text-ink/50">No activity recorded yet.</p>
           ) : (
-            filtered.map((event) => (
+            events.map((event) => (
               <button
                 key={event.id}
                 type="button"
@@ -122,6 +128,13 @@ export default function ActivityLogPage() {
               </button>
             ))
           )}
+          <Pagination
+            pageIndex={pageIndex}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={DEFAULT_PAGE_SIZE}
+            onPageChange={setPageIndex}
+          />
         </article>
 
         {selected && (

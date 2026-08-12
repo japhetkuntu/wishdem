@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
 using WishDem.Admin.Api.Models.Responses;
@@ -16,18 +17,34 @@ public class ModerationService(
     IAuditLogService auditLog,
     ILogger<ModerationService> logger) : IModerationService
 {
-    public async Task<IApiResponse<PagedResult<ModerationCaseResponse>>> GetAllAsync(int pageIndex, int pageSize, ModerationStatus? status, CancellationToken ct = default)
+    public async Task<IApiResponse<PagedResult<ModerationCaseResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, ModerationStatus? status, ModerationSeverity[]? severity,
+        Guid? assignedAdminUserId, string? search, CancellationToken ct = default)
     {
         try
         {
-            var page = await cases.GetPagedAsync(
-                pageIndex,
-                pageSize,
-                filter: status.HasValue ? c => c.Status == status.Value : null,
-                orderBy: q => q.OrderByDescending(c => c.CreatedAtUtc),
-                ct: ct);
+            var query = cases.GetQueryable();
 
-            var adminIds = page.Items
+            if (status.HasValue) query = query.Where(c => c.Status == status.Value);
+            if (severity is { Length: > 0 }) query = query.Where(c => severity.Contains(c.Severity));
+            if (assignedAdminUserId.HasValue) query = query.Where(c => c.AssignedAdminUserId == assignedAdminUserId.Value);
+
+            var trimmedSearch = search?.Trim();
+            if (!string.IsNullOrEmpty(trimmedSearch))
+            {
+                query = query.Where(c =>
+                    EF.Functions.ILike(c.Title, $"%{trimmedSearch}%") ||
+                    (c.Description != null && EF.Functions.ILike(c.Description, $"%{trimmedSearch}%")));
+            }
+
+            var totalCount = query.Count();
+            var items = query
+                .OrderByDescending(c => c.CreatedAtUtc)
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var adminIds = items
                 .SelectMany(c => new[] { c.ReviewerAdminUserId, c.AssignedAdminUserId })
                 .Where(id => id.HasValue)
                 .Select(id => id!.Value)
@@ -38,15 +55,15 @@ public class ModerationService(
 
             var result = new PagedResult<ModerationCaseResponse>
             {
-                Items = page.Items
+                Items = items
                     .Select(c => ToResponse(
                         c,
                         c.ReviewerAdminUserId.HasValue ? adminsById.GetValueOrDefault(c.ReviewerAdminUserId.Value) : null,
                         c.AssignedAdminUserId.HasValue ? adminsById.GetValueOrDefault(c.AssignedAdminUserId.Value) : null))
                     .ToList(),
-                PageIndex = page.PageIndex,
-                PageSize = page.PageSize,
-                TotalCount = page.TotalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount,
             };
 
             return result.ToOkApiResponse("Moderation cases retrieved successfully.");

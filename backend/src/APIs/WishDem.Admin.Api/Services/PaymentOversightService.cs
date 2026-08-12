@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WishDem.Admin.Api.Interfaces;
 using WishDem.Admin.Api.Models.Requests;
 using WishDem.Admin.Api.Models.Responses;
@@ -16,18 +17,35 @@ public class PaymentOversightService(
     IAuditLogService auditLog,
     ILogger<PaymentOversightService> logger) : IPaymentOversightService
 {
-    public async Task<IApiResponse<PagedResult<AdminPaymentResponse>>> GetAllAsync(int pageIndex, int pageSize, PaymentStatus? status, CancellationToken ct = default)
+    public async Task<IApiResponse<PagedResult<AdminPaymentResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, PaymentStatus? status, string? search, CancellationToken ct = default)
     {
         try
         {
-            var page = await payments.GetPagedAsync(
-                pageIndex,
-                pageSize,
-                filter: status.HasValue ? p => p.Status == status.Value : null,
-                orderBy: q => q.OrderByDescending(p => p.CreatedAtUtc),
-                ct: ct);
+            var query = payments.GetQueryable();
 
-            var wishIds = page.Items.Select(p => p.WishId).Distinct().ToList();
+            if (status.HasValue) query = query.Where(p => p.Status == status.Value);
+
+            var trimmedSearch = search?.Trim();
+            if (!string.IsNullOrEmpty(trimmedSearch))
+            {
+                // The sender's name lives on the joined Wish/CustomerUser, not on Payment
+                // itself, so a text search here only reaches the fields that actually live
+                // on the payment record — an exact wish ID, or the phone number on file.
+                if (Guid.TryParse(trimmedSearch, out var searchWishId))
+                    query = query.Where(p => p.WishId == searchWishId);
+                else
+                    query = query.Where(p => EF.Functions.ILike(p.PhoneNumber, $"%{trimmedSearch}%"));
+            }
+
+            var totalCount = query.Count();
+            var items = query
+                .OrderByDescending(p => p.CreatedAtUtc)
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var wishIds = items.Select(p => p.WishId).Distinct().ToList();
             var relatedWishes = await wishes.FindManyAsync(w => wishIds.Contains(w.Id), ct);
             var wishesById = relatedWishes.ToDictionary(w => w.Id);
 
@@ -37,10 +55,10 @@ public class PaymentOversightService(
 
             var result = new PagedResult<AdminPaymentResponse>
             {
-                Items = page.Items.Select(p => ToResponse(p, wishesById.GetValueOrDefault(p.WishId), customersById)).ToList(),
-                PageIndex = page.PageIndex,
-                PageSize = page.PageSize,
-                TotalCount = page.TotalCount,
+                Items = items.Select(p => ToResponse(p, wishesById.GetValueOrDefault(p.WishId), customersById)).ToList(),
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount,
             };
 
             return result.ToOkApiResponse("Payments retrieved successfully.");

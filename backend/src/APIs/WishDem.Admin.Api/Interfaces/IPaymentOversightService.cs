@@ -7,7 +7,9 @@ namespace WishDem.Admin.Api.Interfaces;
 
 public interface IPaymentOversightService
 {
-    Task<IApiResponse<PagedResult<AdminPaymentResponse>>> GetAllAsync(int pageIndex, int pageSize, PaymentStatus? status, CancellationToken ct = default);
+    /// <param name="search">Matches the recipient phone number on file, or an exact wish ID.</param>
+    Task<IApiResponse<PagedResult<AdminPaymentResponse>>> GetAllAsync(
+        int pageIndex, int pageSize, PaymentStatus? status, string? search, CancellationToken ct = default);
 
     Task<IApiResponse<AdminPaymentResponse>> GetByIdAsync(Guid paymentId, CancellationToken ct = default);
 

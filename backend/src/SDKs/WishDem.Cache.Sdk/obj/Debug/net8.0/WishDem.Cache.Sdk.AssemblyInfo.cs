@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WishDem.Cache.Sdk")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9bb799e32f61ba74f16452b88421d9025cf6c9c4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f74d9e2c3db434f90a4214c33aebc28c97ddc56e")]
 [assembly: System.Reflection.AssemblyProductAttribute("WishDem.Cache.Sdk")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WishDem.Cache.Sdk")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
