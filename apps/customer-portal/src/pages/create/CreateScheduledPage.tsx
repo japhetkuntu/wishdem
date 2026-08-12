@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
@@ -13,9 +13,15 @@ export default function CreateScheduledPage() {
   const navigate = useNavigate();
   const { wishId, recipient, themeId, channel, reset } = useWizardStore();
   const vesselImage = getThemeImage(themeId, "scheduled");
+  // React 18 batches the navigate() + reset() pair below into one update, so this
+  // page's own guard effect still runs (on the still-mounted page) once `recipient`
+  // disappears — and its navigate("/create/who") wins the race against the dashboard
+  // navigation. This ref lets the effect recognize "we're leaving on purpose" and skip
+  // firing its own redirect.
+  const leavingRef = useRef(false);
 
   useEffect(() => {
-    if (!recipient) navigate("/create/who", { replace: true });
+    if (!recipient && !leavingRef.current) navigate("/create/who", { replace: true });
   }, [recipient, navigate]);
 
   if (!recipient) return null;
@@ -26,8 +32,9 @@ export default function CreateScheduledPage() {
   const channelLabel = channel === "sms" ? "SMS notification" : "private link";
 
   function handleDashboard() {
-    reset();
+    leavingRef.current = true;
     navigate("/dashboard");
+    reset();
   }
 
   return (

@@ -27,8 +27,7 @@ public class WishDeliveryDispatchService(
             w => w.Status == WishStatus.Sealed && w.DeliveredAtUtc == null
                 && (w.NextDeliveryAttemptAtUtc == null || w.NextDeliveryAttemptAtUtc <= now),
             ct);
-       // var dueWishes = candidates.Where(w => WishDeliveryTiming.IsDue(w, now)).ToList();
-         var dueWishes=candidates;
+        var dueWishes = candidates.Where(w => WishDeliveryTiming.IsDue(w, now)).ToList();
         foreach (var wish in dueWishes)
             actors.DeliveryDispatcher.Tell(new DeliverWish(wish.Id), ActorRefs.NoSender);
 

@@ -31,6 +31,12 @@ public class WishDeliveryBackgroundService(
 
                 if (dispatchedCount > 0)
                     logger.LogInformation("[WishDeliveryBackgroundService] Handed off {Count} wish(es) to the delivery actor pool this pass.", dispatchedCount);
+
+                // Same poll, same scope — recurring wishes never get redelivered (see
+                // RecurringWishReminderService), so this is the only thing standing between
+                // "sender never hears about next year's occasion" and an actual nudge.
+                var reminderService = scope.ServiceProvider.GetRequiredService<IRecurringWishReminderService>();
+                await reminderService.SendDueRemindersAsync(stoppingToken);
             }
             catch (Exception e)
             {

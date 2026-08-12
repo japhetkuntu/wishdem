@@ -48,4 +48,11 @@ public class Wish : BaseEntity
     /// exponentially and gives up after WishDeliveryProcessor's max-attempts cap.</summary>
     public int DeliveryAttemptCount { get; set; }
     public DateTime? NextDeliveryAttemptAtUtc { get; set; }
+
+    /// <summary>Birthday/Anniversary wishes are one-shot once delivered — nothing ever
+    /// resends the same message next year. Instead, as the next occurrence approaches, the
+    /// sender gets a reminder email nudging them to write a fresh wish for it. This tracks
+    /// when that reminder last went out so the worker sends it once per occurrence, not on
+    /// every poll while the reminder window is open.</summary>
+    public DateTime? LastRecurringReminderAtUtc { get; set; }
 }

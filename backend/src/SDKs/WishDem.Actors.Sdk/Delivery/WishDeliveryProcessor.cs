@@ -144,12 +144,38 @@ public class WishDeliveryProcessor(
         }
     }
 
-    // This SMS lands directly on the recipient's own phone — referring to them by name in
-    // the third person ("X sent Y a wish") reads like a notification about someone else's
-    // business, when it's actually addressed to them. Speaking to them directly ("sent
-    // you") is the more natural, personal phrasing for a message they're the one reading.
-    private static string BuildMessage(Wish wish, string link) =>
-        $"Hi {wish.RecipientName}! {wish.FromName} sent you a {wish.Occasion.WishPhrase(wish.OccasionLabel)} on WishDem. Open it here: {link}";
+    // Cap on how much of the actual message we quote in the SMS body. Most recipients
+    // won't tap an unfamiliar link from an unknown sender — putting the real words
+    // directly in the text is what makes this read as genuine rather than a phishing
+    // link, and lets them read it without leaving their messages app at all. But SMS is
+    // billed per ~153-char GSM-7 segment, and a message can run up to 2000 chars, so an
+    // unbounded quote could turn one wish into several billed segments. This keeps the
+    // quoted snippet (plus the branded intro) to roughly a single segment's worth.
+    private const int MaxEmbeddedMessageLength = 280;
+
+    // This SMS lands directly on the recipient's own phone from a bare (if pre-registered)
+    // sender ID, addressed to a stranger, on an occasion when scam texts are common —
+    // quoting their actual words back to them, in the sender's own name, is what makes it
+    // read as genuine rather than a phishing attempt. The link is now a bonus (attachments,
+    // or the rest of a message too long to fit here), not the only way to read the wish.
+    private static string BuildMessage(Wish wish, string link)
+    {
+        var occasionPhrase = wish.Occasion.WishPhrase(wish.OccasionLabel);
+        var intro = $"Hi {wish.RecipientName}, {wish.FromName} sent you a {occasionPhrase} via WishDem";
+
+        var trimmedMessage = wish.Message.Trim();
+        if (trimmedMessage.Length == 0) return $"{intro}. Open it here: {link}";
+
+        var truncated = trimmedMessage.Length > MaxEmbeddedMessageLength;
+        var snippet = truncated ? trimmedMessage[..MaxEmbeddedMessageLength].TrimEnd() + "…" : trimmedMessage;
+        var body = $"{intro}:\n\n\"{snippet}\"";
+
+        var hasAttachment = !string.IsNullOrWhiteSpace(wish.AttachmentUrl);
+        if (hasAttachment && truncated) return $"{body}\n\nFull message + photo: {link}";
+        if (hasAttachment) return $"{body}\n\nView the photo: {link}";
+        if (truncated) return $"{body}\n\nRead the rest: {link}";
+        return body;
+    }
 
     private async Task NotifySenderOfFailureAsync(Wish wish, CancellationToken ct)
     {

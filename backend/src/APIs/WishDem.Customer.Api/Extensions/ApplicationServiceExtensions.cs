@@ -26,6 +26,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IBirthdayBloomService, BirthdayBloomService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IWishDeliveryDispatchService, WishDeliveryDispatchService>();
+        services.AddScoped<IRecurringWishReminderService, RecurringWishReminderService>();
         services.AddHostedService<WishDeliveryBackgroundService>();
 
         services.AddValidatorsFromAssemblyContaining<Program>();

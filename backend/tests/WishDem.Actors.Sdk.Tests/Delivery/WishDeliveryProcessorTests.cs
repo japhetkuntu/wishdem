@@ -67,6 +67,57 @@ public class WishDeliveryProcessorTests
     }
 
     [Fact]
+    public async Task DeliverAsync_ForSmsChannelWithShortMessage_QuotesFullMessageWithoutLink()
+    {
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, "0244123456");
+        wish.Message = "Happy birthday! Hope your day is full of joy.";
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.DeliverAsync(wish.Id);
+
+        // Short enough to quote in full — no reason to spend an extra segment on a link
+        // to content the recipient already just read.
+        _smsSender.Verify(s => s.SendAsync(
+            "+233244123456",
+            It.Is<string>(m => m.Contains(wish.Message) && !m.Contains("/w/" + wish.Id)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeliverAsync_ForSmsChannelWithLongMessage_TruncatesAndLinksToTheRest()
+    {
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, "0244123456");
+        wish.Message = new string('a', 500);
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.DeliverAsync(wish.Id);
+
+        _smsSender.Verify(s => s.SendAsync(
+            "+233244123456",
+            It.Is<string>(m => m.Contains("…") && m.Contains("/w/" + wish.Id) && !m.Contains(wish.Message)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeliverAsync_ForSmsChannelWithAttachment_LinksToTheAttachmentEvenWithShortMessage()
+    {
+        var wish = NewDueSealedWish(DeliveryChannel.Sms, "0244123456");
+        wish.Message = "A little something extra for you.";
+        wish.AttachmentUrl = "https://spaces.example.com/photo.jpg";
+        SetupWish(wish);
+        _wishes.Setup(r => r.UpdateAsync(wish, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.DeliverAsync(wish.Id);
+
+        _smsSender.Verify(s => s.SendAsync(
+            "+233244123456",
+            It.Is<string>(m => m.Contains(wish.Message) && m.Contains("/w/" + wish.Id)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task DeliverAsync_ForWhatsAppChannelWithPhone_SendsViaSmsAsFallback()
     {
         // No WhatsApp provider is wired up — WhatsApp-channel wishes fall back to SMS,

@@ -598,6 +598,9 @@ namespace WishDem.Postgres.Sdk.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastRecurringReminderAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(4000)

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, Loading } from "@wishdem/design-system";
 import { Seo } from "@/components/Seo";
@@ -8,8 +9,15 @@ import { CountdownInline } from "@/components/Countdown";
 import { useWishes } from "@/hooks/useWishes";
 import { daysUntilOccasion, formatWeekdayDate } from "@/lib/date";
 
+// Numbered pages ("1 2 3 →") ask you to do arithmetic about how far in your own history
+// you want to go — a progressive reveal just asks "a few more?", which reads calmer for a
+// list of personal, sentimental moments. Each reveal shows one more handful and nothing
+// more; nothing to lose your place in, nothing to page back from.
+const REVEAL_BATCH_SIZE = 6;
+
 export default function DashboardPage() {
   const { wishes, loading, refresh } = useWishes();
+  const [visibleCount, setVisibleCount] = useState(REVEAL_BATCH_SIZE);
   const [params] = useSearchParams();
   // `?empty=1` forces the empty-dashboard layout for local testing —
   // otherwise this route reflects the mock data layer's current wishes.
@@ -132,9 +140,35 @@ export default function DashboardPage() {
                 {list.length} ACTIVE
               </span>
             </header>
-            {list.map((wish) => (
-              <WishCard key={wish.id} wish={wish} onRetried={refresh} />
+            {list.slice(0, visibleCount).map((wish, i) => (
+              <div
+                key={wish.id}
+                // Only the newest batch is ever mounting for the first time — earlier
+                // cards don't remount when visibleCount grows, so this only plays once
+                // per card, staggered within its own reveal, never on the ones already settled.
+                className="animate-wd-reveal-rise"
+                style={{ animationDelay: `${(i % REVEAL_BATCH_SIZE) * 45}ms` }}
+              >
+                <WishCard wish={wish} onRetried={refresh} />
+              </div>
             ))}
+            {visibleCount < list.length && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount((n) => n + REVEAL_BATCH_SIZE)}
+                className="group flex w-full flex-col items-center gap-[9px] border-t border-porcelain/[0.12] px-[18px] py-[16px] text-center transition-colors hover:bg-porcelain/[0.03]"
+              >
+                <div className="h-[3px] w-full max-w-[220px] overflow-hidden rounded-full bg-porcelain/[0.12]">
+                  <div
+                    className="h-full rounded-full bg-champagne transition-[width] duration-500 ease-out"
+                    style={{ width: `${(visibleCount / list.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-extrabold text-champagne transition-transform group-hover:translate-y-[1px]">
+                  Reveal {Math.min(REVEAL_BATCH_SIZE, list.length - visibleCount)} more · {visibleCount} of {list.length} →
+                </span>
+              </button>
+            )}
           </section>
 
           <section className="mt-5 grid gap-[14px] sm:grid-cols-2">

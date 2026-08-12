@@ -52,23 +52,16 @@ public class WishDeliveryTimingTests
     }
 
     [Fact]
-    public void IsDue_WhenLocalOccurrenceLaterTodayInAheadTimezone_ReturnsFalse()
+    public void IsDue_IgnoresStoredRecipientTimezone_AlwaysEvaluatesInGhanaTime()
     {
-        // Asia/Tokyo is UTC+9. At 2026-08-09 20:00 UTC it's 2026-08-10 05:00 in Tokyo —
-        // the 09:00 local delivery moment hasn't arrived yet.
+        // Regardless of what's stored on the wish, delivery timing is fixed to Ghana time
+        // (Africa/Accra, UTC+0) — a per-wish IANA zone captured from the sender's own
+        // browser was producing wrong "is this due yet" results, so it's no longer honored.
+        // "Asia/Tokyo" here should be treated exactly like "Africa/Accra" would be.
         var wish = NewWish(new DateOnly(1995, 8, 10), new TimeOnly(9, 0), "Asia/Tokyo", SealedInJanuary2026);
-        var utcNow = new DateTime(2026, 8, 9, 20, 0, 0, DateTimeKind.Utc);
 
-        WishDeliveryTiming.IsDue(wish, utcNow).Should().BeFalse();
-    }
-
-    [Fact]
-    public void IsDue_WhenLocalOccurrenceInAheadTimezoneHasPassed_ReturnsTrue()
-    {
-        var wish = NewWish(new DateOnly(1995, 8, 10), new TimeOnly(9, 0), "Asia/Tokyo", SealedInJanuary2026);
-        var utcNow = new DateTime(2026, 8, 10, 1, 0, 0, DateTimeKind.Utc); // 2026-08-10 10:00 Tokyo
-
-        WishDeliveryTiming.IsDue(wish, utcNow).Should().BeTrue();
+        WishDeliveryTiming.IsDue(wish, new DateTime(2026, 8, 10, 6, 0, 0, DateTimeKind.Utc)).Should().BeFalse();
+        WishDeliveryTiming.IsDue(wish, new DateTime(2026, 8, 10, 12, 0, 0, DateTimeKind.Utc)).Should().BeTrue();
     }
 
     [Fact]
@@ -85,8 +78,11 @@ public class WishDeliveryTimingTests
     }
 
     [Fact]
-    public void MostRecentOccurrenceUtc_WhenTimezoneIsUnrecognized_FallsBackToUtcRatherThanThrowing()
+    public void TargetOccurrenceUtc_IgnoresGarbageStoredTimezone_NeverThrows()
     {
+        // The stored value isn't looked at for timing anymore (see the class-level note on
+        // why), so even garbage here can't break the calculation the way an unrecognized
+        // IANA zone used to risk.
         var wish = NewWish(new DateOnly(1995, 8, 10), new TimeOnly(9, 0), "Not/A/RealZone", SealedInJanuary2026);
 
         var act = () => WishDeliveryTiming.TargetOccurrenceUtc(wish);
@@ -119,5 +115,39 @@ public class WishDeliveryTimingTests
 
         occurrence!.Value.Month.Should().Be(2);
         occurrence.Value.Day.Should().Be(28);
+    }
+
+    [Fact]
+    public void NextRecurringOccurrenceUtc_ForOneTimeOccasion_ReturnsNull()
+    {
+        var wish = NewWish(
+            new DateOnly(2026, 3, 1), new TimeOnly(9, 0), "Africa/Accra", SealedInJanuary2026,
+            occasion: OccasionType.Congratulations);
+
+        WishDeliveryTiming.NextRecurringOccurrenceUtc(wish, DateTime.UtcNow).Should().BeNull();
+    }
+
+    [Fact]
+    public void NextRecurringOccurrenceUtc_AfterThisYearsOccurrenceHasPassed_RollsToNextYear()
+    {
+        // Delivered already for 2026 (the anchor's own year) — asking "what's next" from a
+        // reference point after Aug 10 2026 should land on Aug 10 2027, not repeat 2026.
+        var wish = NewWish(new DateOnly(1995, 8, 10), new TimeOnly(9, 0), "Africa/Accra", SealedInJanuary2026);
+        var referenceAfterThisYear = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Utc);
+
+        var next = WishDeliveryTiming.NextRecurringOccurrenceUtc(wish, referenceAfterThisYear);
+
+        next.Should().Be(new DateTime(2027, 8, 10, 9, 0, 0, DateTimeKind.Utc));
+    }
+
+    [Fact]
+    public void NextRecurringOccurrenceUtc_BeforeThisYearsOccurrence_ReturnsThisYear()
+    {
+        var wish = NewWish(new DateOnly(1995, 8, 10), new TimeOnly(9, 0), "Africa/Accra", SealedInJanuary2026);
+        var referenceBeforeThisYear = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var next = WishDeliveryTiming.NextRecurringOccurrenceUtc(wish, referenceBeforeThisYear);
+
+        next.Should().Be(new DateTime(2026, 8, 10, 9, 0, 0, DateTimeKind.Utc));
     }
 }
